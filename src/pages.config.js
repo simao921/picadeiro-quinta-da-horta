@@ -1,47 +1,47 @@
-import Home from './pages/Home';
-import Services from './pages/Services';
-import Gallery from './pages/Gallery';
-import Contact from './pages/Contact';
+import AdminCoupons from './pages/AdminCoupons';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminGallery from './pages/AdminGallery';
+import AdminInstructors from './pages/AdminInstructors';
+import AdminLessons from './pages/AdminLessons';
+import AdminLogin from './pages/AdminLogin';
+import AdminMessages from './pages/AdminMessages';
+import AdminOrders from './pages/AdminOrders';
+import AdminPayments from './pages/AdminPayments';
+import AdminSettings from './pages/AdminSettings';
+import AdminShop from './pages/AdminShop';
+import AdminStudents from './pages/AdminStudents';
 import Bookings from './pages/Bookings';
-import Shop from './pages/Shop';
 import Cart from './pages/Cart';
 import ClientDashboard from './pages/ClientDashboard';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminLessons from './pages/AdminLessons';
-import AdminStudents from './pages/AdminStudents';
-import AdminPayments from './pages/AdminPayments';
-import AdminShop from './pages/AdminShop';
-import AdminOrders from './pages/AdminOrders';
-import AdminGallery from './pages/AdminGallery';
-import AdminMessages from './pages/AdminMessages';
-import AdminInstructors from './pages/AdminInstructors';
-import AdminCoupons from './pages/AdminCoupons';
-import AdminSettings from './pages/AdminSettings';
+import Contact from './pages/Contact';
+import Gallery from './pages/Gallery';
+import Home from './pages/Home';
+import Services from './pages/Services';
+import Shop from './pages/Shop';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Home": Home,
-    "Services": Services,
-    "Gallery": Gallery,
-    "Contact": Contact,
+    "AdminCoupons": AdminCoupons,
+    "AdminDashboard": AdminDashboard,
+    "AdminGallery": AdminGallery,
+    "AdminInstructors": AdminInstructors,
+    "AdminLessons": AdminLessons,
+    "AdminLogin": AdminLogin,
+    "AdminMessages": AdminMessages,
+    "AdminOrders": AdminOrders,
+    "AdminPayments": AdminPayments,
+    "AdminSettings": AdminSettings,
+    "AdminShop": AdminShop,
+    "AdminStudents": AdminStudents,
     "Bookings": Bookings,
-    "Shop": Shop,
     "Cart": Cart,
     "ClientDashboard": ClientDashboard,
-    "AdminLogin": AdminLogin,
-    "AdminDashboard": AdminDashboard,
-    "AdminLessons": AdminLessons,
-    "AdminStudents": AdminStudents,
-    "AdminPayments": AdminPayments,
-    "AdminShop": AdminShop,
-    "AdminOrders": AdminOrders,
-    "AdminGallery": AdminGallery,
-    "AdminMessages": AdminMessages,
-    "AdminInstructors": AdminInstructors,
-    "AdminCoupons": AdminCoupons,
-    "AdminSettings": AdminSettings,
+    "Contact": Contact,
+    "Gallery": Gallery,
+    "Home": Home,
+    "Services": Services,
+    "Shop": Shop,
 }
 
 export const pagesConfig = {
