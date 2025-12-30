@@ -13,6 +13,11 @@ import AdminStudents from './pages/AdminStudents';
 import AdminPayments from './pages/AdminPayments';
 import AdminShop from './pages/AdminShop';
 import AdminOrders from './pages/AdminOrders';
+import AdminGallery from './pages/AdminGallery';
+import AdminMessages from './pages/AdminMessages';
+import AdminInstructors from './pages/AdminInstructors';
+import AdminCoupons from './pages/AdminCoupons';
+import AdminSettings from './pages/AdminSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +37,11 @@ export const PAGES = {
     "AdminPayments": AdminPayments,
     "AdminShop": AdminShop,
     "AdminOrders": AdminOrders,
+    "AdminGallery": AdminGallery,
+    "AdminMessages": AdminMessages,
+    "AdminInstructors": AdminInstructors,
+    "AdminCoupons": AdminCoupons,
+    "AdminSettings": AdminSettings,
 }
 
 export const pagesConfig = {
