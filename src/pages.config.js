@@ -6,6 +6,9 @@ import Bookings from './pages/Bookings';
 import Shop from './pages/Shop';
 import Cart from './pages/Cart';
 import ClientDashboard from './pages/ClientDashboard';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminLessons from './pages/AdminLessons';
 import __Layout from './Layout.jsx';
 
 
@@ -18,6 +21,9 @@ export const PAGES = {
     "Shop": Shop,
     "Cart": Cart,
     "ClientDashboard": ClientDashboard,
+    "AdminLogin": AdminLogin,
+    "AdminDashboard": AdminDashboard,
+    "AdminLessons": AdminLessons,
 }
 
 export const pagesConfig = {
