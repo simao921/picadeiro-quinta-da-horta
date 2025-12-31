@@ -1,3 +1,4 @@
+import AdminAI from './pages/AdminAI';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminGallery from './pages/AdminGallery';
@@ -18,11 +19,13 @@ import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
-import AdminAI from './pages/AdminAI';
+import Tasks from './pages/Tasks';
+import Calendar from './pages/Calendar';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminAI": AdminAI,
     "AdminCoupons": AdminCoupons,
     "AdminDashboard": AdminDashboard,
     "AdminGallery": AdminGallery,
@@ -43,7 +46,8 @@ export const PAGES = {
     "Home": Home,
     "Services": Services,
     "Shop": Shop,
-    "AdminAI": AdminAI,
+    "Tasks": Tasks,
+    "Calendar": Calendar,
 }
 
 export const pagesConfig = {

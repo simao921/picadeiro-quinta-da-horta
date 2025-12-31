@@ -74,6 +74,8 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Galeria', page: 'Gallery' },
     { name: 'Loja', page: 'Shop' },
     { name: 'Reservas', page: 'Bookings' },
+    { name: 'Tarefas', page: 'Tasks', adminOnly: true },
+    { name: 'Calendário', page: 'Calendar' },
     { name: 'Contactos', page: 'Contact' },
   ];
 
@@ -119,10 +121,10 @@ export default function Layout({ children, currentPageName }) {
             </a>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-[#B8956A] transition-colors">
+            <a href="https://www.facebook.com/Picadeiroquintadahortaoficial/" target="_blank" rel="noopener noreferrer" className="hover:text-[#B8956A] transition-colors">
               <Facebook className="w-4 h-4" />
             </a>
-            <a href="#" className="hover:text-[#B8956A] transition-colors">
+            <a href="https://www.instagram.com/picadeiro.quinta.da.horta/" target="_blank" rel="noopener noreferrer" className="hover:text-[#B8956A] transition-colors">
               <Instagram className="w-4 h-4" />
             </a>
           </div>
@@ -141,9 +143,11 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to={createPageUrl('Home')} className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#2D2D2D] flex items-center justify-center">
-                <span className="text-white font-serif text-lg font-bold">PH</span>
-              </div>
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                alt="Picadeiro Quinta da Horta"
+                className="h-12 w-auto"
+              />
               <div className="hidden sm:block">
                 <h1 className="text-lg font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
                 <p className="text-xs text-[#8B7355] tracking-wider">QUINTA DA HORTA</p>
@@ -152,19 +156,21 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.page}
-                  to={createPageUrl(link.page)}
-                  className={`text-sm font-medium transition-colors hover:text-[#B8956A] pb-1 ${
-                    currentPageName === link.page 
-                      ? 'text-[#B8956A] border-b-2 border-[#B8956A]' 
-                      : 'text-[#1A1A1A]'
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+              {navLinks
+                .filter(link => !link.adminOnly || user?.role === 'admin')
+                .map((link) => (
+                  <Link
+                    key={link.page}
+                    to={createPageUrl(link.page)}
+                    className={`text-sm font-medium transition-colors hover:text-[#B8956A] pb-1 ${
+                      currentPageName === link.page 
+                        ? 'text-[#B8956A] border-b-2 border-[#B8956A]' 
+                        : 'text-[#1A1A1A]'
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
             </nav>
 
             {/* Right Side */}
@@ -222,20 +228,22 @@ export default function Layout({ children, currentPageName }) {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-t shadow-lg">
             <nav className="flex flex-col p-4 gap-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.page}
-                  to={createPageUrl(link.page)}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-lg transition-colors ${
-                    currentPageName === link.page 
-                      ? 'bg-[#4A5D23] text-white' 
-                      : 'text-[#2C3E1F] hover:bg-stone-100'
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+              {navLinks
+                .filter(link => !link.adminOnly || user?.role === 'admin')
+                .map((link) => (
+                  <Link
+                    key={link.page}
+                    to={createPageUrl(link.page)}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`px-4 py-3 rounded-lg transition-colors ${
+                      currentPageName === link.page 
+                        ? 'bg-[#2D2D2D] text-white' 
+                        : 'text-[#2D2D2D] hover:bg-stone-100'
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
             </nav>
           </div>
         )}
@@ -271,7 +279,9 @@ export default function Layout({ children, currentPageName }) {
             <div>
               <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Links Rápidos</h4>
               <ul className="space-y-3">
-                {navLinks.map((link) => (
+                {navLinks
+                .filter(link => !link.adminOnly)
+                .map((link) => (
                   <li key={link.page}>
                     <Link 
                       to={createPageUrl(link.page)}
@@ -327,10 +337,10 @@ export default function Layout({ children, currentPageName }) {
               © {new Date().getFullYear()} Picadeiro Quinta da Horta. Todos os direitos reservados.
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="text-stone-400 hover:text-[#B8956A] transition-colors">
+              <a href="https://www.facebook.com/Picadeiroquintadahortaoficial/" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-[#B8956A] transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-stone-400 hover:text-[#B8956A] transition-colors">
+              <a href="https://www.instagram.com/picadeiro.quinta.da.horta/" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-[#B8956A] transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
             </div>
