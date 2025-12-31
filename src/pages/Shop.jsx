@@ -1,19 +1,93 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, ShoppingBag, Star } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  ShoppingBag, Search, SlidersHorizontal, 
+  ShoppingCart, Heart, Star, Tag 
+} from 'lucide-react';
 import { motion } from 'framer-motion';
-import ProductCard from '@/components/shop/ProductCard';
-import ProductFilters from '@/components/shop/ProductFilters';
+import { toast } from 'sonner';
+
+const categories = [
+  { id: 'all', label: 'Todos' },
+  { id: 'vestuario', label: 'Vestuário' },
+  { id: 'equipamento', label: 'Equipamento' },
+  { id: 'acessorios', label: 'Acessórios' },
+  { id: 'cuidados', label: 'Cuidados' }
+];
+
+const defaultProducts = [
+  {
+    id: '1',
+    name: 'Capacete de Equitação Premium',
+    price: 89.99,
+    sale_price: 79.99,
+    category: 'equipamento',
+    images: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80'],
+    stock: 15,
+    is_featured: true
+  },
+  {
+    id: '2',
+    name: 'Botas de Equitação Clássicas',
+    price: 159.99,
+    category: 'vestuario',
+    images: ['https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=400&q=80'],
+    stock: 8
+  },
+  {
+    id: '3',
+    name: 'Luvas de Couro Premium',
+    price: 45.00,
+    category: 'acessorios',
+    images: ['https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=400&q=80'],
+    stock: 25
+  },
+  {
+    id: '4',
+    name: 'Escova para Cavalos',
+    price: 24.99,
+    category: 'cuidados',
+    images: ['https://images.unsplash.com/photo-1508881598441-324f3974994b?w=400&q=80'],
+    stock: 50
+  },
+  {
+    id: '5',
+    name: 'Calças de Equitação Stretch',
+    price: 75.00,
+    category: 'vestuario',
+    images: ['https://images.unsplash.com/photo-1460134846237-51c777df6111?w=400&q=80'],
+    stock: 12
+  },
+  {
+    id: '6',
+    name: 'Rédeas de Couro',
+    price: 55.00,
+    category: 'equipamento',
+    images: ['https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=400&q=80'],
+    stock: 20
+  }
+];
 
 export default function Shop() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('todos');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
-  const [showFilters, setShowFilters] = useState(false);
+  const [cart, setCart] = useState([]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
@@ -21,148 +95,249 @@ export default function Shop() {
     initialData: []
   });
 
-  const filteredProducts = products
-    .filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           p.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'todos' || p.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    })
+  const displayProducts = products.length > 0 ? products : defaultProducts;
+
+  const filteredProducts = displayProducts
+    .filter(p => selectedCategory === 'all' || p.category === selectedCategory)
+    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
-      if (sortBy === 'price_asc') return a.price - b.price;
-      if (sortBy === 'price_desc') return b.price - a.price;
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'featured') return (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0);
       return 0;
     });
 
-  const featuredProducts = products.filter(p => p.featured).slice(0, 3);
+  const addToCart = (product) => {
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+      setCart(cart.map(item => 
+        item.id === product.id 
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setCart([...cart, { ...product, quantity: 1 }]);
+    }
+    toast.success(`${product.name} adicionado ao carrinho!`);
+    
+    // Save to localStorage
+    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  };
 
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-r from-[#2D2D2D] to-[#4A4A4A] overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-20 w-96 h-96 bg-[#B8956A] rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-20 w-96 h-96 bg-[#8B7355] rounded-full blur-3xl" />
+      <section className="relative py-24 bg-[#2C3E1F] overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img
+            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80"
+            alt=""
+            className="w-full h-full object-cover"
+          />
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
-                           rounded-full text-[#B8956A] text-sm font-medium mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/20 
+                           rounded-full text-[#C9A961] text-sm font-medium mb-6">
               <ShoppingBag className="w-4 h-4" />
-              Loja Virtual
+              Loja Online
             </span>
-            <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white mb-4">
-              Equipamento <span className="text-[#B8956A]">Equestre</span>
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+              Equipamento
+              <span className="text-[#C9A961]"> Equestre</span>
             </h1>
             <p className="text-lg text-stone-300 max-w-2xl mx-auto">
-              Descubra a nossa seleção de equipamentos, vestuário e acessórios de equitação
+              Descubra a nossa seleção de produtos de qualidade para cavaleiros e cavalos.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Featured Products */}
-      {featuredProducts.length > 0 && (
-        <section className="py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-2 mb-6">
-              <Star className="w-5 h-5 text-[#B8956A] fill-[#B8956A]" />
-              <h2 className="font-serif text-2xl font-bold text-[#2D2D2D]">
-                Produtos em Destaque
-              </h2>
+      {/* Filters */}
+      <section className="py-6 bg-white border-b sticky top-16 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+              <Input
+                placeholder="Pesquisar produtos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} featured />
+
+            {/* Category Filter */}
+            <div className="flex gap-2 flex-wrap">
+              {categories.map((cat) => (
+                <Button
+                  key={cat.id}
+                  variant={selectedCategory === cat.id ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={selectedCategory === cat.id 
+                    ? 'bg-[#4A5D23] hover:bg-[#3A4A1B]' 
+                    : ''
+                  }
+                >
+                  {cat.label}
+                </Button>
               ))}
             </div>
-          </div>
-        </section>
-      )}
 
-      {/* Main Shop */}
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Ordenar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="featured">Destaques</SelectItem>
+                <SelectItem value="price-asc">Preço: Menor</SelectItem>
+                <SelectItem value="price-desc">Preço: Maior</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Cart Button */}
+            <Link to={createPageUrl('Cart')}>
+              <Button variant="outline" className="relative">
+                <ShoppingCart className="w-5 h-5" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#C9A961] text-[#2C3E1F] 
+                                  text-xs rounded-full flex items-center justify-center font-bold">
+                    {cart.length}
+                  </span>
+                )}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Products Grid */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Search & Filters */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
-                <Input
-                  placeholder="Pesquisar produtos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full lg:w-48">
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas as Categorias</SelectItem>
-                  <SelectItem value="equipamento">Equipamento</SelectItem>
-                  <SelectItem value="vestuario">Vestuário</SelectItem>
-                  <SelectItem value="acessorios">Acessórios</SelectItem>
-                  <SelectItem value="cuidados_cavalo">Cuidados do Cavalo</SelectItem>
-                  <SelectItem value="decoracao">Decoração</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full lg:w-48">
-                  <SelectValue placeholder="Ordenar por" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="featured">Em Destaque</SelectItem>
-                  <SelectItem value="price_asc">Preço: Baixo a Alto</SelectItem>
-                  <SelectItem value="price_desc">Preço: Alto a Baixo</SelectItem>
-                  <SelectItem value="name">Nome A-Z</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Products Grid */}
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B8956A]"></div>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-20">
-              <ShoppingBag className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-stone-600 mb-2">
-                Nenhum produto encontrado
-              </h3>
-              <p className="text-stone-500">
-                Tente ajustar os seus filtros de pesquisa
-              </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="aspect-square" />
+                  <CardContent className="p-4">
+                    <Skeleton className="h-5 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : (
-            <>
-              <div className="mb-4 text-sm text-stone-600">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="group overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all">
+                    <div className="aspect-square relative overflow-hidden bg-stone-100">
+                      <img
+                        src={product.images?.[0] || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80'}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-500 
+                                   group-hover:scale-110"
+                      />
+                      
+                      {/* Badges */}
+                      <div className="absolute top-3 left-3 flex flex-col gap-2">
+                        {product.is_featured && (
+                          <Badge className="bg-[#C9A961] text-[#2C3E1F]">
+                            <Star className="w-3 h-3 mr-1" />
+                            Destaque
+                          </Badge>
+                        )}
+                        {product.sale_price && (
+                          <Badge className="bg-red-500 text-white">
+                            <Tag className="w-3 h-3 mr-1" />
+                            Promoção
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Quick Actions */}
+                      <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 
+                                     group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="w-9 h-9 rounded-full bg-white/90 hover:bg-white"
+                        >
+                          <Heart className="w-4 h-4 text-stone-600" />
+                        </Button>
+                      </div>
+
+                      {/* Add to Cart Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t 
+                                     from-black/70 to-transparent opacity-0 group-hover:opacity-100 
+                                     transition-opacity">
+                        <Button
+                          onClick={() => addToCart(product)}
+                          className="w-full bg-white text-[#2C3E1F] hover:bg-stone-100"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Adicionar ao Carrinho
+                        </Button>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <p className="text-xs text-stone-500 uppercase tracking-wide mb-1">
+                        {categories.find(c => c.id === product.category)?.label || 'Produto'}
+                      </p>
+                      <h3 className="font-semibold text-[#2C3E1F] mb-2 line-clamp-2 
+                                    group-hover:text-[#4A5D23] transition-colors">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        {product.sale_price ? (
+                          <>
+                            <span className="font-bold text-lg text-[#4A5D23]">
+                              {product.sale_price.toFixed(2)}€
+                            </span>
+                            <span className="text-sm text-stone-400 line-through">
+                              {product.price.toFixed(2)}€
+                            </span>
+                          </>
+                        ) : (
+                          <span className="font-bold text-lg text-[#4A5D23]">
+                            {product.price.toFixed(2)}€
+                          </span>
+                        )}
+                      </div>
+                      {product.stock < 10 && product.stock > 0 && (
+                        <p className="text-xs text-amber-600 mt-2">
+                          Apenas {product.stock} em stock
+                        </p>
+                      )}
+                      {product.stock === 0 && (
+                        <p className="text-xs text-red-600 mt-2">Esgotado</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {filteredProducts.length === 0 && !isLoading && (
+            <div className="text-center py-16">
+              <ShoppingBag className="w-16 h-16 text-stone-300 mx-auto mb-4" />
+              <p className="text-stone-500 text-lg">Nenhum produto encontrado.</p>
+            </div>
           )}
         </div>
       </section>

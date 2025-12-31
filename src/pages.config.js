@@ -21,8 +21,6 @@ import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Tasks from './pages/Tasks';
 import Calendar from './pages/Calendar';
-import Checkout from './pages/Checkout';
-import ProductDetail from './pages/ProductDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -50,8 +48,6 @@ export const PAGES = {
     "Shop": Shop,
     "Tasks": Tasks,
     "Calendar": Calendar,
-    "Checkout": Checkout,
-    "ProductDetail": ProductDetail,
 }
 
 export const pagesConfig = {
