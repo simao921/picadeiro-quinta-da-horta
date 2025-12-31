@@ -26,21 +26,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Package, Eye, Loader2 } from 'lucide-react';
+import { Package, Eye, Loader2, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'sonner';
 
-const statusOptions = [
-  { value: 'pending', label: 'Pendente', class: 'bg-amber-100 text-amber-800' },
-  { value: 'processing', label: 'Em Processamento', class: 'bg-blue-100 text-blue-800' },
-  { value: 'shipped', label: 'Enviado', class: 'bg-purple-100 text-purple-800' },
-  { value: 'delivered', label: 'Entregue', class: 'bg-green-100 text-green-800' },
-  { value: 'cancelled', label: 'Cancelado', class: 'bg-red-100 text-red-800' }
-];
+const statusOptions = {
+  pendente: { label: 'Pendente', color: 'bg-amber-100 text-amber-800' },
+  processamento: { label: 'Processamento', color: 'bg-blue-100 text-blue-800' },
+  enviada: { label: 'Enviada', color: 'bg-purple-100 text-purple-800' },
+  entregue: { label: 'Entregue', color: 'bg-green-100 text-green-800' },
+  cancelada: { label: 'Cancelada', color: 'bg-red-100 text-red-800' }
+};
 
 export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({
@@ -58,8 +61,26 @@ export default function AdminOrders() {
   });
 
   const getStatusBadge = (status) => {
-    const config = statusOptions.find(s => s.value === status) || statusOptions[0];
-    return <Badge className={config.class}>{config.label}</Badge>;
+    const config = statusOptions[status] || statusOptions.pendente;
+    return <Badge className={config.color}>{config.label}</Badge>;
+  };
+
+  // Filter orders
+  const filteredOrders = orders.filter(order => {
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const matchesSearch = !searchQuery || 
+      order.client_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.client_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.id?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const stats = {
+    total: orders.length,
+    pendente: orders.filter(o => o.status === 'pendente').length,
+    processamento: orders.filter(o => o.status === 'processamento').length,
+    enviada: orders.filter(o => o.status === 'enviada').length,
+    entregue: orders.filter(o => o.status === 'entregue').length,
   };
 
   return (
@@ -68,17 +89,80 @@ export default function AdminOrders() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-[#2C3E1F]">Gestão de Encomendas</h1>
-          <p className="text-stone-500">{orders.length} encomendas</p>
+          <p className="text-stone-500">{filteredOrders.length} de {orders.length} encomendas</p>
         </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-[#2C3E1F]">{stats.total}</p>
+              <p className="text-xs text-stone-500">Total</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-amber-600">{stats.pendente}</p>
+              <p className="text-xs text-stone-500">Pendentes</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-blue-600">{stats.processamento}</p>
+              <p className="text-xs text-stone-500">Processamento</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-purple-600">{stats.enviada}</p>
+              <p className="text-xs text-stone-500">Enviadas</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{stats.entregue}</p>
+              <p className="text-xs text-stone-500">Entregues</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Pesquisar por cliente ou ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filtrar por estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Estados</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="processamento">Processamento</SelectItem>
+                  <SelectItem value="enviada">Enviada</SelectItem>
+                  <SelectItem value="entregue">Entregue</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Orders Table */}
         <Card className="border-0 shadow-md">
           <CardContent className="p-0">
             {isLoading ? (
               <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#4A5D23]" />
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
               </div>
-            ) : orders.length === 0 ? (
+            ) : filteredOrders.length === 0 ? (
               <div className="text-center py-12">
                 <Package className="w-12 h-12 mx-auto mb-2 text-stone-300" />
                 <p className="text-stone-500">Nenhuma encomenda</p>
@@ -97,7 +181,7 @@ export default function AdminOrders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((order) => (
+                  {filteredOrders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-mono text-sm">
                         #{order.id?.slice(-8)}
@@ -124,9 +208,11 @@ export default function AdminOrders() {
                             {getStatusBadge(order.status)}
                           </SelectTrigger>
                           <SelectContent>
-                            {statusOptions.map(s => (
-                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
+                            <SelectItem value="pendente">Pendente</SelectItem>
+                            <SelectItem value="processamento">Processamento</SelectItem>
+                            <SelectItem value="enviada">Enviada</SelectItem>
+                            <SelectItem value="entregue">Entregue</SelectItem>
+                            <SelectItem value="cancelada">Cancelada</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>

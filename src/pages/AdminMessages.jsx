@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 export default function AdminMessages() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const queryClient = useQueryClient();
 
   const { data: messages, isLoading } = useQuery({
@@ -77,6 +78,14 @@ export default function AdminMessages() {
   };
 
   const unreadCount = messages.filter(m => !m.is_read).length;
+  const repliedCount = messages.filter(m => m.replied_at).length;
+
+  const filteredMessages = messages.filter(m => {
+    if (filterStatus === 'unread') return !m.is_read;
+    if (filterStatus === 'read') return m.is_read && !m.replied_at;
+    if (filterStatus === 'replied') return m.replied_at;
+    return true;
+  });
 
   return (
     <AdminLayout currentPage="AdminMessages">
@@ -85,14 +94,54 @@ export default function AdminMessages() {
         <div>
           <h1 className="text-2xl font-bold text-[#2C3E1F]">Mensagens de Contacto</h1>
           <p className="text-stone-500">
-            {unreadCount > 0 ? `${unreadCount} não lidas` : 'Todas lidas'}
+            {filteredMessages.length} de {messages.length} mensagens
           </p>
+        </div>
+
+        {/* Stats & Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <Card 
+            className={`border-0 shadow-sm cursor-pointer transition-all ${filterStatus === 'all' ? 'ring-2 ring-[#B8956A]' : ''}`}
+            onClick={() => setFilterStatus('all')}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-[#2C3E1F]">{messages.length}</p>
+              <p className="text-xs text-stone-500">Total</p>
+            </CardContent>
+          </Card>
+          <Card 
+            className={`border-0 shadow-sm cursor-pointer transition-all ${filterStatus === 'unread' ? 'ring-2 ring-[#B8956A]' : ''}`}
+            onClick={() => setFilterStatus('unread')}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-amber-600">{unreadCount}</p>
+              <p className="text-xs text-stone-500">Não Lidas</p>
+            </CardContent>
+          </Card>
+          <Card 
+            className={`border-0 shadow-sm cursor-pointer transition-all ${filterStatus === 'read' ? 'ring-2 ring-[#B8956A]' : ''}`}
+            onClick={() => setFilterStatus('read')}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-blue-600">{messages.length - unreadCount - repliedCount}</p>
+              <p className="text-xs text-stone-500">Lidas</p>
+            </CardContent>
+          </Card>
+          <Card 
+            className={`border-0 shadow-sm cursor-pointer transition-all ${filterStatus === 'replied' ? 'ring-2 ring-[#B8956A]' : ''}`}
+            onClick={() => setFilterStatus('replied')}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{repliedCount}</p>
+              <p className="text-xs text-stone-500">Respondidas</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Messages List */}
         {isLoading ? (
           <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#4A5D23]" />
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
           </div>
         ) : messages.length === 0 ? (
           <Card className="text-center py-12">
@@ -103,11 +152,11 @@ export default function AdminMessages() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {messages.map((message) => (
+            {filteredMessages.map((message) => (
               <Card 
                 key={message.id} 
                 className={`cursor-pointer transition-all hover:shadow-md ${
-                  !message.is_read ? 'border-l-4 border-l-[#4A5D23] bg-[#4A5D23]/5' : ''
+                  !message.is_read ? 'border-l-4 border-l-[#B8956A] bg-[#B8956A]/5' : ''
                 }`}
                 onClick={() => openMessage(message)}
               >
@@ -117,7 +166,7 @@ export default function AdminMessages() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-semibold text-[#2C3E1F]">{message.name}</span>
                         {!message.is_read && (
-                          <Badge className="bg-[#4A5D23] text-white text-xs">Nova</Badge>
+                          <Badge className="bg-[#B8956A] text-white text-xs">Nova</Badge>
                         )}
                         {message.replied_at && (
                           <Badge className="bg-green-100 text-green-800 text-xs">
@@ -164,12 +213,12 @@ export default function AdminMessages() {
                 </div>
 
                 <div className="flex gap-4">
-                  <a href={`mailto:${selectedMessage.email}`} className="flex items-center gap-2 text-sm text-[#4A5D23] hover:underline">
+                  <a href={`mailto:${selectedMessage.email}`} className="flex items-center gap-2 text-sm text-[#B8956A] hover:underline">
                     <Mail className="w-4 h-4" />
                     {selectedMessage.email}
                   </a>
                   {selectedMessage.phone && (
-                    <a href={`tel:${selectedMessage.phone}`} className="flex items-center gap-2 text-sm text-[#4A5D23] hover:underline">
+                    <a href={`tel:${selectedMessage.phone}`} className="flex items-center gap-2 text-sm text-[#B8956A] hover:underline">
                       <Phone className="w-4 h-4" />
                       {selectedMessage.phone}
                     </a>
@@ -202,7 +251,7 @@ export default function AdminMessages() {
                     <Button
                       onClick={() => sendReplyMutation.mutate({ message: selectedMessage, reply: replyText })}
                       disabled={!replyText || sendReplyMutation.isPending}
-                      className="mt-3 bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                      className="mt-3 bg-[#B8956A] hover:bg-[#8B7355] text-white"
                     >
                       {sendReplyMutation.isPending ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />

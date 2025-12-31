@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import AdminLayout from '@/components/admin/AdminLayout';
+import StatCard from '@/components/admin/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Users, CalendarDays, Euro, ShoppingBag, 
-  TrendingUp, Clock, AlertCircle, CheckCircle
+  TrendingUp, Clock, AlertCircle, CheckCircle, Bell, Package, MessageSquare, Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -57,28 +61,48 @@ export default function AdminDashboard() {
       value: pendingBookings.length, 
       icon: CalendarDays, 
       color: 'bg-amber-500',
-      bgLight: 'bg-amber-50'
+      bgLight: 'bg-amber-50',
+      link: 'AdminLessons'
     },
     { 
       label: 'Aulas Hoje', 
       value: lessons.length, 
       icon: Clock, 
       color: 'bg-blue-500',
-      bgLight: 'bg-blue-50'
+      bgLight: 'bg-blue-50',
+      link: 'AdminLessons'
+    },
+    { 
+      label: 'Mensagens Não Lidas', 
+      value: messages.length, 
+      icon: MessageSquare, 
+      color: 'bg-purple-500',
+      bgLight: 'bg-purple-50',
+      link: 'AdminMessages'
+    },
+    { 
+      label: 'Encomendas Pendentes', 
+      value: pendingOrders.length, 
+      icon: Package, 
+      color: 'bg-orange-500',
+      bgLight: 'bg-orange-50',
+      link: 'AdminOrders'
     },
     { 
       label: 'Pagamentos Pendentes', 
       value: pendingPayments.length, 
       icon: Euro, 
       color: 'bg-red-500',
-      bgLight: 'bg-red-50'
+      bgLight: 'bg-red-50',
+      link: 'AdminPayments'
     },
     { 
       label: 'Receita Total', 
       value: `${totalRevenue.toFixed(0)}€`, 
       icon: TrendingUp, 
       color: 'bg-green-500',
-      bgLight: 'bg-green-50'
+      bgLight: 'bg-green-50',
+      link: 'AdminPayments'
     },
   ];
 
@@ -91,29 +115,51 @@ export default function AdminDashboard() {
           <p className="text-stone-500">Visão geral do Picadeiro Quinta da Horta</p>
         </div>
 
+        {/* Notifications Banner */}
+        {(pendingBookings.length > 0 || pendingOrders.length > 0 || messages.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] rounded-xl p-4 text-white shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <Bell className="w-6 h-6" />
+              <div className="flex-1">
+                <h3 className="font-semibold">Ações Necessárias</h3>
+                <div className="flex flex-wrap gap-3 mt-1 text-sm">
+                  {pendingBookings.length > 0 && (
+                    <Link to={createPageUrl('AdminLessons')} className="hover:underline">
+                      {pendingBookings.length} reserva{pendingBookings.length > 1 ? 's' : ''} pendente{pendingBookings.length > 1 ? 's' : ''}
+                    </Link>
+                  )}
+                  {pendingOrders.length > 0 && (
+                    <>
+                      {pendingBookings.length > 0 && <span>•</span>}
+                      <Link to={createPageUrl('AdminOrders')} className="hover:underline">
+                        {pendingOrders.length} encomenda{pendingOrders.length > 1 ? 's' : ''} pendente{pendingOrders.length > 1 ? 's' : ''}
+                      </Link>
+                    </>
+                  )}
+                  {messages.length > 0 && (
+                    <>
+                      {(pendingBookings.length > 0 || pendingOrders.length > 0) && <span>•</span>}
+                      <Link to={createPageUrl('AdminMessages')} className="hover:underline">
+                        {messages.length} mensagem{messages.length > 1 ? 'ns' : ''} não lida{messages.length > 1 ? 's' : ''}
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="border-0 shadow-md">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-stone-500">{stat.label}</p>
-                      <p className="text-3xl font-bold text-[#2C3E1F] mt-1">{stat.value}</p>
-                    </div>
-                    <div className={`w-12 h-12 ${stat.bgLight} rounded-xl flex items-center justify-center`}>
-                      <stat.icon className={`w-6 h-6 ${stat.color.replace('bg-', 'text-')}`} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <Link key={stat.label} to={createPageUrl(stat.link)}>
+              <StatCard {...stat} delay={index * 0.05} />
+            </Link>
           ))}
         </div>
 
@@ -133,12 +179,20 @@ export default function AdminDashboard() {
               ) : (
                 <div className="space-y-3">
                   {pendingBookings.slice(0, 5).map((booking) => (
-                    <div key={booking.id} className="p-3 bg-stone-50 rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-[#2C3E1F]">{booking.client_name}</p>
-                        <p className="text-sm text-stone-500">{booking.client_email}</p>
+                    <div key={booking.id} className="p-3 bg-stone-50 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-medium text-[#2C3E1F]">{booking.client_name}</p>
+                          <p className="text-xs text-stone-500">{booking.client_email}</p>
+                        </div>
+                        <Badge className="bg-amber-100 text-amber-800">Pendente</Badge>
                       </div>
-                      <Badge className="bg-amber-100 text-amber-800">Pendente</Badge>
+                      <Link to={createPageUrl('AdminLessons')}>
+                        <Button size="sm" variant="outline" className="w-full mt-2">
+                          <Eye className="w-3 h-3 mr-1" />
+                          Ver Detalhes
+                        </Button>
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -168,7 +222,13 @@ export default function AdminDashboard() {
                           {msg.created_date && format(new Date(msg.created_date), 'dd/MM')}
                         </span>
                       </div>
-                      <p className="text-sm text-stone-500 line-clamp-2">{msg.message}</p>
+                      <p className="text-sm text-stone-500 line-clamp-1 mb-2">{msg.message}</p>
+                      <Link to={createPageUrl('AdminMessages')}>
+                        <Button size="sm" variant="outline" className="w-full">
+                          <Eye className="w-3 h-3 mr-1" />
+                          Ler Mensagem
+                        </Button>
+                      </Link>
                     </div>
                   ))}
                 </div>

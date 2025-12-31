@@ -118,7 +118,7 @@ export default function AdminPayments() {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
+              <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Pagamento
               </Button>
@@ -167,7 +167,7 @@ export default function AdminPayments() {
                 <Button 
                   onClick={() => createPaymentMutation.mutate(newPayment)}
                   disabled={createPaymentMutation.isPending}
-                  className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                  className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
                 >
                   {createPaymentMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Criar Pagamento
@@ -225,7 +225,7 @@ export default function AdminPayments() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#4A5D23]" />
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
               </div>
             ) : (
               <Table>
