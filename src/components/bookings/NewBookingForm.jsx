@@ -34,7 +34,14 @@ export default function NewBookingForm({ user, isBlocked }) {
 
   const { data: lessons } = useQuery({
     queryKey: ['lessons', format(selectedDate, 'yyyy-MM-dd')],
-    queryFn: () => base44.entities.Lesson.filter({ date: format(selectedDate, 'yyyy-MM-dd') }),
+    queryFn: async () => {
+      try {
+        return await base44.entities.Lesson.filter({ date: format(selectedDate, 'yyyy-MM-dd') });
+      } catch (e) {
+        return [];
+      }
+    },
+    enabled: !!selectedDate,
     initialData: []
   });
 
@@ -98,10 +105,13 @@ export default function NewBookingForm({ user, isBlocked }) {
   });
 
   const getAvailableSlots = () => {
-    if (!selectedService) return [];
+    if (!selectedService) return timeSlots;
+    if (!lessons || lessons.length === 0) return timeSlots;
+    
     const bookedSlots = lessons
       .filter(l => l.service_id === selectedService.id && (l.booked_spots >= l.max_spots))
       .map(l => l.start_time);
+    
     return timeSlots.filter(slot => !bookedSlots.includes(slot));
   };
 
@@ -176,46 +186,55 @@ export default function NewBookingForm({ user, isBlocked }) {
       {step === 1 && (
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha o Serviço</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {services.map((service) => (
-              <Card
-                key={service.id}
-                className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
-                  selectedService?.id === service.id 
-                    ? 'border-[#4A5D23] bg-[#4A5D23]/5' 
-                    : 'border-transparent'
-                }`}
-                onClick={() => setSelectedService(service)}
-              >
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">{service.title}</h3>
-                  <div className="flex flex-wrap gap-3 text-sm text-stone-600">
-                    <span className="flex items-center gap-1">
-                      <Euro className="w-4 h-4" />
-                      {service.price}€
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {service.duration} min
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      Máx. {service.max_participants}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="mt-6 flex justify-end">
-            <Button
-              onClick={() => setStep(2)}
-              disabled={!selectedService}
-              className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
-            >
-              Continuar
-            </Button>
-          </div>
+          {services.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-stone-500">Nenhum serviço disponível no momento. Por favor contacte-nos.</p>
+            </Card>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {services.map((service) => (
+                  <Card
+                    key={service.id}
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedService?.id === service.id 
+                        ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedService(service)}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">{service.title}</h3>
+                      <p className="text-sm text-stone-600 mb-4 line-clamp-2">{service.short_description || service.description}</p>
+                      <div className="flex flex-wrap gap-3 text-sm text-stone-600">
+                        <span className="flex items-center gap-1">
+                          <Euro className="w-4 h-4 text-[#B8956A]" />
+                          <strong>{service.price}€</strong>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 text-[#B8956A]" />
+                          {service.duration} min
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4 text-[#B8956A]" />
+                          Máx. {service.max_participants}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={() => setStep(2)}
+                  disabled={!selectedService}
+                  className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
+                >
+                  Continuar
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -224,33 +243,36 @@ export default function NewBookingForm({ user, isBlocked }) {
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha a Data e Hora</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
+            <Card className="border-stone-200">
+              <CardHeader className="bg-stone-50">
                 <CardTitle className="text-lg">Data</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   locale={pt}
                   disabled={(date) => date < new Date() || date > addDays(new Date(), 60)}
-                  className="rounded-md border"
+                  className="rounded-md border-0"
                 />
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Hora</CardTitle>
+            <Card className="border-stone-200">
+              <CardHeader className="bg-stone-50">
+                <CardTitle className="text-lg">Horários Disponíveis</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="grid grid-cols-3 gap-2">
                   {getAvailableSlots().map((slot) => (
                     <Button
                       key={slot}
                       variant={selectedTime === slot ? 'default' : 'outline'}
-                      className={selectedTime === slot ? 'bg-[#4A5D23] hover:bg-[#3A4A1B]' : ''}
+                      className={selectedTime === slot 
+                        ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]' 
+                        : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                      }
                       onClick={() => setSelectedTime(slot)}
                     >
                       {slot}
@@ -258,19 +280,21 @@ export default function NewBookingForm({ user, isBlocked }) {
                   ))}
                 </div>
                 {getAvailableSlots().length === 0 && (
-                  <p className="text-center text-stone-500 py-8">
-                    Não há horários disponíveis para esta data.
-                  </p>
+                  <div className="text-center py-8 text-stone-500">
+                    <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+                    <p>Não há horários disponíveis para esta data.</p>
+                    <p className="text-sm mt-2">Por favor selecione outra data.</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
           </div>
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
+            <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">Voltar</Button>
             <Button
               onClick={() => setStep(3)}
               disabled={!selectedTime}
-              className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white disabled:bg-stone-300"
             >
               Continuar
             </Button>
@@ -282,40 +306,43 @@ export default function NewBookingForm({ user, isBlocked }) {
       {step === 3 && (
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Confirme a Reserva</h2>
-          <Card>
+          <Card className="border-stone-200 overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
+              <CardTitle className="text-xl">Resumo da Reserva</CardTitle>
+            </CardHeader>
             <CardContent className="p-8">
               <div className="space-y-4">
-                <div className="flex justify-between py-3 border-b">
+                <div className="flex justify-between py-3 border-b border-stone-200">
                   <span className="text-stone-600">Serviço</span>
-                  <span className="font-semibold">{selectedService?.title}</span>
+                  <span className="font-semibold text-[#2C3E1F]">{selectedService?.title}</span>
                 </div>
-                <div className="flex justify-between py-3 border-b">
+                <div className="flex justify-between py-3 border-b border-stone-200">
                   <span className="text-stone-600">Data</span>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-[#2C3E1F]">
                     {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
                   </span>
                 </div>
-                <div className="flex justify-between py-3 border-b">
+                <div className="flex justify-between py-3 border-b border-stone-200">
                   <span className="text-stone-600">Hora</span>
-                  <span className="font-semibold">{selectedTime}</span>
+                  <span className="font-semibold text-[#2C3E1F]">{selectedTime}</span>
                 </div>
-                <div className="flex justify-between py-3 border-b">
+                <div className="flex justify-between py-3 border-b border-stone-200">
                   <span className="text-stone-600">Duração</span>
-                  <span className="font-semibold">{selectedService?.duration} minutos</span>
+                  <span className="font-semibold text-[#2C3E1F]">{selectedService?.duration} minutos</span>
                 </div>
-                <div className="flex justify-between py-3">
-                  <span className="text-stone-600">Preço</span>
-                  <span className="font-bold text-xl text-[#4A5D23]">{selectedService?.price}€</span>
+                <div className="flex justify-between py-4 bg-stone-50 -mx-8 px-8 mt-4">
+                  <span className="text-lg font-medium text-stone-700">Total</span>
+                  <span className="font-bold text-2xl text-[#B8956A]">{selectedService?.price}€</span>
                 </div>
               </div>
             </CardContent>
           </Card>
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(2)}>Voltar</Button>
+            <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">Voltar</Button>
             <Button
               onClick={() => createBookingMutation.mutate()}
               disabled={createBookingMutation.isPending}
-              className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
             >
               {createBookingMutation.isPending ? (
                 <>
