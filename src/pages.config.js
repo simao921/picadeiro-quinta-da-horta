@@ -19,8 +19,6 @@ import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
-import Tasks from './pages/Tasks';
-import Calendar from './pages/Calendar';
 import __Layout from './Layout.jsx';
 
 
@@ -46,8 +44,6 @@ export const PAGES = {
     "Home": Home,
     "Services": Services,
     "Shop": Shop,
-    "Tasks": Tasks,
-    "Calendar": Calendar,
 }
 
 export const pagesConfig = {

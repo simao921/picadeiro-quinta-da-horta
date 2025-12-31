@@ -74,8 +74,6 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Galeria', page: 'Gallery' },
     { name: 'Loja', page: 'Shop' },
     { name: 'Reservas', page: 'Bookings' },
-    { name: 'Tarefas', page: 'Tasks', adminOnly: true },
-    { name: 'Calendário', page: 'Calendar' },
     { name: 'Contactos', page: 'Contact' },
   ];
 
@@ -146,9 +144,9 @@ export default function Layout({ children, currentPageName }) {
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                 alt="Picadeiro Quinta da Horta"
-                className="h-12 w-auto"
+                className="h-14 w-auto object-contain"
               />
-              <div className="hidden sm:block">
+              <div className="hidden md:block">
                 <h1 className="text-lg font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
                 <p className="text-xs text-[#8B7355] tracking-wider">QUINTA DA HORTA</p>
               </div>
@@ -261,13 +259,11 @@ export default function Layout({ children, currentPageName }) {
             {/* About */}
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-[#B8956A] flex items-center justify-center">
-                  <span className="text-white font-serif text-xl font-bold">PH</span>
-                </div>
-                <div>
-                  <h3 className="font-serif text-lg font-bold">Picadeiro</h3>
-                  <p className="text-xs text-[#B8956A] tracking-wider">QUINTA DA HORTA</p>
-                </div>
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                  alt="Picadeiro Quinta da Horta"
+                  className="h-16 w-auto object-contain brightness-0 invert"
+                />
               </div>
               <p className="text-stone-300 text-sm leading-relaxed">
                 Centro equestre de excelência em Alcochete, oferecendo aulas de equitação, 
