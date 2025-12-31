@@ -122,7 +122,7 @@ export default function AdminLessons() {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
+              <Button className="bg-[#8B7355] hover:bg-[#6B5845]">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Aula
               </Button>
@@ -185,7 +185,7 @@ export default function AdminLessons() {
                 <Button 
                   onClick={() => createLessonMutation.mutate(newLesson)}
                   disabled={createLessonMutation.isPending}
-                  className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                  className="w-full bg-[#8B7355] hover:bg-[#6B5845]"
                 >
                   {createLessonMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Criar Aula
@@ -200,7 +200,7 @@ export default function AdminLessons() {
           <Card className="lg:col-span-1 border-0 shadow-md">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-[#4A5D23]" />
+                <CalendarDays className="w-5 h-5 text-[#8B7355]" />
                 Calendário
               </CardTitle>
             </CardHeader>
@@ -225,7 +225,7 @@ export default function AdminLessons() {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#4A5D23]" />
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#8B7355]" />
                 </div>
               ) : lessons.length === 0 ? (
                 <div className="text-center py-8 text-stone-500">
@@ -242,7 +242,7 @@ export default function AdminLessons() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                               <div className="flex items-center gap-2 mb-1">
-                                <Clock className="w-4 h-4 text-[#4A5D23]" />
+                                <Clock className="w-4 h-4 text-[#8B7355]" />
                                 <span className="font-semibold">{lesson.start_time} - {lesson.end_time || '--:--'}</span>
                               </div>
                               <p className="text-stone-600">{getServiceName(lesson.service_id)}</p>
