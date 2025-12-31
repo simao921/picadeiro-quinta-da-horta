@@ -155,7 +155,7 @@ export default function NewBookingForm({ user, isBlocked }) {
   return (
     <div className="space-y-6">
       {/* Progress */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-center mb-8 max-w-md mx-auto">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all
@@ -164,7 +164,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               {step > s ? <CheckCircle className="w-5 h-5" /> : s}
             </div>
             {s < 3 && (
-              <div className={`w-24 sm:w-32 h-1 mx-2 rounded transition-all
+              <div className={`w-16 sm:w-24 h-1 mx-2 rounded transition-all
                 ${step > s ? 'bg-[#4A5D23]' : 'bg-stone-200'}`}
               />
             )}
@@ -175,7 +175,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Step 1: Select Service */}
       {step === 1 && (
         <div>
-          <h2 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-6">Escolha o Serviço</h2>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha o Serviço</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {services.map((service) => (
               <Card
@@ -222,7 +222,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Step 2: Select Date & Time */}
       {step === 2 && (
         <div>
-          <h2 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-6">Escolha a Data e Hora</h2>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha a Data e Hora</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -281,7 +281,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Step 3: Confirmation */}
       {step === 3 && (
         <div>
-          <h2 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-6">Confirme a Reserva</h2>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Confirme a Reserva</h2>
           <Card>
             <CardContent className="p-8">
               <div className="space-y-4">

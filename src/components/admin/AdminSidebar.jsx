@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, CalendarDays, Users, UserCog,
+  LayoutDashboard, Brain, CalendarDays, Users, UserCog,
   Settings, ShoppingBag, Package, Tag, Image,
   MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home
 } from 'lucide-react';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', page: 'AdminDashboard' },
+  { icon: Brain, label: 'IA Assistente', page: 'AdminAI' },
   { icon: CalendarDays, label: 'Aulas', page: 'AdminLessons' },
   { icon: Users, label: 'Alunos', page: 'AdminStudents' },
   { icon: UserCog, label: 'Monitores', page: 'AdminInstructors' },
