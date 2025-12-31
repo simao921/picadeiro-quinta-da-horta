@@ -142,10 +142,10 @@ export default function Layout({ children, currentPageName }) {
             {/* Logo */}
             <Link to={createPageUrl('Home')} className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-[#4A5D23] flex items-center justify-center">
-                <span className="text-white font-serif text-xl font-bold">PH</span>
+                <span className="text-white font-serif text-lg font-bold">PH</span>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-serif font-bold text-[#2C3E1F]">Picadeiro</h1>
+                <h1 className="text-lg font-serif font-bold text-[#2C3E1F]">Picadeiro</h1>
                 <p className="text-xs text-[#8B7355] tracking-wider">QUINTA DA HORTA</p>
               </div>
             </Link>
@@ -156,9 +156,9 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={link.page}
                   to={createPageUrl(link.page)}
-                  className={`text-sm font-medium transition-colors hover:text-[#4A5D23] ${
+                  className={`text-sm font-medium transition-colors hover:text-[#4A5D23] pb-1 ${
                     currentPageName === link.page 
-                      ? 'text-[#4A5D23] border-b-2 border-[#C9A961]' 
+                      ? 'text-[#4A5D23] border-b-2 border-[#4A5D23]' 
                       : 'text-[#2C3E1F]'
                   }`}
                 >
