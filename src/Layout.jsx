@@ -81,11 +81,11 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen flex flex-col bg-stone-50">
       <style>{`
         :root {
-          --color-primary: #4A5D23;
-          --color-primary-light: #6B7F3A;
+          --color-primary: #2D2D2D;
+          --color-primary-light: #4A4A4A;
           --color-secondary: #8B7355;
-          --color-accent: #C9A961;
-          --color-dark: #2C3E1F;
+          --color-accent: #B8956A;
+          --color-dark: #1A1A1A;
           --color-cream: #F5F3EF;
           --color-stone: #E8E4DD;
         }
@@ -106,23 +106,23 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
 
       {/* Top Bar */}
-      <div className="bg-[#2C3E1F] text-white py-2 px-4 text-sm hidden md:block">
+      <div className="bg-[#1A1A1A] text-white py-2 px-4 text-sm hidden md:block">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <a href="tel:+351932111786" className="flex items-center gap-2 hover:text-[#C9A961] transition-colors">
+            <a href="tel:+351932111786" className="flex items-center gap-2 hover:text-[#B8956A] transition-colors">
               <Phone className="w-3.5 h-3.5" />
               +351 932 111 786
             </a>
-            <a href="mailto:picadeiroquintadahortagf@gmail.com" className="flex items-center gap-2 hover:text-[#C9A961] transition-colors">
+            <a href="mailto:picadeiroquintadahortagf@gmail.com" className="flex items-center gap-2 hover:text-[#B8956A] transition-colors">
               <Mail className="w-3.5 h-3.5" />
               picadeiroquintadahortagf@gmail.com
             </a>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-[#C9A961] transition-colors">
+            <a href="#" className="hover:text-[#B8956A] transition-colors">
               <Facebook className="w-4 h-4" />
             </a>
-            <a href="#" className="hover:text-[#C9A961] transition-colors">
+            <a href="#" className="hover:text-[#B8956A] transition-colors">
               <Instagram className="w-4 h-4" />
             </a>
           </div>
@@ -141,11 +141,11 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to={createPageUrl('Home')} className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#4A5D23] flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-[#2D2D2D] flex items-center justify-center">
                 <span className="text-white font-serif text-lg font-bold">PH</span>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg font-serif font-bold text-[#2C3E1F]">Picadeiro</h1>
+                <h1 className="text-lg font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
                 <p className="text-xs text-[#8B7355] tracking-wider">QUINTA DA HORTA</p>
               </div>
             </Link>
@@ -156,10 +156,10 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={link.page}
                   to={createPageUrl(link.page)}
-                  className={`text-sm font-medium transition-colors hover:text-[#4A5D23] pb-1 ${
+                  className={`text-sm font-medium transition-colors hover:text-[#B8956A] pb-1 ${
                     currentPageName === link.page 
-                      ? 'text-[#4A5D23] border-b-2 border-[#4A5D23]' 
-                      : 'text-[#2C3E1F]'
+                      ? 'text-[#B8956A] border-b-2 border-[#B8956A]' 
+                      : 'text-[#1A1A1A]'
                   }`}
                 >
                   {link.name}
@@ -177,7 +177,7 @@ export default function Layout({ children, currentPageName }) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-[#4A5D23] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-[#2D2D2D] flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
                           {user.full_name?.charAt(0) || user.email?.charAt(0)}
                         </span>
@@ -201,7 +201,7 @@ export default function Layout({ children, currentPageName }) {
               ) : (
                 <Button 
                   onClick={() => base44.auth.redirectToLogin()}
-                  className="bg-[#4A5D23] hover:bg-[#3A4A1B] text-white"
+                  className="bg-[#2D2D2D] hover:bg-[#1A1A1A] text-white"
                 >
                   Entrar
                 </Button>
@@ -247,18 +247,18 @@ export default function Layout({ children, currentPageName }) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#2C3E1F] text-white">
+      <footer className="bg-[#1A1A1A] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             {/* About */}
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-[#C9A961] flex items-center justify-center">
-                  <span className="text-[#2C3E1F] font-serif text-xl font-bold">PH</span>
+                <div className="w-12 h-12 rounded-full bg-[#B8956A] flex items-center justify-center">
+                  <span className="text-white font-serif text-xl font-bold">PH</span>
                 </div>
                 <div>
                   <h3 className="font-serif text-lg font-bold">Picadeiro</h3>
-                  <p className="text-xs text-[#C9A961] tracking-wider">QUINTA DA HORTA</p>
+                  <p className="text-xs text-[#B8956A] tracking-wider">QUINTA DA HORTA</p>
                 </div>
               </div>
               <p className="text-stone-300 text-sm leading-relaxed">
@@ -269,7 +269,7 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Quick Links */}
             <div>
-              <h4 className="font-serif text-lg font-semibold mb-6 text-[#C9A961]">Links Rápidos</h4>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Links Rápidos</h4>
               <ul className="space-y-3">
                 {navLinks.map((link) => (
                   <li key={link.page}>
@@ -286,7 +286,7 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Services */}
             <div>
-              <h4 className="font-serif text-lg font-semibold mb-6 text-[#C9A961]">Serviços</h4>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Serviços</h4>
               <ul className="space-y-3 text-sm text-stone-300">
                 <li>Aulas Particulares</li>
                 <li>Aulas em Grupo</li>
@@ -297,23 +297,23 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Contact */}
             <div>
-              <h4 className="font-serif text-lg font-semibold mb-6 text-[#C9A961]">Contactos</h4>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Contactos</h4>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-[#C9A961] flex-shrink-0 mt-0.5" />
+                  <MapPin className="w-5 h-5 text-[#B8956A] flex-shrink-0 mt-0.5" />
                   <span className="text-stone-300 text-sm">
                     Rua das Hortas 83 – Fonte da Senhora<br />
                     Alcochete, Portugal
                   </span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-[#C9A961]" />
+                  <Phone className="w-5 h-5 text-[#B8956A]" />
                   <a href="tel:+351932111786" className="text-stone-300 hover:text-white text-sm">
                     +351 932 111 786
                   </a>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-[#C9A961]" />
+                  <Mail className="w-5 h-5 text-[#B8956A]" />
                   <a href="mailto:picadeiroquintadahortagf@gmail.com" className="text-stone-300 hover:text-white text-sm break-all">
                     picadeiroquintadahortagf@gmail.com
                   </a>
@@ -327,10 +327,10 @@ export default function Layout({ children, currentPageName }) {
               © {new Date().getFullYear()} Picadeiro Quinta da Horta. Todos os direitos reservados.
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="text-stone-400 hover:text-[#C9A961] transition-colors">
+              <a href="#" className="text-stone-400 hover:text-[#B8956A] transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-stone-400 hover:text-[#C9A961] transition-colors">
+              <a href="#" className="text-stone-400 hover:text-[#B8956A] transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
             </div>
@@ -342,8 +342,8 @@ export default function Layout({ children, currentPageName }) {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 w-12 h-12 bg-[#4A5D23] text-white rounded-full shadow-lg 
-                     flex items-center justify-center hover:bg-[#3A4A1B] transition-all duration-300
+          className="fixed bottom-6 right-6 w-12 h-12 bg-[#2D2D2D] text-white rounded-full shadow-lg 
+                     flex items-center justify-center hover:bg-[#1A1A1A] transition-all duration-300
                      animate-in fade-in slide-in-from-bottom-4 z-50"
         >
           <ChevronUp className="w-6 h-6" />
