@@ -116,17 +116,17 @@ export default function Gallery() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-3">
             {categories.map((cat) => (
-              <Button
-                key={cat.id}
-                variant={selectedCategory === cat.id ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={selectedCategory === cat.id 
-                  ? 'bg-[#4A5D23] hover:bg-[#3A4A1B]' 
-                  : 'border-stone-300 hover:bg-stone-100'
-                }
-              >
-                {cat.label}
-              </Button>
+            <Button
+              key={cat.id}
+              variant={selectedCategory === cat.id ? 'default' : 'outline'}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={selectedCategory === cat.id 
+                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white' 
+                : 'border-stone-300 hover:bg-stone-100 hover:border-[#B8956A]'
+              }
+            >
+              {cat.label}
+            </Button>
             ))}
           </div>
         </div>

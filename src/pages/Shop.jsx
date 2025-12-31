@@ -187,8 +187,8 @@ export default function Shop() {
                   size="sm"
                   onClick={() => setSelectedCategory(cat.id)}
                   className={selectedCategory === cat.id 
-                    ? 'bg-[#4A5D23] hover:bg-[#3A4A1B]' 
-                    : ''
+                    ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]' 
+                    : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
                   }
                 >
                   {cat.label}
@@ -315,7 +315,7 @@ export default function Shop() {
                       <div className="flex items-center gap-2">
                         {product.sale_price ? (
                           <>
-                            <span className="font-bold text-lg text-[#4A5D23]">
+                            <span className="font-bold text-lg text-[#B8956A]">
                               {product.sale_price.toFixed(2)}€
                             </span>
                             <span className="text-sm text-stone-400 line-through">
@@ -323,7 +323,7 @@ export default function Shop() {
                             </span>
                           </>
                         ) : (
-                          <span className="font-bold text-lg text-[#4A5D23]">
+                          <span className="font-bold text-lg text-[#B8956A]">
                             {product.price.toFixed(2)}€
                           </span>
                         )}

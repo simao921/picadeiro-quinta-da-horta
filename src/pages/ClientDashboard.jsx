@@ -111,7 +111,7 @@ export default function ClientDashboard() {
   if (!user) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4A5D23]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B8956A]"></div>
       </div>
     );
   }
@@ -233,10 +233,16 @@ export default function ClientDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="bg-white border">
-            <TabsTrigger value="bookings">Minhas Aulas</TabsTrigger>
-            <TabsTrigger value="payments">Pagamentos</TabsTrigger>
-            <TabsTrigger value="orders">Encomendas</TabsTrigger>
+          <TabsList className="bg-white border shadow-sm">
+            <TabsTrigger value="bookings" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
+              Minhas Aulas
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
+              Pagamentos
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
+              Encomendas
+            </TabsTrigger>
           </TabsList>
 
           {/* Bookings Tab */}
@@ -245,7 +251,7 @@ export default function ClientDashboard() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Minhas Reservas</CardTitle>
                 <Link to={createPageUrl('Bookings')}>
-                  <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
+                  <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     Nova Reserva
                   </Button>
@@ -425,16 +431,17 @@ export default function ClientDashboard() {
                               {order.total.toFixed(2)}€
                             </p>
                             <Badge className={
-                              order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                              order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                              order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                              order.status === 'entregue' ? 'bg-green-100 text-green-800' :
+                              order.status === 'enviada' ? 'bg-blue-100 text-blue-800' :
+                              order.status === 'cancelada' ? 'bg-red-100 text-red-800' :
+                              order.status === 'processamento' ? 'bg-purple-100 text-purple-800' :
                               'bg-amber-100 text-amber-800'
                             }>
-                              {order.status === 'pending' ? 'Pendente' :
-                               order.status === 'processing' ? 'Em Processamento' :
-                               order.status === 'shipped' ? 'Enviado' :
-                               order.status === 'delivered' ? 'Entregue' :
-                               'Cancelado'}
+                              {order.status === 'pendente' ? 'Pendente' :
+                               order.status === 'processamento' ? 'Processamento' :
+                               order.status === 'enviada' ? 'Enviada' :
+                               order.status === 'entregue' ? 'Entregue' :
+                               'Cancelada'}
                             </Badge>
                           </div>
                         </div>

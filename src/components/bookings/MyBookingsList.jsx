@@ -111,7 +111,7 @@ export default function MyBookingsList({ user }) {
               if (!lesson) return null;
 
               return (
-                <Card key={booking.id} className="border-l-4 border-l-[#4A5D23]">
+                <Card key={booking.id} className="border-l-4 border-l-[#B8956A]">
                   <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">

@@ -147,7 +147,7 @@ export default function AdminShop() {
             if (!open) resetForm();
           }}>
             <DialogTrigger asChild>
-              <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
+              <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Produto
               </Button>
@@ -245,7 +245,7 @@ export default function AdminShop() {
                 <Button 
                   onClick={handleSubmit}
                   disabled={createProductMutation.isPending || updateProductMutation.isPending}
-                  className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                  className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
                 >
                   {(createProductMutation.isPending || updateProductMutation.isPending) && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

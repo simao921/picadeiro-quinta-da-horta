@@ -147,7 +147,7 @@ export default function ServicesPreview() {
           <Link to={createPageUrl('Services')}>
             <Button 
               size="lg" 
-              className="bg-[#8B7355] hover:bg-[#6B5845] text-white px-8"
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white px-8 shadow-lg shadow-[#B8956A]/30"
             >
               Ver Todos os Serviços
               <ArrowRight className="w-5 h-5 ml-2" />

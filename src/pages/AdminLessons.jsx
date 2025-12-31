@@ -122,7 +122,7 @@ export default function AdminLessons() {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#8B7355] hover:bg-[#6B5845]">
+              <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Aula
               </Button>
@@ -185,7 +185,7 @@ export default function AdminLessons() {
                 <Button 
                   onClick={() => createLessonMutation.mutate(newLesson)}
                   disabled={createLessonMutation.isPending}
-                  className="w-full bg-[#8B7355] hover:bg-[#6B5845]"
+                  className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
                 >
                   {createLessonMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Criar Aula

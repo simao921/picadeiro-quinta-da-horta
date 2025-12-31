@@ -132,7 +132,7 @@ export default function Cart() {
         total,
         coupon_code: appliedCoupon?.code,
         shipping_address: shippingAddress,
-        status: 'pending'
+        status: 'pendente'
       });
 
       // Update coupon usage
@@ -200,7 +200,7 @@ export default function Cart() {
             A sua encomenda foi processada com sucesso. Receberá um email de confirmação em breve.
           </p>
           <Link to={createPageUrl('Shop')}>
-            <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
+            <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
               Continuar a Comprar
             </Button>
           </Link>
@@ -237,7 +237,7 @@ export default function Cart() {
                 Adicione alguns produtos para começar.
               </p>
               <Link to={createPageUrl('Shop')}>
-                <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
+                <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
                   Explorar Produtos
                 </Button>
               </Link>
@@ -423,7 +423,7 @@ export default function Cart() {
                   {step === 'cart' ? (
                     <Button
                       onClick={handleCheckout}
-                      className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                      className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
                     >
                       <CreditCard className="w-5 h-5 mr-2" />
                       Finalizar Compra
@@ -433,7 +433,7 @@ export default function Cart() {
                       <Button
                         onClick={handlePlaceOrder}
                         disabled={createOrderMutation.isPending}
-                        className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                        className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
                       >
                         {createOrderMutation.isPending ? (
                           <>

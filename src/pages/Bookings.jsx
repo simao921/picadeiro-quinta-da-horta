@@ -161,15 +161,15 @@ export default function Bookings() {
 
           <Tabs defaultValue="bookings" className="space-y-8">
             <TabsList className="bg-white border shadow-sm">
-              <TabsTrigger value="bookings" className="data-[state=active]:bg-[#4A5D23] data-[state=active]:text-white">
+              <TabsTrigger value="bookings" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
                 <CalendarDays className="w-4 h-4 mr-2" />
                 Minhas Aulas
               </TabsTrigger>
-              <TabsTrigger value="new" className="data-[state=active]:bg-[#4A5D23] data-[state=active]:text-white">
+              <TabsTrigger value="new" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Reserva
               </TabsTrigger>
-              <TabsTrigger value="payments" className="data-[state=active]:bg-[#4A5D23] data-[state=active]:text-white">
+              <TabsTrigger value="payments" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
                 <Euro className="w-4 h-4 mr-2" />
                 Pagamentos
               </TabsTrigger>

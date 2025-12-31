@@ -213,7 +213,7 @@ export default function Services() {
                           <Link to={createPageUrl('Bookings')}>
                             <Button 
                               size="lg" 
-                              className="bg-[#4A5D23] hover:bg-[#3A4A1B] text-white w-fit"
+                              className="bg-[#B8956A] hover:bg-[#8B7355] text-white w-fit shadow-lg shadow-[#B8956A]/30"
                             >
                               Reservar Agora
                               <ArrowRight className="w-5 h-5 ml-2" />
@@ -231,20 +231,25 @@ export default function Services() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-[#4A5D23]">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="font-serif text-3xl font-bold text-white mb-4">
+      <section className="relative py-20 bg-gradient-to-r from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#B8956A] rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8B7355] rounded-full blur-3xl" />
+        </div>
+        <div className="max-w-4xl mx-auto px-4 text-center relative">
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">
             Não Encontrou o Que Procura?
           </h2>
-          <p className="text-stone-300 mb-8">
+          <p className="text-stone-300 text-lg mb-8">
             Contacte-nos e teremos todo o gosto em criar uma experiência personalizada para si.
           </p>
           <Link to={createPageUrl('Contact')}>
             <Button 
               size="lg" 
-              className="bg-[#C9A961] hover:bg-[#B89A51] text-[#2C3E1F] font-semibold"
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-8"
             >
               Fale Connosco
+              <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
         </div>

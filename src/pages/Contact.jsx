@@ -313,7 +313,7 @@ export default function Contact() {
                       type="submit"
                       size="lg"
                       disabled={sendEmailMutation.isPending}
-                      className="w-full sm:w-auto bg-[#4A5D23] hover:bg-[#3A4A1B] text-white h-12 px-8"
+                      className="w-full sm:w-auto bg-[#B8956A] hover:bg-[#8B7355] text-white h-12 px-8 shadow-lg"
                     >
                       {sendEmailMutation.isPending ? (
                         <>
