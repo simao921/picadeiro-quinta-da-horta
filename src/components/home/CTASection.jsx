@@ -15,7 +15,7 @@ export default function CTASection() {
           alt="Cavalos ao pôr do sol"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#2C3E1F]/95 via-[#2C3E1F]/85 to-[#2C3E1F]/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/95 via-[#1A1A1A]/85 to-[#1A1A1A]/70" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -28,7 +28,7 @@ export default function CTASection() {
           >
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
               Pronto para Começar a Sua
-              <span className="text-[#C9A961]"> Jornada Equestre?</span>
+              <span className="text-[#B8956A]"> Jornada Equestre?</span>
             </h2>
             
             <p className="text-lg text-stone-300 leading-relaxed mb-8">
