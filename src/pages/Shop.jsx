@@ -108,20 +108,22 @@ export default function Shop() {
     });
 
   const addToCart = (product) => {
+    let updatedCart;
     const existingItem = cart.find(item => item.id === product.id);
     if (existingItem) {
-      setCart(cart.map(item => 
+      updatedCart = cart.map(item => 
         item.id === product.id 
           ? { ...item, quantity: item.quantity + 1 }
           : item
-      ));
+      );
     } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+      updatedCart = [...cart, { ...product, quantity: 1 }];
     }
+    setCart(updatedCart);
     toast.success(`${product.name} adicionado ao carrinho!`);
     
     // Save to localStorage
-    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
   return (
@@ -244,13 +246,17 @@ export default function Shop() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Card className="group overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all">
-                    <div className="aspect-square relative overflow-hidden bg-stone-100">
-                      <img
-                        src={product.images?.[0] || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80'}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 
-                                   group-hover:scale-110"
-                      />
+                  <div className="aspect-square relative overflow-hidden bg-stone-100">
+                    <img
+                      src={product.images?.[0] || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80'}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-500 
+                                 group-hover:scale-110"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400&q=80';
+                      }}
+                    />
                       
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex flex-col gap-2">
