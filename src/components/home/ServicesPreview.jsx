@@ -61,8 +61,8 @@ export default function ServicesPreview() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#4A5D23]/10 rounded-full 
-                       text-[#4A5D23] text-sm font-medium mb-4"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/10 rounded-full 
+                       text-[#8B7355] text-sm font-medium mb-4"
           >
             <Trophy className="w-4 h-4" />
             Os Nossos Serviços
@@ -112,12 +112,12 @@ export default function ServicesPreview() {
                   <div className="absolute bottom-4 right-4 w-14 h-14 bg-white rounded-xl 
                                   shadow-lg flex items-center justify-center 
                                   group-hover:scale-110 transition-transform duration-300">
-                    <service.icon className="w-7 h-7 text-[#4A5D23]" />
+                    <service.icon className="w-7 h-7 text-[#8B7355]" />
                   </div>
                 </div>
                 <CardContent className="p-6">
-                  <h3 className="font-serif text-xl font-bold text-[#2C3E1F] mb-2 
-                                 group-hover:text-[#4A5D23] transition-colors">
+                  <h3 className="font-serif text-xl font-bold text-[#1A1A1A] mb-2 
+                                 group-hover:text-[#8B7355] transition-colors">
                     {service.title}
                   </h3>
                   <p className="text-stone-600 text-sm leading-relaxed mb-4">
@@ -147,7 +147,7 @@ export default function ServicesPreview() {
           <Link to={createPageUrl('Services')}>
             <Button 
               size="lg" 
-              className="bg-[#4A5D23] hover:bg-[#3A4A1B] text-white px-8"
+              className="bg-[#8B7355] hover:bg-[#6B5845] text-white px-8"
             >
               Ver Todos os Serviços
               <ArrowRight className="w-5 h-5 ml-2" />

@@ -27,7 +27,7 @@ const menuItems = [
 export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
   return (
     <aside className={cn(
-      "fixed left-0 top-0 h-screen bg-[#2C3E1F] text-white transition-all duration-300 z-40",
+      "fixed left-0 top-0 h-screen bg-[#1A1A1A] text-white transition-all duration-300 z-40",
       collapsed ? "w-16" : "w-64"
     )}>
       <div className="flex flex-col h-full">
@@ -35,8 +35,8 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#C9A961] rounded-lg flex items-center justify-center">
-                <span className="text-[#2C3E1F] font-bold">PH</span>
+              <div className="w-10 h-10 bg-[#B8956A] rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">PH</span>
               </div>
               <div>
                 <h2 className="font-semibold text-sm">Admin Panel</h2>
@@ -63,7 +63,7 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
                 currentPage === item.page
-                  ? "bg-[#C9A961] text-[#2C3E1F]"
+                  ? "bg-[#B8956A] text-white"
                   : "text-stone-300 hover:bg-white/10 hover:text-white"
               )}
             >

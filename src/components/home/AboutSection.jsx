@@ -30,7 +30,7 @@ const features = [
 
 export default function AboutSection() {
   return (
-    <section className="py-24 bg-[#2C3E1F] relative overflow-hidden">
+    <section className="py-24 bg-[#1A1A1A] relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-1/3 h-full opacity-10">
         <img
@@ -48,8 +48,8 @@ export default function AboutSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/20 
-                           rounded-full text-[#C9A961] text-sm font-medium mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 
+                           rounded-full text-[#B8956A] text-sm font-medium mb-6">
               Sobre Nós
             </span>
             
@@ -75,8 +75,8 @@ export default function AboutSection() {
                   transition={{ delay: index * 0.1 }}
                   className="flex items-start gap-3 p-4 bg-white/5 rounded-xl backdrop-blur-sm"
                 >
-                  <div className="w-10 h-10 bg-[#C9A961]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <feature.icon className="w-5 h-5 text-[#C9A961]" />
+                  <div className="w-10 h-10 bg-[#B8956A]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <feature.icon className="w-5 h-5 text-[#B8956A]" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-white text-sm">{feature.title}</h4>
@@ -89,7 +89,7 @@ export default function AboutSection() {
             <Link to={createPageUrl('Contact')}>
               <Button 
                 size="lg" 
-                className="bg-[#C9A961] hover:bg-[#B89A51] text-[#2C3E1F] font-semibold"
+                className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold"
               >
                 Contacte-nos
               </Button>
@@ -141,11 +141,11 @@ export default function AboutSection() {
             {/* Floating Card */}
             <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-2xl p-6 max-w-xs">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-[#4A5D23] rounded-xl flex items-center justify-center">
-                  <Award className="w-8 h-8 text-[#C9A961]" />
+                <div className="w-16 h-16 bg-[#8B7355] rounded-xl flex items-center justify-center">
+                  <Award className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <p className="font-serif text-2xl font-bold text-[#2C3E1F]">15+ Anos</p>
+                  <p className="font-serif text-2xl font-bold text-[#1A1A1A]">15+ Anos</p>
                   <p className="text-stone-500 text-sm">de Experiência</p>
                 </div>
               </div>
