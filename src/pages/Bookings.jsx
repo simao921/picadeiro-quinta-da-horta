@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import NewBookingForm from '@/components/bookings/NewBookingForm';
 import MyBookingsList from '@/components/bookings/MyBookingsList';
 import PaymentsSection from '@/components/bookings/PaymentsSection';
+import AIRecommendations from '@/components/recommendations/AIRecommendations';
 import { useQuery } from '@tanstack/react-query';
 
 export default function Bookings() {
@@ -118,6 +119,10 @@ export default function Bookings() {
       {/* Main Content */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* AI Recommendations */}
+          <div className="mb-12">
+            <AIRecommendations user={user} />
+          </div>
           {/* Account Status Alert */}
           {isBlocked && (
             <motion.div
