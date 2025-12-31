@@ -27,26 +27,61 @@ export default function Contact() {
       // Save to database
       await base44.entities.ContactMessage.create(data);
       
-      // Send email notification
+      // Send email to admin
       await base44.integrations.Core.SendEmail({
+        from_name: 'Picadeiro Quinta da Horta',
         to: 'picadeiroquintadahortagf@gmail.com',
         subject: `[Website] ${data.subject || 'Nova mensagem de contacto'}`,
         body: `
-          <h2>Nova mensagem de contacto</h2>
-          <p><strong>Nome:</strong> ${data.name}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
-          <p><strong>Telefone:</strong> ${data.phone || 'Não fornecido'}</p>
-          <p><strong>Assunto:</strong> ${data.subject || 'Não especificado'}</p>
-          <hr />
-          <p><strong>Mensagem:</strong></p>
-          <p>${data.message}</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2C3E1F;">Nova mensagem de contacto</h2>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Nome:</strong> ${data.name}</p>
+              <p><strong>Email:</strong> ${data.email}</p>
+              <p><strong>Telefone:</strong> ${data.phone || 'Não fornecido'}</p>
+              <p><strong>Assunto:</strong> ${data.subject || 'Não especificado'}</p>
+            </div>
+            <div style="background: white; padding: 20px; border-left: 4px solid #B8956A; margin: 20px 0;">
+              <p><strong>Mensagem:</strong></p>
+              <p style="white-space: pre-wrap;">${data.message}</p>
+            </div>
+          </div>
+        `
+      });
+      
+      // Send automatic reply to client
+      await base44.integrations.Core.SendEmail({
+        from_name: 'Picadeiro Quinta da Horta',
+        to: data.email,
+        subject: 'Recebemos a sua mensagem - Picadeiro Quinta da Horta',
+        body: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2C3E1F;">Olá ${data.name}!</h2>
+            <p>Agradecemos o seu contacto. Recebemos a sua mensagem e responderemos o mais brevemente possível.</p>
+            
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>A sua mensagem:</strong></p>
+              <p style="white-space: pre-wrap;">${data.message}</p>
+            </div>
+            
+            <p>Atenciosamente,<br>
+            <strong>Equipa Picadeiro Quinta da Horta</strong></p>
+            
+            <hr style="border: 0; border-top: 1px solid #ddd; margin: 30px 0;">
+            
+            <div style="color: #666; font-size: 12px;">
+              <p>📍 Rua das Hortas 83 – Fonte da Senhora, Alcochete</p>
+              <p>📞 +351 932 111 786</p>
+              <p>✉️ picadeiroquintadahortagf@gmail.com</p>
+            </div>
+          </div>
         `
       });
       
       return data;
     },
     onSuccess: () => {
-      toast.success('Mensagem enviada com sucesso!');
+      toast.success('Mensagem enviada com sucesso! Receberá uma resposta em breve.');
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     },
     onError: () => {
