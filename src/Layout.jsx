@@ -33,6 +33,17 @@ export default function Layout({ children, currentPageName }) {
       }
     };
     checkAuth();
+
+    // Update cart count
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const countEl = document.getElementById('cart-count');
+      if (countEl) countEl.textContent = count;
+    };
+    updateCartCount();
+    window.addEventListener('storage', updateCartCount);
+    return () => window.removeEventListener('storage', updateCartCount);
   }, []);
 
   useEffect(() => {
@@ -268,13 +279,13 @@ export default function Layout({ children, currentPageName }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             {/* About */}
             <div>
-              <div className="flex items-center gap-3 mb-6">
+              <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                   alt="Picadeiro Quinta da Horta"
                   className="h-16 w-auto object-contain brightness-0 invert"
                 />
-              </div>
+              </Link>
               <p className="text-stone-300 text-sm leading-relaxed">
                 Centro equestre de excelência em Alcochete, oferecendo aulas de equitação, 
                 hipoterapia e experiências únicas com cavalos.

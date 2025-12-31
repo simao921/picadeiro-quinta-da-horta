@@ -427,7 +427,8 @@ export default function Shop() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-shadow h-full flex flex-col bg-white">
+                    <Link to={`${createPageUrl('ProductDetail')}?id=${product.id}`}>
+                    <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-shadow h-full flex flex-col bg-white cursor-pointer">
                       <div className="relative h-52 overflow-hidden group">
                         <LazyImage
                           src={product.images?.[0] || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'}
@@ -491,6 +492,7 @@ export default function Shop() {
                         </div>
                       </CardContent>
                     </Card>
+                  </Link>
                   </motion.div>
                 ))}
               </AnimatePresence>

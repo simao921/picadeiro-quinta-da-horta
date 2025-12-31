@@ -19,6 +19,8 @@ import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
+import ProductDetail from './pages/ProductDetail';
+import AdminContent from './pages/AdminContent';
 import __Layout from './Layout.jsx';
 
 
@@ -44,6 +46,8 @@ export const PAGES = {
     "Home": Home,
     "Services": Services,
     "Shop": Shop,
+    "ProductDetail": ProductDetail,
+    "AdminContent": AdminContent,
 }
 
 export const pagesConfig = {
