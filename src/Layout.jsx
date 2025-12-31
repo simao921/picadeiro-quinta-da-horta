@@ -153,22 +153,20 @@ export default function Layout({ children, currentPageName }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-8">
-              {navLinks
-                .filter(link => !link.adminOnly || user?.role === 'admin')
-                .map((link) => (
-                  <Link
-                    key={link.page}
-                    to={createPageUrl(link.page)}
-                    className={`text-sm font-medium transition-colors hover:text-[#B8956A] pb-1 ${
-                      currentPageName === link.page 
-                        ? 'text-[#B8956A] border-b-2 border-[#B8956A]' 
-                        : 'text-[#1A1A1A]'
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+            <nav className="hidden lg:flex items-center gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.page}
+                  to={createPageUrl(link.page)}
+                  className={`text-sm font-medium transition-all duration-200 pb-1 border-b-2 ${
+                    currentPageName === link.page 
+                      ? 'text-[#B8956A] border-[#B8956A]' 
+                      : 'text-[#1A1A1A] hover:text-[#B8956A] border-transparent'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
             </nav>
 
             {/* Right Side */}
@@ -226,22 +224,20 @@ export default function Layout({ children, currentPageName }) {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-t shadow-lg">
             <nav className="flex flex-col p-4 gap-2">
-              {navLinks
-                .filter(link => !link.adminOnly || user?.role === 'admin')
-                .map((link) => (
-                  <Link
-                    key={link.page}
-                    to={createPageUrl(link.page)}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-3 rounded-lg transition-colors ${
-                      currentPageName === link.page 
-                        ? 'bg-[#2D2D2D] text-white' 
-                        : 'text-[#2D2D2D] hover:bg-stone-100'
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+              {navLinks.map((link) => (
+                <Link
+                  key={link.page}
+                  to={createPageUrl(link.page)}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-3 rounded-lg transition-colors ${
+                    currentPageName === link.page 
+                      ? 'bg-[#B8956A] text-white' 
+                      : 'text-[#2D2D2D] hover:bg-stone-100'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
             </nav>
           </div>
         )}
@@ -275,18 +271,16 @@ export default function Layout({ children, currentPageName }) {
             <div>
               <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Links Rápidos</h4>
               <ul className="space-y-3">
-                {navLinks
-                .filter(link => !link.adminOnly)
-                .map((link) => (
-                  <li key={link.page}>
-                    <Link 
-                      to={createPageUrl(link.page)}
-                      className="text-stone-300 hover:text-white transition-colors text-sm"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
+                {navLinks.map((link) => (
+                <li key={link.page}>
+                  <Link 
+                    to={createPageUrl(link.page)}
+                    className="text-stone-300 hover:text-white transition-colors text-sm"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
               </ul>
             </div>
 
