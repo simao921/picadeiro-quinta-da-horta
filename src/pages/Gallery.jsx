@@ -20,18 +20,22 @@ const categories = [
 ];
 
 const defaultImages = [
-  { id: '1', image_url: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80', title: 'Cavalo Elegante', category: 'cavalos' },
+  { id: '1', image_url: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80', title: 'Cavalo no Campo', category: 'cavalos', is_featured: true },
   { id: '2', image_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80', title: 'Aula de Equitação', category: 'aulas' },
   { id: '3', image_url: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800&q=80', title: 'Treino em Grupo', category: 'aulas' },
-  { id: '4', image_url: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80', title: 'Instalações', category: 'instalacoes' },
+  { id: '4', image_url: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80', title: 'Picadeiro Principal', category: 'instalacoes' },
   { id: '5', image_url: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=800&q=80', title: 'Momento Especial', category: 'eventos' },
-  { id: '6', image_url: 'https://images.unsplash.com/photo-1460134846237-51c777df6111?w=800&q=80', title: 'Pôr do Sol', category: 'instalacoes' },
-  { id: '7', image_url: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&q=80', title: 'Cavalo Branco', category: 'cavalos' },
-  { id: '8', image_url: 'https://images.unsplash.com/photo-1566068256805-4aeacd8ca92d?w=800&q=80', title: 'Competição', category: 'competicoes' },
-  { id: '9', image_url: 'https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?w=800&q=80', title: 'Arena', category: 'instalacoes' },
+  { id: '6', image_url: 'https://images.unsplash.com/photo-1460134846237-51c777df6111?w=800&q=80', title: 'Cavalos ao Pôr do Sol', category: 'instalacoes', is_featured: true },
+  { id: '7', image_url: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&q=80', title: 'Cavalo Branco em Treino', category: 'cavalos' },
+  { id: '8', image_url: 'https://images.unsplash.com/photo-1566068256805-4aeacd8ca92d?w=800&q=80', title: 'Competição de Saltos', category: 'competicoes', is_featured: true },
+  { id: '9', image_url: 'https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?w=800&q=80', title: 'Arena de Treino', category: 'instalacoes' },
   { id: '10', image_url: 'https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?w=800&q=80', title: 'Evento Especial', category: 'eventos' },
-  { id: '11', image_url: 'https://images.unsplash.com/photo-1628605210289-d24c3a5d9bc3?w=800&q=80', title: 'Cavaleiro', category: 'competicoes' },
-  { id: '12', image_url: 'https://images.unsplash.com/photo-1593179508887-c4b67aba5ad0?w=800&q=80', title: 'Cavalo Castanho', category: 'cavalos' }
+  { id: '11', image_url: 'https://images.unsplash.com/photo-1628605210289-d24c3a5d9bc3?w=800&q=80', title: 'Cavaleiro em Ação', category: 'competicoes' },
+  { id: '12', image_url: 'https://images.unsplash.com/photo-1593179508887-c4b67aba5ad0?w=800&q=80', title: 'Cavalo Castanho no Prado', category: 'cavalos' },
+  { id: '13', image_url: 'https://images.unsplash.com/photo-1568572933382-74d440642117?w=800&q=80', title: 'Cavalos Pastando', category: 'cavalos' },
+  { id: '14', image_url: 'https://images.unsplash.com/photo-1590584469252-d8ce95fe7467?w=800&q=80', title: 'Treino Matinal', category: 'aulas' },
+  { id: '15', image_url: 'https://images.unsplash.com/photo-1596514072553-a8dd03e41903?w=800&q=80', title: 'Equitação ao Ar Livre', category: 'aulas' },
+  { id: '16', image_url: 'https://images.unsplash.com/photo-1502920514313-52581002a659?w=800&q=80', title: 'Competição Nacional', category: 'competicoes' }
 ];
 
 export default function Gallery() {
@@ -73,7 +77,7 @@ export default function Gallery() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Hero Section */}
-      <section className="relative py-24 bg-[#2C3E1F] overflow-hidden">
+      <section className="relative py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
             src="https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1920&q=80"
@@ -81,22 +85,26 @@ export default function Gallery() {
             className="w-full h-full object-cover"
           />
         </div>
+        {/* Decorative Elements */}
+        <div className="absolute top-20 right-20 w-72 h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/20 
-                           rounded-full text-[#C9A961] text-sm font-medium mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
+                           rounded-full text-[#B8956A] text-sm font-medium mb-6">
               <Camera className="w-4 h-4" />
-              Galeria
+              Nossa Galeria
             </span>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-              Momentos
-              <span className="text-[#C9A961]"> Inesquecíveis</span>
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              Momentos<br />
+              <span className="text-[#B8956A]">Inesquecíveis</span>
             </h1>
-            <p className="text-lg text-stone-300 max-w-2xl mx-auto">
+            <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
               Explore a nossa galeria e descubra os melhores momentos vividos no Picadeiro Quinta da Horta.
             </p>
           </motion.div>

@@ -84,7 +84,7 @@ export default function Services() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Hero Section */}
-      <section className="relative py-24 bg-[#2C3E1F] overflow-hidden">
+      <section className="relative py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
             src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
@@ -92,22 +92,26 @@ export default function Services() {
             className="w-full h-full object-cover"
           />
         </div>
+        {/* Decorative Elements */}
+        <div className="absolute top-20 right-20 w-72 h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/20 
-                           rounded-full text-[#C9A961] text-sm font-medium mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
+                           rounded-full text-[#B8956A] text-sm font-medium mb-6">
               <Trophy className="w-4 h-4" />
-              Os Nossos Serviços
+              Nossos Serviços
             </span>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-              Experiências
-              <span className="text-[#C9A961]"> Personalizadas</span>
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              Experiências<br />
+              <span className="text-[#B8956A]">Personalizadas</span>
             </h1>
-            <p className="text-lg text-stone-300 max-w-2xl mx-auto">
+            <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
               Descubra os nossos serviços e encontre a experiência perfeita para si. 
               Desde aulas para iniciantes até treinos avançados.
             </p>

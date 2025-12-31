@@ -92,7 +92,7 @@ export default function Bookings() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Hero Section */}
-      <section className="relative py-16 bg-[#2C3E1F] overflow-hidden">
+      <section className="relative py-16 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
             src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80"
@@ -100,13 +100,16 @@ export default function Bookings() {
             className="w-full h-full object-cover"
           />
         </div>
+        {/* Decorative Elements */}
+        <div className="absolute top-10 right-10 w-48 h-48 bg-[#B8956A]/20 rounded-full blur-3xl" />
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
-              Olá, <span className="text-[#C9A961]">{user?.full_name?.split(' ')[0]}</span>
+              Olá, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
             </h1>
             <p className="text-stone-300">
               Gerir as suas aulas, confirmar presença e consultar pagamentos
