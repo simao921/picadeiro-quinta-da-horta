@@ -41,7 +41,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
+            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6"
           >
             Picadeiro
             <span className="block text-[#C9A961]">Quinta da Horta</span>
@@ -51,11 +51,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg text-stone-300 leading-relaxed mb-8 max-w-lg"
+            className="text-base text-stone-300 leading-relaxed mb-8 max-w-lg"
           >
-            Descubra a arte da equitação com o Bi-Campeão do Mundo, Gilberto Filipe. 
-            Oferecemos aulas personalizadas, hipoterapia e experiências únicas com cavalos 
-            num ambiente natural e acolhedor.
+            Descubra a arte da equitação com o <strong className="text-white">Bi-Campeão do Mundo Gilberto Filipe</strong>. 
+            Oferecemos aulas personalizadas, hipoterapia e experiências únicas com cavalos num ambiente natural e&nbsp;acolhedor.
           </motion.p>
 
           <motion.div

@@ -53,21 +53,16 @@ export default function AboutSection() {
               Sobre Nós
             </span>
             
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
-              Uma Tradição de
-              <span className="text-[#C9A961]"> Excelência Equestre</span>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight">
+              Uma Tradição de Excelência&nbsp;Equestre
             </h2>
             
-            <p className="text-stone-300 text-lg leading-relaxed mb-6">
-              O Picadeiro Quinta da Horta é mais do que um centro equestre — é um lugar onde 
-              a paixão pelos cavalos encontra a excelência no ensino. Localizado na bela região 
-              de Alcochete, oferecemos um ambiente natural e tranquilo para a prática da equitação.
+            <p className="text-stone-300 text-base leading-relaxed mb-6">
+              O Picadeiro Quinta da Horta é mais do que um centro equestre — é um lugar onde a paixão pelos cavalos encontra a excelência no ensino. Localizado na bela região de Alcochete, oferecemos um ambiente natural e tranquilo para a prática da&nbsp;equitação.
             </p>
             
-            <p className="text-stone-400 leading-relaxed mb-8">
-              Sob a orientação do Bi-Campeão do Mundo de Equitação, Gilberto Filipe, 
-              desenvolvemos programas personalizados que respeitam o ritmo de cada aluno, 
-              desde iniciantes aos mais experientes.
+            <p className="text-stone-400 text-base leading-relaxed mb-8">
+              Sob a orientação do <strong className="text-stone-200">Bi-Campeão do Mundo Gilberto Filipe</strong>, desenvolvemos programas personalizados que respeitam o ritmo de cada aluno, desde iniciantes aos mais&nbsp;experientes.
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-8">

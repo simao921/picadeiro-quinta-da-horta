@@ -14,8 +14,8 @@ const services = [
     icon: GraduationCap,
     title: 'Aulas Particulares',
     description: 'Aulas individuais com monitores experientes ou com o Bi-Campeão Mundial Gilberto Filipe.',
-    highlight: 'Bi-Campeão Mundial',
-    color: 'from-[#4A5D23] to-[#6B7F3A]',
+    highlight: 'Exclusivo',
+    color: 'from-[#4A5D23]/80 to-[#6B7F3A]/80',
     image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'
   },
   {
@@ -23,23 +23,23 @@ const services = [
     title: 'Aulas em Grupo',
     description: 'Aulas com até 4 alunos, promovendo aprendizagem colaborativa e socialização.',
     highlight: 'Máx. 4 alunos',
-    color: 'from-[#8B7355] to-[#A68B6A]',
+    color: 'from-[#8B7355]/80 to-[#A68B6A]/80',
     image: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80'
   },
   {
     icon: Heart,
     title: 'Hipoterapia',
     description: 'Terapia assistida por cavalos para desenvolvimento físico, emocional e cognitivo.',
-    highlight: 'Terapia Especializada',
-    color: 'from-[#C9A961] to-[#DFC17A]',
+    highlight: 'Terapia',
+    color: 'from-[#C9A961]/80 to-[#DFC17A]/80',
     image: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=600&q=80'
   },
   {
     icon: PartyPopper,
     title: 'Aluguer de Espaço',
     description: 'Espaço único para eventos, festas de aniversário e celebrações especiais.',
-    highlight: 'Eventos Únicos',
-    color: 'from-[#2C3E1F] to-[#4A5D23]',
+    highlight: 'Eventos',
+    color: 'from-[#2C3E1F]/80 to-[#4A5D23]/80',
     image: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=600&q=80'
   }
 ];
@@ -73,10 +73,9 @@ export default function ServicesPreview() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C3E1F] mb-4"
+            className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#2C3E1F] mb-4 text-left max-w-4xl mx-auto"
           >
-            Experiências Equestres
-            <span className="text-[#C9A961]"> de Excelência</span>
+            Experiências Equestres de&nbsp;Excelência
           </motion.h2>
           
           <motion.p
@@ -84,10 +83,9 @@ export default function ServicesPreview() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-lg text-stone-600 max-w-2xl mx-auto"
+            className="text-base text-stone-600 max-w-2xl mx-auto text-left"
           >
-            Desde iniciantes a cavaleiros experientes, oferecemos programas personalizados 
-            para todas as idades e níveis.
+            Desde iniciantes a cavaleiros experientes, oferecemos programas personalizados para todas as idades e&nbsp;níveis.
           </motion.p>
         </div>
 
@@ -110,13 +108,7 @@ export default function ServicesPreview() {
                     className="w-full h-full object-cover transition-transform duration-700 
                                group-hover:scale-110"
                   />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-60`} />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full 
-                                   text-white text-xs font-medium">
-                      {service.highlight}
-                    </span>
-                  </div>
+                  <div className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-50`} />
                   <div className="absolute bottom-4 right-4 w-14 h-14 bg-white rounded-xl 
                                   shadow-lg flex items-center justify-center 
                                   group-hover:scale-110 transition-transform duration-300">

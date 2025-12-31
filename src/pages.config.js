@@ -18,6 +18,7 @@ import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
+import AdminAI from './pages/AdminAI';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "Home": Home,
     "Services": Services,
     "Shop": Shop,
+    "AdminAI": AdminAI,
 }
 
 export const pagesConfig = {
