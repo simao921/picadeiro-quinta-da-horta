@@ -80,6 +80,8 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+        
         :root {
           --color-primary: #2D2D2D;
           --color-primary-light: #4A4A4A;
@@ -90,18 +92,27 @@ export default function Layout({ children, currentPageName }) {
           --color-stone: #E8E4DD;
         }
         
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
         .font-serif {
           font-family: 'Playfair Display', Georgia, serif;
         }
         
         .gradient-gold {
-          background: linear-gradient(135deg, #C9A961 0%, #DFC17A 50%, #C9A961 100%);
+          background: linear-gradient(135deg, #B8956A 0%, #C9A961 50%, #B8956A 100%);
         }
         
         .text-gradient {
-          background: linear-gradient(135deg, #4A5D23 0%, #6B7F3A 100%);
+          background: linear-gradient(135deg, #B8956A 0%, #8B7355 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        
+        * {
+          scroll-behavior: smooth;
         }
       `}</style>
 
