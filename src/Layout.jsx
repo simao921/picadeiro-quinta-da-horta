@@ -182,8 +182,11 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Right Side */}
             <div className="flex items-center gap-4">
-              <Link to={createPageUrl('Cart')} className="relative p-2 hover:bg-stone-100 rounded-full transition-colors">
-                <ShoppingCart className="w-5 h-5 text-[#2C3E1F]" />
+              <Link to={createPageUrl('Cart')} className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group">
+                <ShoppingCart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8956A] text-white text-xs rounded-full flex items-center justify-center font-semibold" id="cart-count">
+                  0
+                </span>
               </Link>
 
               {user ? (

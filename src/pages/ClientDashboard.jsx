@@ -427,7 +427,7 @@ export default function ClientDashboard() {
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
-                            <p className="font-bold text-lg text-[#4A5D23]">
+                            <p className="font-bold text-lg text-[#B8956A]">
                               {order.total.toFixed(2)}€
                             </p>
                             <Badge className={

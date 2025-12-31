@@ -295,7 +295,7 @@ export default function AdminOrders() {
                   </div>
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
                     <span>Total</span>
-                    <span className="text-[#4A5D23]">{selectedOrder.total?.toFixed(2)}€</span>
+                    <span className="text-[#B8956A]">{selectedOrder.total?.toFixed(2)}€</span>
                   </div>
                 </div>
               </div>

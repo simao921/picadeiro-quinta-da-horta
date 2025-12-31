@@ -77,10 +77,10 @@ export default function Services() {
   const { data: services, isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.list(),
-    initialData: []
+    initialData: defaultServices
   });
 
-  const displayServices = services.length > 0 ? services : defaultServices;
+  const displayServices = (services && services.length > 0) ? services : defaultServices;
 
   return (
     <div className="min-h-screen bg-stone-50">
