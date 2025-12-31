@@ -78,7 +78,7 @@ export default function CTASection() {
                     Experimente uma aula introdutória e descubra o mundo da equitação.
                   </p>
                 </div>
-                <ArrowRight className="w-6 h-6 text-[#C9A961] group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
@@ -91,7 +91,7 @@ export default function CTASection() {
                     Agende uma visita para conhecer o nosso espaço e os nossos cavalos.
                   </p>
                 </div>
-                <ArrowRight className="w-6 h-6 text-[#C9A961] group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
@@ -104,7 +104,7 @@ export default function CTASection() {
                     Descubra os nossos planos com condições especiais para alunos regulares.
                   </p>
                 </div>
-                <ArrowRight className="w-6 h-6 text-[#C9A961] group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </motion.div>
