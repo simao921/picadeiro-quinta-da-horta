@@ -92,7 +92,7 @@ export default function AdminStudents() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#4A5D23]" />
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
               </div>
             ) : (
               <Table>
@@ -113,8 +113,8 @@ export default function AdminStudents() {
                       <TableRow key={student.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#4A5D23]/10 rounded-full flex items-center justify-center">
-                              <span className="font-semibold text-[#4A5D23]">
+                            <div className="w-10 h-10 bg-[#B8956A]/10 rounded-full flex items-center justify-center">
+                              <span className="font-semibold text-[#B8956A]">
                                 {student.full_name?.charAt(0) || student.email?.charAt(0)}
                               </span>
                             </div>
@@ -168,7 +168,7 @@ export default function AdminStudents() {
             {selectedStudent && (
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-[#4A5D23] rounded-full flex items-center justify-center">
+                  <div className="w-16 h-16 bg-[#B8956A] rounded-full flex items-center justify-center">
                     <span className="text-2xl font-bold text-white">
                       {selectedStudent.full_name?.charAt(0) || selectedStudent.email?.charAt(0)}
                     </span>

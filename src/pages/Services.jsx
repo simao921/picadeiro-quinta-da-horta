@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import MetaTags from '@/components/seo/MetaTags';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -83,6 +84,11 @@ export default function Services() {
 
   return (
     <div className="min-h-screen bg-stone-50">
+      <MetaTags 
+        title="Serviços - Picadeiro Quinta da Horta"
+        description="Aulas de equitação particulares e em grupo, hipoterapia e aluguer de espaço para eventos. Programas personalizados com o Bi-Campeão Mundial Gilberto Filipe."
+        keywords="aulas equitação, aulas particulares cavalos, hipoterapia, eventos cavalos, gilberto filipe"
+      />
       {/* Hero Section */}
       <section className="relative py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">

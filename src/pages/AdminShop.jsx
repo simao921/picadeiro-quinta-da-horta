@@ -262,7 +262,7 @@ export default function AdminShop() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#4A5D23]" />
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
               </div>
             ) : products.length === 0 ? (
               <div className="text-center py-12">

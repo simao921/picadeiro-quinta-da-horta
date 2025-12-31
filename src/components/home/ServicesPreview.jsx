@@ -125,8 +125,8 @@ export default function ServicesPreview() {
                   </p>
                   <Link 
                     to={createPageUrl('Services')}
-                    className="inline-flex items-center text-[#4A5D23] font-medium text-sm 
-                               hover:text-[#C9A961] transition-colors group/link"
+                    className="inline-flex items-center text-[#B8956A] font-medium text-sm 
+                               hover:text-[#8B7355] transition-colors group/link"
                   >
                     Saber Mais
                     <ArrowRight className="w-4 h-4 ml-2 group-hover/link:translate-x-1 transition-transform" />
