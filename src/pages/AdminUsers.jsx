@@ -227,9 +227,7 @@ export default function AdminUsers() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                if (window.confirm('Tornar este utilizador administrador?')) {
-                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' });
-                                }
+                                updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' });
                               }}
                               disabled={updateRoleMutation.isPending}
                               className="text-green-600 border-green-600 hover:bg-green-50"
