@@ -1,4 +1,5 @@
 import AdminAI from './pages/AdminAI';
+import AdminContent from './pages/AdminContent';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminGallery from './pages/AdminGallery';
@@ -17,15 +18,15 @@ import ClientDashboard from './pages/ClientDashboard';
 import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
+import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
-import ProductDetail from './pages/ProductDetail';
-import AdminContent from './pages/AdminContent';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminAI": AdminAI,
+    "AdminContent": AdminContent,
     "AdminCoupons": AdminCoupons,
     "AdminDashboard": AdminDashboard,
     "AdminGallery": AdminGallery,
@@ -44,10 +45,9 @@ export const PAGES = {
     "Contact": Contact,
     "Gallery": Gallery,
     "Home": Home,
+    "ProductDetail": ProductDetail,
     "Services": Services,
     "Shop": Shop,
-    "ProductDetail": ProductDetail,
-    "AdminContent": AdminContent,
 }
 
 export const pagesConfig = {

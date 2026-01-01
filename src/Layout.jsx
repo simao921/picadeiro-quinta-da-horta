@@ -283,7 +283,7 @@ export default function Layout({ children, currentPageName }) {
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                   alt="Picadeiro Quinta da Horta"
-                  className="h-16 w-auto object-contain brightness-0 invert"
+                  className="h-20 w-auto object-contain filter brightness-200 contrast-150"
                 />
               </Link>
               <p className="text-stone-300 text-sm leading-relaxed">

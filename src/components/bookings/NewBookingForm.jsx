@@ -186,7 +186,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {step === 1 && (
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha o Serviço</h2>
-          {services.length === 0 ? (
+          {displayServices.length === 0 ? (
             <Card className="p-8 text-center">
               <p className="text-stone-500">Nenhum serviço disponível no momento. Por favor contacte-nos.</p>
             </Card>
