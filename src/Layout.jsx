@@ -4,7 +4,7 @@ import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
 import { 
   Menu, X, Phone, Mail, MapPin, Facebook, Instagram, 
-  ChevronUp, User, LogOut, ShoppingCart 
+  ChevronUp, User, LogOut, ShoppingCart, Heart 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -87,6 +87,20 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Reservas', page: 'Bookings' },
     { name: 'Contactos', page: 'Contact' },
   ];
+
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  useEffect(() => {
+    const updateWishlistCount = async () => {
+      if (user?.email) {
+        try {
+          const wishlist = await base44.entities.Wishlist.filter({ client_email: user.email });
+          setWishlistCount(wishlist.length);
+        } catch (e) {}
+      }
+    };
+    updateWishlistCount();
+  }, [user]);
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
@@ -192,7 +206,17 @@ export default function Layout({ children, currentPageName }) {
             </nav>
 
             {/* Right Side */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {user && (
+                <Link to={createPageUrl('Wishlist')} className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group">
+                  <Heart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Link>
+              )}
               <Link to={createPageUrl('Cart')} className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group">
                 <ShoppingCart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8956A] text-white text-xs rounded-full flex items-center justify-center font-semibold" id="cart-count">
@@ -280,11 +304,13 @@ export default function Layout({ children, currentPageName }) {
             {/* About */}
             <div>
               <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
-                  alt="Picadeiro Quinta da Horta"
-                  className="h-20 w-auto object-contain filter brightness-200 contrast-150"
-                />
+                <div className="w-20 h-20 rounded-full bg-white p-2 flex items-center justify-center">
+                  <img 
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                    alt="Picadeiro Quinta da Horta"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </Link>
               <p className="text-stone-300 text-sm leading-relaxed">
                 Centro equestre de excelência em Alcochete, oferecendo aulas de equitação, 

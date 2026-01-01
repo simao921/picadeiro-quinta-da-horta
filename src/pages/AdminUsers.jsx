@@ -1,0 +1,265 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Users, Shield, UserPlus, Trash2, Mail, Loader2, Crown } from 'lucide-react';
+import { toast } from 'sonner';
+
+export default function AdminUsers() {
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('user');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: () => base44.entities.User.list('-created_date', 500),
+    initialData: []
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async ({ email, role }) => {
+      return await base44.users.inviteUser(email, role);
+    },
+    onSuccess: () => {
+      toast.success('Convite enviado!');
+      setInviteEmail('');
+      setDialogOpen(false);
+      queryClient.invalidateQueries(['all-users']);
+    },
+    onError: (error) => {
+      toast.error('Erro ao enviar convite: ' + error.message);
+    }
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, newRole }) => {
+      return await base44.entities.User.update(userId, { role: newRole });
+    },
+    onSuccess: () => {
+      toast.success('Permissões atualizadas!');
+      queryClient.invalidateQueries(['all-users']);
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar permissões');
+    }
+  });
+
+  const stats = {
+    total: users.length,
+    admins: users.filter(u => u.role === 'admin').length,
+    users: users.filter(u => u.role === 'user').length
+  };
+
+  return (
+    <AdminLayout currentPage="AdminUsers">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#2C3E1F]">Gestão de Utilizadores</h1>
+            <p className="text-stone-500">Gerir utilizadores e permissões</p>
+          </div>
+          <Button
+            onClick={() => setDialogOpen(true)}
+            className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Convidar Utilizador
+          </Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#2C3E1F]">{stats.total}</p>
+                  <p className="text-sm text-stone-500">Total Utilizadores</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Crown className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#2C3E1F]">{stats.admins}</p>
+                  <p className="text-sm text-stone-500">Administradores</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#2C3E1F]">{stats.users}</p>
+                  <p className="text-sm text-stone-500">Utilizadores</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Users Table */}
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Função</TableHead>
+                    <TableHead>Registado</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user.role === 'admin' ? (
+                          <Badge className="bg-amber-100 text-amber-800">
+                            <Crown className="w-3 h-3 mr-1" />
+                            Administrador
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-blue-100 text-blue-800">
+                            <Shield className="w-3 h-3 mr-1" />
+                            Utilizador
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {user.created_date && new Date(user.created_date).toLocaleDateString('pt-PT')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {user.role === 'admin' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateRoleMutation.mutate({ userId: user.id, newRole: 'user' })}
+                              className="text-amber-600 border-amber-600 hover:bg-amber-50"
+                            >
+                              Remover Admin
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' })}
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                            >
+                              Tornar Admin
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Invite Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Convidar Novo Utilizador</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  placeholder="utilizador@exemplo.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Função</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={inviteRole === 'user' ? 'default' : 'outline'}
+                    onClick={() => setInviteRole('user')}
+                    className={inviteRole === 'user' ? 'bg-[#B8956A]' : ''}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Utilizador
+                  </Button>
+                  <Button
+                    variant={inviteRole === 'admin' ? 'default' : 'outline'}
+                    onClick={() => setInviteRole('admin')}
+                    className={inviteRole === 'admin' ? 'bg-[#B8956A]' : ''}
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Administrador
+                  </Button>
+                </div>
+              </div>
+              <Button
+                onClick={() => inviteMutation.mutate({ email: inviteEmail, role: inviteRole })}
+                disabled={!inviteEmail || inviteMutation.isPending}
+                className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
+              >
+                {inviteMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    A enviar...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Enviar Convite
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </AdminLayout>
+  );
+}

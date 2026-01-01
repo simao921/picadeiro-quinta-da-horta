@@ -16,9 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShoppingCart, Star, ArrowLeft, Check, Truck, Shield, Package, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Star, ArrowLeft, Check, Truck, Shield, Package, Plus, Minus, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import ReviewSection from '@/components/product/ReviewSection';
 
 export default function ProductDetail() {
   const location = useLocation();
@@ -28,6 +29,53 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [user, setUser] = useState(null);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const isAuth = await base44.auth.isAuthenticated();
+        if (isAuth) {
+          const userData = await base44.auth.me();
+          setUser(userData);
+        }
+      } catch (e) {}
+    };
+    checkAuth();
+  }, []);
+
+  const { data: wishlist } = useQuery({
+    queryKey: ['wishlist', user?.email],
+    queryFn: () => base44.entities.Wishlist.filter({ client_email: user?.email }),
+    enabled: !!user?.email,
+    initialData: []
+  });
+
+  useEffect(() => {
+    if (product && wishlist) {
+      setIsInWishlist(wishlist.some(w => w.product_id === product.id));
+    }
+  }, [product, wishlist]);
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: async () => {
+      if (isInWishlist) {
+        const item = wishlist.find(w => w.product_id === product.id);
+        await base44.entities.Wishlist.delete(item.id);
+      } else {
+        await base44.entities.Wishlist.create({
+          client_email: user.email,
+          product_id: product.id
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['wishlist']);
+      toast.success(isInWishlist ? 'Removido da lista de desejos' : 'Adicionado à lista de desejos');
+    }
+  });
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
@@ -299,15 +347,27 @@ export default function ProductDetail() {
 
             {/* Add to Cart */}
             <div className="space-y-3">
-              <Button
-                onClick={addToCart}
-                disabled={!inStock}
-                className="w-full h-14 bg-[#B8956A] hover:bg-[#8B7355] text-white text-lg font-semibold"
-                size="lg"
-              >
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                {inStock ? 'Adicionar ao Carrinho' : 'Esgotado'}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={addToCart}
+                  disabled={!inStock}
+                  className="flex-1 h-14 bg-[#B8956A] hover:bg-[#8B7355] text-white text-lg font-semibold"
+                  size="lg"
+                >
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  {inStock ? 'Adicionar ao Carrinho' : 'Esgotado'}
+                </Button>
+                {user && (
+                  <Button
+                    onClick={() => toggleWishlistMutation.mutate()}
+                    variant="outline"
+                    size="lg"
+                    className="h-14 w-14 border-2"
+                  >
+                    <Heart className={`w-6 h-6 ${isInWishlist ? 'fill-red-500 text-red-500' : ''}`} />
+                  </Button>
+                )}
+              </div>
               <Link to={createPageUrl('Shop')} className="block">
                 <Button variant="outline" className="w-full">
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -334,6 +394,12 @@ export default function ProductDetail() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-16">
+          <h2 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-6">Avaliações</h2>
+          <ReviewSection entityType="product" entityId={product.id} />
         </div>
       </div>
     </div>

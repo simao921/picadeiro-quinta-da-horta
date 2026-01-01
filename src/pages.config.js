@@ -21,6 +21,9 @@ import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
+import AdminUsers from './pages/AdminUsers';
+import AdminReports from './pages/AdminReports';
+import Wishlist from './pages/Wishlist';
 import __Layout from './Layout.jsx';
 
 
@@ -48,6 +51,9 @@ export const PAGES = {
     "ProductDetail": ProductDetail,
     "Services": Services,
     "Shop": Shop,
+    "AdminUsers": AdminUsers,
+    "AdminReports": AdminReports,
+    "Wishlist": Wishlist,
 }
 
 export const pagesConfig = {

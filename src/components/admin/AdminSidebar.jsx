@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Brain, CalendarDays, Users, UserCog,
   Settings, ShoppingBag, Package, Tag, Image,
-  MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText
+  MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -13,6 +13,8 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', page: 'AdminDashboard' },
   { icon: Brain, label: 'IA Assistente', page: 'AdminAI' },
   { icon: FileText, label: 'Conteúdo', page: 'AdminContent' },
+  { icon: Users, label: 'Utilizadores', page: 'AdminUsers' },
+  { icon: BarChart3, label: 'Relatórios', page: 'AdminReports' },
   { icon: CalendarDays, label: 'Aulas', page: 'AdminLessons' },
   { icon: Users, label: 'Alunos', page: 'AdminStudents' },
   { icon: UserCog, label: 'Monitores', page: 'AdminInstructors' },
