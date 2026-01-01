@@ -201,9 +201,9 @@ export default function AdminUsers() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                if (confirm('Remover permissões de administrador?')) {
-                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'user' });
+                              onClick={async () => {
+                                if (window.confirm('Remover permissões de administrador?')) {
+                                  await updateRoleMutation.mutateAsync({ userId: user.id, newRole: 'user' });
                                 }
                               }}
                               disabled={updateRoleMutation.isPending}
@@ -219,9 +219,9 @@ export default function AdminUsers() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                if (confirm('Tornar este utilizador administrador?')) {
-                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' });
+                              onClick={async () => {
+                                if (window.confirm('Tornar este utilizador administrador?')) {
+                                  await updateRoleMutation.mutateAsync({ userId: user.id, newRole: 'admin' });
                                 }
                               }}
                               disabled={updateRoleMutation.isPending}
