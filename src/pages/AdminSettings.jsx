@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Euro, Bell, Shield, Loader2, Save } from 'lucide-react';
+import { Settings, Euro, Bell, Shield, Loader2, Save, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminSettings() {
@@ -27,6 +27,20 @@ export default function AdminSettings() {
     queryKey: ['admin-settings'],
     queryFn: () => base44.entities.SiteSettings.list(),
     initialData: []
+  });
+
+  const { data: services, isLoading: servicesLoading } = useQuery({
+    queryKey: ['services-pricing'],
+    queryFn: () => base44.entities.Service.list('-created_date', 100),
+    initialData: []
+  });
+
+  const updateServiceMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Service.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['services-pricing']);
+      toast.success('Serviço atualizado!');
+    }
   });
 
   useEffect(() => {
@@ -101,6 +115,7 @@ export default function AdminSettings() {
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList className="bg-white border">
             <TabsTrigger value="general">Geral</TabsTrigger>
+            <TabsTrigger value="services">Preços Serviços</TabsTrigger>
             <TabsTrigger value="payments">Pagamentos</TabsTrigger>
             <TabsTrigger value="notifications">Notificações</TabsTrigger>
           </TabsList>
@@ -127,6 +142,80 @@ export default function AdminSettings() {
                     onCheckedChange={(v) => setSettings({...settings, maintenance_mode: v})}
                   />
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Services Pricing */}
+          <TabsContent value="services">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-[#4A5D23]" />
+                  Preços dos Serviços
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {servicesLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
+                  </div>
+                ) : services.length === 0 ? (
+                  <div className="text-center py-8 text-stone-500">
+                    <p>Nenhum serviço encontrado</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {services.map((service) => (
+                      <div key={service.id} className="p-4 bg-stone-50 rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-lg">{service.title}</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label>Preço (€)</Label>
+                            <Input
+                              type="number"
+                              value={service.price || 0}
+                              onChange={(e) => {
+                                updateServiceMutation.mutate({
+                                  id: service.id,
+                                  data: { price: parseFloat(e.target.value) }
+                                });
+                              }}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Duração (min)</Label>
+                            <Input
+                              type="number"
+                              value={service.duration || 60}
+                              onChange={(e) => {
+                                updateServiceMutation.mutate({
+                                  id: service.id,
+                                  data: { duration: parseInt(e.target.value) }
+                                });
+                              }}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Máx. Participantes</Label>
+                            <Input
+                              type="number"
+                              value={service.max_participants || 1}
+                              onChange={(e) => {
+                                updateServiceMutation.mutate({
+                                  id: service.id,
+                                  data: { max_participants: parseInt(e.target.value) }
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
