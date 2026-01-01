@@ -271,15 +271,33 @@ export default function AdminLessons() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecionar cliente (opcional)" />
+                        <SelectValue placeholder="Pesquisar cliente..." />
                       </SelectTrigger>
                       <SelectContent>
+                        <div className="p-2">
+                          <Input
+                            placeholder="Pesquisar por nome..."
+                            className="h-8 mb-2"
+                            onChange={(e) => {
+                              const input = e.target;
+                              const search = input.value.toLowerCase();
+                              const items = input.closest('[role="listbox"]')?.querySelectorAll('[role="option"]');
+                              items?.forEach(item => {
+                                const text = item.textContent?.toLowerCase() || '';
+                                item.style.display = text.includes(search) ? '' : 'none';
+                              });
+                            }}
+                          />
+                        </div>
                         {allUsers.length === 0 ? (
                           <SelectItem value="none" disabled>Sem clientes disponíveis</SelectItem>
                         ) : (
                           allUsers.map(u => (
                             <SelectItem key={u.id} value={u.email}>
-                              {u.full_name || u.email}
+                              <div className="flex flex-col">
+                                <span className="font-medium">{u.full_name || 'Sem nome'}</span>
+                                <span className="text-xs text-stone-500">{u.email}</span>
+                              </div>
                             </SelectItem>
                           ))
                         )}
