@@ -8,8 +8,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Euro, Bell, Shield, Loader2, Save, DollarSign } from 'lucide-react';
+import { Settings, Euro, Bell, Shield, Loader2, Save, DollarSign, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+
+const weekDays = [
+  { value: 'monday', label: 'Segunda-feira' },
+  { value: 'tuesday', label: 'Terça-feira' },
+  { value: 'wednesday', label: 'Quarta-feira' },
+  { value: 'thursday', label: 'Quinta-feira' },
+  { value: 'friday', label: 'Sexta-feira' },
+  { value: 'saturday', label: 'Sábado' },
+  { value: 'sunday', label: 'Domingo' }
+];
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
@@ -19,6 +29,16 @@ export default function AdminSettings() {
     penalty_16_end: 15,
     block_threshold: 30,
     notification_hours: 2
+  });
+
+  const [schedules, setSchedules] = useState({
+    monday: { enabled: true, start: '09:00', end: '18:00' },
+    tuesday: { enabled: true, start: '09:00', end: '18:00' },
+    wednesday: { enabled: true, start: '09:00', end: '18:00' },
+    thursday: { enabled: true, start: '09:00', end: '18:00' },
+    friday: { enabled: true, start: '09:00', end: '18:00' },
+    saturday: { enabled: true, start: '09:00', end: '13:00' },
+    sunday: { enabled: false, start: '09:00', end: '18:00' }
   });
 
   const queryClient = useQueryClient();
@@ -115,6 +135,7 @@ export default function AdminSettings() {
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList className="bg-white border">
             <TabsTrigger value="general">Geral</TabsTrigger>
+            <TabsTrigger value="schedules">Horários</TabsTrigger>
             <TabsTrigger value="services">Preços Serviços</TabsTrigger>
             <TabsTrigger value="payments">Pagamentos</TabsTrigger>
             <TabsTrigger value="notifications">Notificações</TabsTrigger>
@@ -142,6 +163,60 @@ export default function AdminSettings() {
                     onCheckedChange={(v) => setSettings({...settings, maintenance_mode: v})}
                   />
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Schedules */}
+          <TabsContent value="schedules">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-[#4A5D23]" />
+                  Horários Disponíveis
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {weekDays.map((day) => (
+                  <div key={day.value} className="p-4 bg-stone-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold">{day.label}</h3>
+                      <Switch
+                        checked={schedules[day.value].enabled}
+                        onCheckedChange={(v) => setSchedules({
+                          ...schedules,
+                          [day.value]: { ...schedules[day.value], enabled: v }
+                        })}
+                      />
+                    </div>
+                    {schedules[day.value].enabled && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Abertura</Label>
+                          <Input
+                            type="time"
+                            value={schedules[day.value].start}
+                            onChange={(e) => setSchedules({
+                              ...schedules,
+                              [day.value]: { ...schedules[day.value], start: e.target.value }
+                            })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Encerramento</Label>
+                          <Input
+                            type="time"
+                            value={schedules[day.value].end}
+                            onChange={(e) => setSchedules({
+                              ...schedules,
+                              [day.value]: { ...schedules[day.value], end: e.target.value }
+                            })}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </TabsContent>
