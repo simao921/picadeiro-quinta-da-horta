@@ -64,27 +64,39 @@ export default function AdminLessons() {
 
   const { data: services } = useQuery({
     queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list(),
+    queryFn: () => base44.entities.Service.filter({ is_active: true }),
     initialData: []
   });
 
   const { data: instructors } = useQuery({
     queryKey: ['instructors'],
-    queryFn: () => base44.entities.Instructor.list(),
+    queryFn: () => base44.entities.Instructor.filter({ is_active: true }),
     initialData: []
   });
 
   const createLessonMutation = useMutation({
-    mutationFn: (data) => base44.entities.Lesson.create({
-      ...data,
-      date: format(selectedDate, 'yyyy-MM-dd'),
-      status: 'scheduled',
-      booked_spots: 0
-    }),
+    mutationFn: (data) => {
+      if (!data.service_id) {
+        toast.error('Selecione um serviço');
+        throw new Error('Service required');
+      }
+      return base44.entities.Lesson.create({
+        ...data,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        status: 'scheduled',
+        booked_spots: 0
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-lessons']);
       setDialogOpen(false);
+      setNewLesson({ service_id: '', instructor_id: '', start_time: '09:00', max_spots: 4 });
       toast.success('Aula criada com sucesso!');
+    },
+    onError: (error) => {
+      if (error.message !== 'Service required') {
+        toast.error('Erro ao criar aula');
+      }
     }
   });
 

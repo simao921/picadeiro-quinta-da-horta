@@ -27,6 +27,7 @@ export default function AdminUsers() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('user');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
@@ -52,15 +53,26 @@ export default function AdminUsers() {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, newRole }) => {
-      return await base44.entities.User.update(userId, { role: newRole });
+      await base44.entities.User.update(userId, { role: newRole });
+      return { userId, newRole };
     },
-    onSuccess: () => {
-      toast.success('Permissões atualizadas!');
+    onSuccess: (data) => {
       queryClient.invalidateQueries(['all-users']);
+      toast.success(`Utilizador agora é ${data.newRole === 'admin' ? 'Administrador' : 'Utilizador'}!`);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Update error:', error);
       toast.error('Erro ao atualizar permissões');
     }
+  });
+
+  const filteredUsers = users.filter(user => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      user.full_name?.toLowerCase().includes(query) ||
+      user.email?.toLowerCase().includes(query)
+    );
   });
 
   const stats = {
@@ -132,6 +144,18 @@ export default function AdminUsers() {
           </Card>
         </div>
 
+        {/* Search */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            <Input
+              placeholder="Pesquisar por nome ou email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full"
+            />
+          </CardContent>
+        </Card>
+
         {/* Users Table */}
         <Card className="border-0 shadow-md">
           <CardContent className="p-0">
@@ -151,7 +175,7 @@ export default function AdminUsers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -177,19 +201,37 @@ export default function AdminUsers() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateRoleMutation.mutate({ userId: user.id, newRole: 'user' })}
+                              onClick={() => {
+                                if (confirm('Remover permissões de administrador?')) {
+                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'user' });
+                                }
+                              }}
+                              disabled={updateRoleMutation.isPending}
                               className="text-amber-600 border-amber-600 hover:bg-amber-50"
                             >
-                              Remover Admin
+                              {updateRoleMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                'Remover Admin'
+                              )}
                             </Button>
                           ) : (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' })}
+                              onClick={() => {
+                                if (confirm('Tornar este utilizador administrador?')) {
+                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' });
+                                }
+                              }}
+                              disabled={updateRoleMutation.isPending}
                               className="text-green-600 border-green-600 hover:bg-green-50"
                             >
-                              Tornar Admin
+                              {updateRoleMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                'Tornar Admin'
+                              )}
                             </Button>
                           )}
                         </div>
