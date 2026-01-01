@@ -227,7 +227,7 @@ export default function Cart() {
         </div>
 
         {cart.length === 0 && step === 'cart' ? (
-          <Card className="text-center py-16">
+          <Card className="border-0 shadow-lg text-center py-16">
             <CardContent>
               <ShoppingCart className="w-16 h-16 text-stone-300 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-[#2C3E1F] mb-2">
@@ -248,13 +248,13 @@ export default function Cart() {
             {/* Cart Items / Checkout Form */}
             <div className="lg:col-span-2">
               {step === 'cart' ? (
-                <Card>
-                  <CardHeader>
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
                     <CardTitle className="text-lg">
                       Produtos ({cart.length})
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 pt-6">
                     <AnimatePresence>
                       {cart.map((item) => (
                         <motion.div
@@ -271,8 +271,11 @@ export default function Cart() {
                           />
                           <div className="flex-1">
                             <h3 className="font-semibold text-[#2C3E1F]">{item.name}</h3>
-                            <p className="text-[#4A5D23] font-medium">
-                              {(item.sale_price || item.price).toFixed(2)}€
+                            <p className="text-stone-500 text-sm mb-1">
+                              Preço unitário: {(item.sale_price || item.price).toFixed(2)}€
+                            </p>
+                            <p className="text-[#B8956A] font-bold">
+                              {((item.sale_price || item.price) * item.quantity).toFixed(2)}€
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -308,11 +311,11 @@ export default function Cart() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
-                  <CardHeader>
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
                     <CardTitle className="text-lg">Morada de Envio</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 pt-6">
                     <div className="space-y-2">
                       <Label htmlFor="street">Morada</Label>
                       <Input
@@ -358,11 +361,11 @@ export default function Cart() {
 
             {/* Order Summary */}
             <div>
-              <Card className="sticky top-24">
-                <CardHeader>
+              <Card className="sticky top-24 border-0 shadow-lg">
+                <CardHeader className="bg-stone-50 border-b">
                   <CardTitle className="text-lg">Resumo</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-6">
                   {/* Coupon */}
                   {step === 'cart' && (
                     <div className="flex gap-2">
@@ -411,7 +414,7 @@ export default function Cart() {
 
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-[#4A5D23]">{total.toFixed(2)}€</span>
+                    <span className="text-[#B8956A]">{total.toFixed(2)}€</span>
                   </div>
 
                   {shipping > 0 && (
