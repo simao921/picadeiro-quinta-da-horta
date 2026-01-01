@@ -209,9 +209,7 @@ export default function AdminUsers() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                if (window.confirm('Remover permissões de administrador?')) {
-                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'user' });
-                                }
+                                updateRoleMutation.mutate({ userId: user.id, newRole: 'user' });
                               }}
                               disabled={updateRoleMutation.isPending}
                               className="text-amber-600 border-amber-600 hover:bg-amber-50"

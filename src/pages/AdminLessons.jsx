@@ -45,7 +45,9 @@ export default function AdminLessons() {
     service_id: '',
     instructor_id: '',
     start_time: '09:00',
-    max_spots: 4
+    max_spots: 4,
+    client_email: '',
+    client_name: ''
   });
 
   const queryClient = useQueryClient();
@@ -88,23 +90,56 @@ export default function AdminLessons() {
     }
   });
 
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-users-for-booking'],
+    queryFn: async () => {
+      try {
+        const result = await base44.entities.User.list('-created_date', 500);
+        return result || [];
+      } catch (error) {
+        console.error('Error loading users:', error);
+        return [];
+      }
+    }
+  });
+
   const createLessonMutation = useMutation({
-    mutationFn: (data) => {
+    mutationFn: async (data) => {
       if (!data.service_id) {
         toast.error('Selecione um serviço');
         throw new Error('Service required');
       }
-      return base44.entities.Lesson.create({
-        ...data,
+      
+      const lessonData = {
+        service_id: data.service_id,
+        instructor_id: data.instructor_id,
         date: format(selectedDate, 'yyyy-MM-dd'),
+        start_time: data.start_time,
+        max_spots: data.max_spots,
         status: 'scheduled',
-        booked_spots: 0
-      });
+        booked_spots: data.client_email ? 1 : 0
+      };
+      
+      const lesson = await base44.entities.Lesson.create(lessonData);
+      
+      // Se cliente selecionado, criar reserva
+      if (data.client_email && data.client_name) {
+        await base44.entities.Booking.create({
+          lesson_id: lesson.id,
+          client_email: data.client_email,
+          client_name: data.client_name,
+          status: 'approved',
+          approved_at: new Date().toISOString()
+        });
+      }
+      
+      return lesson;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-lessons']);
+      queryClient.invalidateQueries(['admin-all-bookings']);
       setDialogOpen(false);
-      setNewLesson({ service_id: '', instructor_id: '', start_time: '09:00', max_spots: 4 });
+      setNewLesson({ service_id: '', instructor_id: '', start_time: '09:00', max_spots: 4, client_email: '', client_name: '' });
       toast.success('Aula criada com sucesso!');
     },
     onError: (error) => {
@@ -217,6 +252,39 @@ export default function AdminLessons() {
                       value={newLesson.max_spots}
                       onChange={(e) => setNewLesson({...newLesson, max_spots: parseInt(e.target.value)})}
                     />
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800 font-medium mb-3">Reservar para cliente (opcional)</p>
+                  <div className="space-y-2">
+                    <Label>Cliente</Label>
+                    <Select 
+                      value={newLesson.client_email || undefined}
+                      onValueChange={(v) => {
+                        const user = allUsers.find(u => u.email === v);
+                        setNewLesson({
+                          ...newLesson, 
+                          client_email: v,
+                          client_name: user?.full_name || user?.email || ''
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar cliente (opcional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allUsers.length === 0 ? (
+                          <SelectItem value="none" disabled>Sem clientes disponíveis</SelectItem>
+                        ) : (
+                          allUsers.map(u => (
+                            <SelectItem key={u.id} value={u.email}>
+                              {u.full_name || u.email}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <Button 
