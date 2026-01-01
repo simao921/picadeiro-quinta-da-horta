@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -30,10 +30,17 @@ export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['all-users'],
-    queryFn: () => base44.entities.User.list('-created_date', 500),
-    initialData: []
+    queryFn: async () => {
+      try {
+        const result = await base44.entities.User.list('-created_date', 500);
+        return result || [];
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        return [];
+      }
+    }
   });
 
   const inviteMutation = useMutation({
@@ -44,7 +51,7 @@ export default function AdminUsers() {
       toast.success('Convite enviado!');
       setInviteEmail('');
       setDialogOpen(false);
-      queryClient.invalidateQueries(['all-users']);
+      refetch();
     },
     onError: (error) => {
       toast.error('Erro ao enviar convite: ' + error.message);
@@ -53,23 +60,16 @@ export default function AdminUsers() {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, newRole }) => {
-      try {
-        await base44.entities.User.update(userId, { role: newRole });
-        return { userId, newRole };
-      } catch (error) {
-        console.error('Mutation error:', error);
-        throw error;
-      }
+      await base44.entities.User.update(userId, { role: newRole });
+      return { userId, newRole };
     },
     onSuccess: async (data) => {
-      // Force refetch to get updated data
-      await queryClient.invalidateQueries(['all-users']);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      toast.success(`✅ Utilizador agora é ${data.newRole === 'admin' ? 'Administrador' : 'Utilizador'}!`);
+      await refetch();
+      toast.success(`Utilizador agora é ${data.newRole === 'admin' ? 'Administrador' : 'Utilizador'}!`);
     },
     onError: (error) => {
       console.error('Update error:', error);
-      toast.error('❌ Erro ao atualizar permissões: ' + error.message);
+      toast.error('Erro ao atualizar permissões');
     }
   });
 
@@ -208,9 +208,9 @@ export default function AdminUsers() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={async () => {
+                              onClick={() => {
                                 if (window.confirm('Remover permissões de administrador?')) {
-                                  await updateRoleMutation.mutateAsync({ userId: user.id, newRole: 'user' });
+                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'user' });
                                 }
                               }}
                               disabled={updateRoleMutation.isPending}
@@ -226,9 +226,9 @@ export default function AdminUsers() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={async () => {
+                              onClick={() => {
                                 if (window.confirm('Tornar este utilizador administrador?')) {
-                                  await updateRoleMutation.mutateAsync({ userId: user.id, newRole: 'admin' });
+                                  updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' });
                                 }
                               }}
                               disabled={updateRoleMutation.isPending}
