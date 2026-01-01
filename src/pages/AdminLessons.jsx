@@ -64,14 +64,28 @@ export default function AdminLessons() {
 
   const { data: services } = useQuery({
     queryKey: ['services'],
-    queryFn: () => base44.entities.Service.filter({ is_active: true }),
-    initialData: []
+    queryFn: async () => {
+      try {
+        const result = await base44.entities.Service.list('-created_date', 100);
+        return result || [];
+      } catch (error) {
+        console.error('Error loading services:', error);
+        return [];
+      }
+    }
   });
 
   const { data: instructors } = useQuery({
     queryKey: ['instructors'],
-    queryFn: () => base44.entities.Instructor.filter({ is_active: true }),
-    initialData: []
+    queryFn: async () => {
+      try {
+        const result = await base44.entities.Instructor.list('-created_date', 100);
+        return result || [];
+      } catch (error) {
+        console.error('Error loading instructors:', error);
+        return [];
+      }
+    }
   });
 
   const createLessonMutation = useMutation({
