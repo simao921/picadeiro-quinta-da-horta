@@ -26,11 +26,19 @@ export default function NewBookingForm({ user, isBlocked }) {
 
   const queryClient = useQueryClient();
 
+  const defaultServices = [
+    { id: '1', title: 'Aulas Particulares', price: 45, duration: 60, max_participants: 1, short_description: 'Aulas individuais personalizadas' },
+    { id: '2', title: 'Aulas em Grupo', price: 30, duration: 60, max_participants: 4, short_description: 'Máximo de 4 alunos por aula' },
+    { id: '3', title: 'Hipoterapia', price: 50, duration: 45, max_participants: 1, short_description: 'Terapia assistida por cavalos' }
+  ];
+
   const { data: services } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.filter({ is_active: true }),
-    initialData: []
+    initialData: defaultServices
   });
+
+  const displayServices = (services && services.length > 0) ? services : defaultServices;
 
   const { data: lessons } = useQuery({
     queryKey: ['lessons', format(selectedDate, 'yyyy-MM-dd')],
@@ -193,7 +201,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {services.map((service) => (
+                {displayServices.map((service) => (
                   <Card
                     key={service.id}
                     className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
