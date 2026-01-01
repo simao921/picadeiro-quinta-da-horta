@@ -34,6 +34,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { Badge } from '@/components/ui/badge';
 import { FileText, Edit, Trash2, Plus, Save, Eye, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -110,7 +111,7 @@ export default function AdminContent() {
 
   const resetForm = () => {
     setFormData({
-      page: selectedPage,
+      page: selectedPage === 'all' ? 'Home' : selectedPage,
       block_id: '',
       content_type: 'text',
       content: '',
