@@ -41,8 +41,8 @@ export default function CTASection() {
               <Link to={createPageUrl('Bookings')}>
                 <Button 
                   size="lg" 
-                  className="bg-[#C9A961] hover:bg-[#B89A51] text-[#2C3E1F] font-semibold px-8
-                             shadow-lg shadow-[#C9A961]/30"
+                  className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold px-8
+                             shadow-lg shadow-[#B8956A]/30"
                 >
                   <Calendar className="w-5 h-5 mr-2" />
                   Reservar Aula

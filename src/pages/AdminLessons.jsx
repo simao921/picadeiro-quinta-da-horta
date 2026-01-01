@@ -204,13 +204,13 @@ export default function AdminLessons() {
                 Calendário
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 locale={pt}
-                className="rounded-md border"
+                className="rounded-md border-0"
               />
             </CardContent>
           </Card>

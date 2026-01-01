@@ -54,7 +54,7 @@ const contentTypes = [
 ];
 
 export default function AdminContent() {
-  const [selectedPage, setSelectedPage] = useState('Home');
+  const [selectedPage, setSelectedPage] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBlock, setEditingBlock] = useState(null);
   const [formData, setFormData] = useState({
@@ -69,11 +69,15 @@ export default function AdminContent() {
 
   const queryClient = useQueryClient();
 
-  const { data: blocks, isLoading } = useQuery({
-    queryKey: ['content-blocks', selectedPage],
-    queryFn: () => base44.entities.ContentBlock.filter({ page: selectedPage }),
+  const { data: allBlocks, isLoading } = useQuery({
+    queryKey: ['content-blocks'],
+    queryFn: () => base44.entities.ContentBlock.list('-created_date', 500),
     initialData: []
   });
+
+  const blocks = selectedPage === 'all' 
+    ? allBlocks 
+    : allBlocks.filter(b => b.page === selectedPage);
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.ContentBlock.create(data),
@@ -144,7 +148,7 @@ export default function AdminContent() {
   };
 
   const getPageStats = (pageName) => {
-    const pageBlocks = blocks.filter(b => b.page === pageName);
+    const pageBlocks = allBlocks.filter(b => b.page === pageName);
     return {
       total: pageBlocks.length,
       active: pageBlocks.filter(b => b.is_active).length,
@@ -177,6 +181,15 @@ export default function AdminContent() {
         {/* Page Tabs */}
         <Tabs value={selectedPage} onValueChange={setSelectedPage}>
           <TabsList className="bg-white border shadow-sm flex-wrap h-auto">
+            <TabsTrigger
+              value="all"
+              className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white"
+            >
+              Todos
+              <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded text-xs">
+                {allBlocks.length}
+              </span>
+            </TabsTrigger>
             {pages.map((page) => {
               const stats = getPageStats(page.value);
               return (
@@ -195,6 +208,90 @@ export default function AdminContent() {
               );
             })}
           </TabsList>
+
+          <TabsContent value="all">
+            <Card className="border-0 shadow-md">
+              <CardContent className="p-0">
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
+                  </div>
+                ) : blocks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+                    <p className="text-stone-500">Nenhum bloco de conteúdo</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Página</TableHead>
+                        <TableHead>ID do Bloco</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Conteúdo</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {blocks.sort((a, b) => (a.order || 0) - (b.order || 0)).map((block) => (
+                        <TableRow key={block.id}>
+                          <TableCell>
+                            <Badge variant="outline">{block.page}</Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{block.block_id}</TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 bg-stone-100 rounded text-xs">
+                              {contentTypes.find(t => t.value === block.content_type)?.label}
+                            </span>
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {block.content_type === 'image' ? (
+                              <img src={block.content} alt="" className="h-10 w-20 object-cover rounded" />
+                            ) : (
+                              block.content
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              block.is_active 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {block.is_active ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(block)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja eliminar este bloco?')) {
+                                    deleteMutation.mutate(block.id);
+                                  }
+                                }}
+                                className="text-red-500 hover:text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {pages.map((page) => (
             <TabsContent key={page.value} value={page.value}>

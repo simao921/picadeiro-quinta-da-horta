@@ -201,11 +201,13 @@ export default function AdminOrders() {
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={order.status}
+                          value={order.status || 'pendente'}
                           onValueChange={(v) => updateOrderMutation.mutate({ id: order.id, status: v })}
                         >
                           <SelectTrigger className="w-40">
-                            {getStatusBadge(order.status)}
+                            <SelectValue>
+                              {getStatusBadge(order.status)}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pendente">Pendente</SelectItem>
