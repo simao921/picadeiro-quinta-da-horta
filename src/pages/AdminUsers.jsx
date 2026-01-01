@@ -56,13 +56,13 @@ export default function AdminUsers() {
       await base44.entities.User.update(userId, { role: newRole });
       return { userId, newRole };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(['all-users']);
-      toast.success(`Utilizador agora é ${data.newRole === 'admin' ? 'Administrador' : 'Utilizador'}!`);
+    onSuccess: async (data) => {
+      await queryClient.refetchQueries(['all-users']);
+      toast.success(`✅ Utilizador agora é ${data.newRole === 'admin' ? 'Administrador' : 'Utilizador'}!`);
     },
     onError: (error) => {
       console.error('Update error:', error);
-      toast.error('Erro ao atualizar permissões');
+      toast.error('❌ Erro ao atualizar permissões');
     }
   });
 

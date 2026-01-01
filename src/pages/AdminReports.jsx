@@ -41,11 +41,43 @@ export default function AdminReports() {
     initialData: []
   });
 
+  const { data: services } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => base44.entities.Service.list(),
+    initialData: []
+  });
+
+  const { data: lessons } = useQuery({
+    queryKey: ['lessons'],
+    queryFn: () => base44.entities.Lesson.list('-created_date', 500),
+    initialData: []
+  });
+
   // Calculations
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const monthRevenue = orders
-    .filter(o => new Date(o.created_date) >= startOfMonth(new Date()))
-    .reduce((sum, o) => sum + (o.total || 0), 0);
+  
+  const currentMonth = new Date();
+  const monthOrders = orders.filter(o => {
+    const orderDate = new Date(o.created_date);
+    return orderDate.getMonth() === currentMonth.getMonth() && 
+           orderDate.getFullYear() === currentMonth.getFullYear();
+  });
+  
+  const monthRevenue = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const monthLessons = lessons.filter(l => {
+    const lessonDate = new Date(l.date);
+    return lessonDate.getMonth() === currentMonth.getMonth() && 
+           lessonDate.getFullYear() === currentMonth.getFullYear();
+  });
+
+  const monthLessonsRevenue = monthLessons.reduce((sum, lesson) => {
+    const service = services.find(s => s.id === lesson.service_id);
+    const bookedSpots = lesson.booked_spots || 0;
+    return sum + (service?.price || 0) * bookedSpots;
+  }, 0);
+
+  const totalMonthRevenue = monthRevenue + monthLessonsRevenue;
 
   const pendingPayments = payments
     .filter(p => p.status === 'pending' || p.status === 'overdue')
@@ -117,8 +149,9 @@ export default function AdminReports() {
                   <TrendingUp className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-stone-500">Este Mês</p>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">{monthRevenue.toFixed(2)}€</p>
+                  <p className="text-sm text-stone-500">Este Mês (Total)</p>
+                  <p className="text-2xl font-bold text-[#2C3E1F]">{totalMonthRevenue.toFixed(2)}€</p>
+                  <p className="text-xs text-stone-400">Loja: {monthRevenue.toFixed(2)}€ | Aulas: {monthLessonsRevenue.toFixed(2)}€</p>
                 </div>
               </div>
             </CardContent>
@@ -131,8 +164,9 @@ export default function AdminReports() {
                   <ShoppingBag className="w-6 h-6 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-stone-500">Total Encomendas</p>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">{orders.length}</p>
+                  <p className="text-sm text-stone-500">Aulas Este Mês</p>
+                  <p className="text-2xl font-bold text-[#2C3E1F]">{monthLessons.length}</p>
+                  <p className="text-xs text-stone-400">Total de aulas: {lessons.length}</p>
                 </div>
               </div>
             </CardContent>

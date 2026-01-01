@@ -145,34 +145,42 @@ export default function AdminLessons() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Serviço</Label>
+                  <Label>Serviço *</Label>
                   <Select 
-                    value={newLesson.service_id}
+                    value={newLesson.service_id || undefined}
                     onValueChange={(v) => setNewLesson({...newLesson, service_id: v})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecionar serviço" />
                     </SelectTrigger>
                     <SelectContent>
-                      {services.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                      ))}
+                      {services.length === 0 ? (
+                        <SelectItem value="none" disabled>Sem serviços disponíveis</SelectItem>
+                      ) : (
+                        services.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Monitor</Label>
                   <Select 
-                    value={newLesson.instructor_id}
+                    value={newLesson.instructor_id || undefined}
                     onValueChange={(v) => setNewLesson({...newLesson, instructor_id: v})}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecionar monitor" />
+                      <SelectValue placeholder="Selecionar monitor (opcional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      {instructors.map(i => (
-                        <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
-                      ))}
+                      {instructors.length === 0 ? (
+                        <SelectItem value="none" disabled>Sem monitores disponíveis</SelectItem>
+                      ) : (
+                        instructors.map(i => (
+                          <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -220,9 +228,9 @@ export default function AdminLessons() {
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
                 locale={pt}
-                className="rounded-md border-0"
+                className="rounded-md border-0 w-full"
               />
             </CardContent>
           </Card>
