@@ -62,7 +62,7 @@ export default function AdminLessons() {
     initialData: []
   });
 
-  const { data: services } = useQuery({
+  const { data: services = [] } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
       try {
@@ -75,7 +75,7 @@ export default function AdminLessons() {
     }
   });
 
-  const { data: instructors } = useQuery({
+  const { data: instructors = [] } = useQuery({
     queryKey: ['instructors'],
     queryFn: async () => {
       try {
@@ -126,14 +126,17 @@ export default function AdminLessons() {
   });
 
   const getServiceName = (serviceId) => {
+    if (!services || !Array.isArray(services)) return 'Serviço não encontrado';
     return services.find(s => s.id === serviceId)?.title || 'Serviço não encontrado';
   };
 
   const getInstructorName = (instructorId) => {
+    if (!instructors || !Array.isArray(instructors)) return 'Não atribuído';
     return instructors.find(i => i.id === instructorId)?.name || 'Não atribuído';
   };
 
   const getLessonBookings = (lessonId) => {
+    if (!bookings || !Array.isArray(bookings)) return [];
     return bookings.filter(b => b.lesson_id === lessonId);
   };
 
@@ -168,7 +171,7 @@ export default function AdminLessons() {
                       <SelectValue placeholder="Selecionar serviço" />
                     </SelectTrigger>
                     <SelectContent>
-                      {services.length === 0 ? (
+                      {!services || services.length === 0 ? (
                         <SelectItem value="none" disabled>Sem serviços disponíveis</SelectItem>
                       ) : (
                         services.map(s => (
@@ -188,7 +191,7 @@ export default function AdminLessons() {
                       <SelectValue placeholder="Selecionar monitor (opcional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      {instructors.length === 0 ? (
+                      {!instructors || instructors.length === 0 ? (
                         <SelectItem value="none" disabled>Sem monitores disponíveis</SelectItem>
                       ) : (
                         instructors.map(i => (
