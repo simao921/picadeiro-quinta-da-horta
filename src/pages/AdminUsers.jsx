@@ -53,16 +53,23 @@ export default function AdminUsers() {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, newRole }) => {
-      await base44.entities.User.update(userId, { role: newRole });
-      return { userId, newRole };
+      try {
+        await base44.entities.User.update(userId, { role: newRole });
+        return { userId, newRole };
+      } catch (error) {
+        console.error('Mutation error:', error);
+        throw error;
+      }
     },
     onSuccess: async (data) => {
-      await queryClient.refetchQueries(['all-users']);
+      // Force refetch to get updated data
+      await queryClient.invalidateQueries(['all-users']);
+      await new Promise(resolve => setTimeout(resolve, 500));
       toast.success(`✅ Utilizador agora é ${data.newRole === 'admin' ? 'Administrador' : 'Utilizador'}!`);
     },
     onError: (error) => {
       console.error('Update error:', error);
-      toast.error('❌ Erro ao atualizar permissões');
+      toast.error('❌ Erro ao atualizar permissões: ' + error.message);
     }
   });
 
