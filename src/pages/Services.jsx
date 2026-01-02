@@ -111,6 +111,7 @@ export default function Services() {
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
 
+
               <Trophy className="w-4 h-4" />
               Nossos Serviços
             </span>
