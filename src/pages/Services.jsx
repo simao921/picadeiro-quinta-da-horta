@@ -8,70 +8,70 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  GraduationCap, Users, Heart, PartyPopper,
-  Clock, Euro, Users2, ArrowRight, Trophy,
-  Star, CheckCircle } from
-'lucide-react';
+import { 
+  GraduationCap, Users, Heart, PartyPopper, 
+  Clock, Euro, Users2, ArrowRight, Trophy, 
+  Star, CheckCircle 
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const iconMap = {
   'GraduationCap': GraduationCap,
   'Users': Users,
   'Heart': Heart,
-  'PartyPopper': PartyPopper
+  'PartyPopper': PartyPopper,
 };
 
 const defaultServices = [
-{
-  id: '1',
-  title: 'Aulas Particulares',
-  short_description: 'Aulas individuais personalizadas',
-  description: 'Aulas particulares com monitores experientes e com o Bi-Campeão do Mundo de Equitação – Gilberto Filipe. Programa totalmente adaptado ao seu nível e objetivos.',
-  price: 45,
-  duration: 60,
-  max_participants: 1,
-  icon: 'GraduationCap',
-  image_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-  features: ['Instrutor dedicado', 'Programa personalizado', 'Acompanhamento individual', 'Flexibilidade horária']
-},
-{
-  id: '2',
-  title: 'Aulas em Grupo',
-  short_description: 'Máximo de 4 alunos por aula',
-  description: 'Aulas em grupo com até 4 alunos, promovendo a aprendizagem colaborativa, socialização e espírito de equipa num ambiente divertido.',
-  price: 30,
-  duration: 60,
-  max_participants: 4,
-  icon: 'Users',
-  image_url: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800&q=80',
-  features: ['Máximo 4 alunos', 'Ambiente social', 'Aprendizagem em equipa', 'Preço acessível']
-},
-{
-  id: '3',
-  title: 'Hipoterapia',
-  short_description: 'Terapia assistida por cavalos',
-  description: 'Terapia especializada que utiliza o cavalo como instrumento terapêutico para promover ganhos físicos, psicológicos e educacionais.',
-  price: 50,
-  duration: 45,
-  max_participants: 1,
-  icon: 'Heart',
-  image_url: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=800&q=80',
-  features: ['Profissionais especializados', 'Cavalos treinados', 'Programa adaptado', 'Acompanhamento contínuo']
-},
-{
-  id: '4',
-  title: 'Aluguer de Espaço',
-  short_description: 'Eventos e festas de aniversário',
-  description: 'Espaço único e acolhedor para eventos especiais, festas de aniversário e celebrações. Inclui atividades com cavalos opcionais.',
-  price: 200,
-  duration: 180,
-  max_participants: 30,
-  icon: 'PartyPopper',
-  image_url: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80',
-  features: ['Espaço privativo', 'Decoração incluída', 'Atividades opcionais', 'Catering disponível']
-}];
-
+  {
+    id: '1',
+    title: 'Aulas Particulares',
+    short_description: 'Aulas individuais personalizadas',
+    description: 'Aulas particulares com monitores experientes e com o Bi-Campeão do Mundo de Equitação – Gilberto Filipe. Programa totalmente adaptado ao seu nível e objetivos.',
+    price: 45,
+    duration: 60,
+    max_participants: 1,
+    icon: 'GraduationCap',
+    image_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+    features: ['Instrutor dedicado', 'Programa personalizado', 'Acompanhamento individual', 'Flexibilidade horária']
+  },
+  {
+    id: '2',
+    title: 'Aulas em Grupo',
+    short_description: 'Máximo de 4 alunos por aula',
+    description: 'Aulas em grupo com até 4 alunos, promovendo a aprendizagem colaborativa, socialização e espírito de equipa num ambiente divertido.',
+    price: 30,
+    duration: 60,
+    max_participants: 4,
+    icon: 'Users',
+    image_url: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800&q=80',
+    features: ['Máximo 4 alunos', 'Ambiente social', 'Aprendizagem em equipa', 'Preço acessível']
+  },
+  {
+    id: '3',
+    title: 'Hipoterapia',
+    short_description: 'Terapia assistida por cavalos',
+    description: 'Terapia especializada que utiliza o cavalo como instrumento terapêutico para promover ganhos físicos, psicológicos e educacionais.',
+    price: 50,
+    duration: 45,
+    max_participants: 1,
+    icon: 'Heart',
+    image_url: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=800&q=80',
+    features: ['Profissionais especializados', 'Cavalos treinados', 'Programa adaptado', 'Acompanhamento contínuo']
+  },
+  {
+    id: '4',
+    title: 'Aluguer de Espaço',
+    short_description: 'Eventos e festas de aniversário',
+    description: 'Espaço único e acolhedor para eventos especiais, festas de aniversário e celebrações. Inclui atividades com cavalos opcionais.',
+    price: 200,
+    duration: 180,
+    max_participants: 30,
+    icon: 'PartyPopper',
+    image_url: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80',
+    features: ['Espaço privativo', 'Decoração incluída', 'Atividades opcionais', 'Catering disponível']
+  }
+];
 
 export default function Services() {
   const { data: services, isLoading } = useQuery({
@@ -80,23 +80,23 @@ export default function Services() {
     initialData: defaultServices
   });
 
-  const displayServices = services && services.length > 0 ? services : defaultServices;
+  const displayServices = (services && services.length > 0) ? services : defaultServices;
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <MetaTags
+      <MetaTags 
         title="Serviços - Picadeiro Quinta da Horta"
         description="Aulas de equitação particulares e em grupo, hipoterapia e aluguer de espaço para eventos. Programas personalizados com o Bi-Campeão Mundial Gilberto Filipe."
-        keywords="aulas equitação, aulas particulares cavalos, hipoterapia, eventos cavalos, gilberto filipe" />
-
+        keywords="aulas equitação, aulas particulares cavalos, hipoterapia, eventos cavalos, gilberto filipe"
+      />
       {/* Hero Section */}
       <section className="relative py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
             src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
             alt=""
-            className="w-full h-full object-cover" />
-
+            className="w-full h-full object-cover"
+          />
         </div>
         {/* Decorative Elements */}
         <div className="absolute top-20 right-20 w-72 h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
@@ -106,12 +106,10 @@ export default function Services() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center">
-
+            className="text-center"
+          >
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
-
-
               <Trophy className="w-4 h-4" />
               Nossos Serviços
             </span>
@@ -119,9 +117,9 @@ export default function Services() {
               Experiências<br />
               <span className="text-[#B8956A]">Personalizadas</span>
             </h1>
-            <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">Descubra os nossos serviços e encontre a experiência perfeita para si. 
-Desde aulas para iniciantes até treinos avançados.
-
+            <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
+              Descubra os nossos serviços e encontre a experiência perfeita para si. 
+              Desde aulas para iniciantes até treinos avançados.
             </p>
           </motion.div>
         </div>
@@ -131,10 +129,10 @@ Desde aulas para iniciantes até treinos avançados.
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-16">
-            {isLoading ?
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {[1, 2, 3, 4].map((i) =>
-              <Card key={i} className="overflow-hidden">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="overflow-hidden">
                     <Skeleton className="h-64 w-full" />
                     <CardContent className="p-6">
                       <Skeleton className="h-6 w-2/3 mb-2" />
@@ -142,30 +140,30 @@ Desde aulas para iniciantes até treinos avançados.
                       <Skeleton className="h-10 w-32" />
                     </CardContent>
                   </Card>
-              )}
-              </div> :
+                ))}
+              </div>
+            ) : (
+              displayServices.map((service, index) => {
+                const Icon = iconMap[service.icon] || GraduationCap;
+                const isEven = index % 2 === 0;
 
-            displayServices.map((service, index) => {
-              const Icon = iconMap[service.icon] || GraduationCap;
-              const isEven = index % 2 === 0;
-
-              return (
-                <motion.div
-                  key={service.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}>
-
+                return (
+                  <motion.div
+                    key={service.id}
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
                     <Card className="overflow-hidden border-0 shadow-xl bg-white">
                       <div className={`grid grid-cols-1 lg:grid-cols-2 ${isEven ? '' : 'lg:flex-row-reverse'}`}>
                         {/* Image */}
                         <div className={`relative h-80 lg:h-auto ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                           <img
-                          src={service.image_url}
-                          alt={service.title}
-                          className="w-full h-full object-cover" />
-
+                            src={service.image_url}
+                            alt={service.title}
+                            className="w-full h-full object-cover"
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent lg:hidden" />
                           <div className="absolute top-4 left-4">
                             <Badge className="bg-[#C9A961] text-[#2C3E1F] px-3 py-1">
@@ -185,44 +183,44 @@ Desde aulas para iniciantes até treinos avançados.
                           </p>
 
                           {/* Features */}
-                          {service.features &&
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                              {service.features.map((feature, i) =>
-                          <div key={i} className="flex items-center gap-2 text-sm text-stone-600">
+                          {service.features && (
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                              {service.features.map((feature, i) => (
+                                <div key={i} className="flex items-center gap-2 text-sm text-stone-600">
                                   <CheckCircle className="w-4 h-4 text-[#4A5D23]" />
                                   {feature}
                                 </div>
-                          )}
+                              ))}
                             </div>
-                        }
+                          )}
 
                           {/* Info Cards */}
                           <div className="flex flex-wrap gap-4 mb-8">
-                            {service.price &&
-                          <div className="flex items-center gap-2 px-4 py-2 bg-[#4A5D23]/10 rounded-lg">
+                            {service.price && (
+                              <div className="flex items-center gap-2 px-4 py-2 bg-[#4A5D23]/10 rounded-lg">
                                 <Euro className="w-4 h-4 text-[#4A5D23]" />
                                 <span className="font-semibold text-[#2C3E1F]">{service.price}€</span>
                               </div>
-                          }
-                            {service.duration &&
-                          <div className="flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 rounded-lg">
+                            )}
+                            {service.duration && (
+                              <div className="flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 rounded-lg">
                                 <Clock className="w-4 h-4 text-[#C9A961]" />
                                 <span className="text-[#2C3E1F]">{service.duration} min</span>
                               </div>
-                          }
-                            {service.max_participants &&
-                          <div className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-lg">
+                            )}
+                            {service.max_participants && (
+                              <div className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-lg">
                                 <Users2 className="w-4 h-4 text-stone-600" />
                                 <span className="text-stone-600">Máx. {service.max_participants}</span>
                               </div>
-                          }
+                            )}
                           </div>
 
                           <Link to={createPageUrl('Bookings')}>
-                            <Button
-                            size="lg"
-                            className="bg-[#B8956A] hover:bg-[#8B7355] text-white w-fit shadow-lg shadow-[#B8956A]/30">
-
+                            <Button 
+                              size="lg" 
+                              className="bg-[#B8956A] hover:bg-[#8B7355] text-white w-fit shadow-lg shadow-[#B8956A]/30"
+                            >
                               Reservar Agora
                               <ArrowRight className="w-5 h-5 ml-2" />
                             </Button>
@@ -230,10 +228,10 @@ Desde aulas para iniciantes até treinos avançados.
                         </CardContent>
                       </div>
                     </Card>
-                  </motion.div>);
-
-            })
-            }
+                  </motion.div>
+                );
+              })
+            )}
           </div>
         </div>
       </section>
@@ -252,16 +250,16 @@ Desde aulas para iniciantes até treinos avançados.
             Contacte-nos e teremos todo o gosto em criar uma experiência personalizada para si.
           </p>
           <Link to={createPageUrl('Contact')}>
-            <Button
-              size="lg"
-              className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-8">
-
+            <Button 
+              size="lg" 
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-8"
+            >
               Fale Connosco
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
         </div>
       </section>
-    </div>);
-
+    </div>
+  );
 }
