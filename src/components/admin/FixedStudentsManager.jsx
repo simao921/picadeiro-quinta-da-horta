@@ -55,7 +55,11 @@ export default function FixedStudentsManager() {
   });
 
   const fixedStudentsFromUsers = allUsers.filter(u => u.student_type === 'fixo');
-  const fixedStudentsFromPicadeiro = picadeiroStudents.filter(s => s.student_type === 'fixo');
+  const fixedStudentsFromPicadeiro = picadeiroStudents.filter(s => s.student_type === 'fixo').map(s => ({
+    ...s,
+    full_name: s.name,
+    email: s.email || s.phone
+  }));
   const fixedStudents = [...fixedStudentsFromUsers, ...fixedStudentsFromPicadeiro];
 
   const { data: services = [] } = useQuery({
