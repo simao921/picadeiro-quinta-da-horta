@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   CalendarDays, Clock, CheckCircle, XCircle, 
   AlertCircle, Euro, ShoppingBag, User, LogOut,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon, FileText, Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -63,6 +63,12 @@ export default function ClientDashboard() {
   const { data: lessons } = useQuery({
     queryKey: ['lessons'],
     queryFn: () => base44.entities.Lesson.list(),
+    initialData: []
+  });
+
+  const { data: regulations } = useQuery({
+    queryKey: ['regulations'],
+    queryFn: () => base44.entities.RegulationDocument.filter({ is_visible: true }),
     initialData: []
   });
 
@@ -230,6 +236,50 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Regulations Section */}
+        {regulations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Card className="border-[#B8956A] bg-gradient-to-br from-stone-50 to-white">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#B8956A]" />
+                  Regulamento Interno
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {regulations.map((reg) => (
+                    <div key={reg.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#B8956A] transition-colors">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-8 h-8 text-[#B8956A]" />
+                        <div>
+                          <p className="font-medium text-[#2C3E1F]">{reg.title}</p>
+                          <p className="text-xs text-stone-500">Documento em PDF</p>
+                        </div>
+                      </div>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A] hover:text-white"
+                      >
+                        <a href={reg.file_url} target="_blank" rel="noopener noreferrer" download>
+                          <Download className="w-4 h-4 mr-2" />
+                          Descarregar
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
