@@ -13,8 +13,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from '@/components/LanguageProvider';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function Layout({ children, currentPageName }) {
+  const { t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -80,12 +83,12 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const navLinks = [
-    { name: 'Início', page: 'Home' },
-    { name: 'Serviços', page: 'Services' },
-    { name: 'Galeria', page: 'Gallery' },
-    { name: 'Loja', page: 'Shop' },
-    { name: 'Reservas', page: 'Bookings' },
-    { name: 'Contactos', page: 'Contact' },
+    { name: t('nav_home'), page: 'Home' },
+    { name: t('nav_services'), page: 'Services' },
+    { name: t('nav_gallery'), page: 'Gallery' },
+    { name: t('nav_shop'), page: 'Shop' },
+    { name: t('nav_bookings'), page: 'Bookings' },
+    { name: t('nav_contact'), page: 'Contact' },
   ];
 
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -207,6 +210,8 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Right Side */}
             <div className="flex items-center gap-2">
+              <LanguageSelector />
+
               {user && (
                 <Link to={createPageUrl('Wishlist')} className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group">
                   <Heart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
@@ -240,12 +245,12 @@ export default function Layout({ children, currentPageName }) {
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('ClientDashboard')} className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        Minha Conta
+                        {t('my_account')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-red-600">
                       <LogOut className="w-4 h-4" />
-                      Terminar Sessão
+                      {t('logout')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -254,7 +259,7 @@ export default function Layout({ children, currentPageName }) {
                   onClick={() => base44.auth.redirectToLogin()}
                   className="bg-[#2D2D2D] hover:bg-[#1A1A1A] text-white"
                 >
-                  Entrar
+                  {t('login')}
                 </Button>
               )}
 
@@ -320,7 +325,7 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Quick Links */}
             <div>
-              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Links Rápidos</h4>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">{t('nav_home')}</h4>
               <ul className="space-y-3">
                 {navLinks.map((link) => (
                 <li key={link.page}>
