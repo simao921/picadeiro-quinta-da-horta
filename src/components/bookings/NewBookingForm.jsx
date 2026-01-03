@@ -41,7 +41,8 @@ export default function NewBookingForm({ user, isBlocked }) {
   const defaultServices = [
     { id: '1', title: 'Aulas Particulares', price: 45, duration: 60, max_participants: 1, short_description: 'Aulas individuais personalizadas' },
     { id: '2', title: 'Aulas em Grupo', price: 30, duration: 60, max_participants: 4, short_description: 'Máximo de 4 alunos por aula' },
-    { id: '3', title: 'Hipoterapia', price: 50, duration: 45, max_participants: 1, short_description: 'Terapia assistida por cavalos' }
+    { id: '3', title: 'Hipoterapia', price: 50, duration: 45, max_participants: 1, short_description: 'Terapia assistida por cavalos' },
+    { id: '5', title: 'Proprietários', price: null, duration: 30, max_participants: 1, short_description: 'Reservas para proprietários', is_owner_service: true }
   ];
 
   const { data: services } = useQuery({
@@ -67,22 +68,34 @@ export default function NewBookingForm({ user, isBlocked }) {
 
   const createBookingMutation = useMutation({
     mutationFn: async () => {
+      // Para proprietários, verificar se já existem 6 alunos nesse horário
+      if (selectedService.is_owner_service || selectedService.title === 'Proprietários') {
+        const existingLesson = lessons.find(l => l.start_time === selectedTime);
+        if (existingLesson && existingLesson.booked_spots >= 6) {
+          throw new Error('Horário indisponível - prioridade para alunos (máximo 6 alunos por sessão)');
+        }
+      }
+
       let lesson = lessons.find(l => 
         l.service_id === selectedService.id && 
         l.start_time === selectedTime
       );
 
+      // Calcular duração baseado no plano (para proprietários)
+      const duration = selectedPlan?.duration || selectedService.duration;
+
       if (!lesson) {
+        const startTime = new Date(`2000-01-01T${selectedTime}:00`);
+        const endTime = new Date(startTime.getTime() + duration * 60000);
+        
         lesson = await base44.entities.Lesson.create({
           service_id: selectedService.id,
           date: format(selectedDate, 'yyyy-MM-dd'),
           start_time: selectedTime,
-          end_time: format(
-            new Date(`2000-01-01T${selectedTime}:00`).getTime() + selectedService.duration * 60000,
-            'HH:mm'
-          ),
-          max_spots: selectedService.max_participants || 4,
-          booked_spots: 0
+          end_time: format(endTime, 'HH:mm'),
+          max_spots: 6,
+          booked_spots: 0,
+          is_owner_service: selectedService.is_owner_service || false
         });
       }
 
@@ -90,7 +103,8 @@ export default function NewBookingForm({ user, isBlocked }) {
         lesson_id: lesson.id,
         client_email: user.email,
         client_name: user.full_name,
-        status: selectedService.auto_approve ? 'approved' : 'pending'
+        status: selectedService.auto_approve ? 'approved' : 'pending',
+        is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários'
       });
 
       await base44.entities.Lesson.update(lesson.id, {
@@ -466,6 +480,45 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
+          {/* Proprietários */}
+          {selectedService?.title === 'Proprietários' && (
+            <div className="space-y-4">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                <p className="text-sm text-amber-800">
+                  <strong>Atenção:</strong> Reservas de proprietários têm prioridade secundária. Se houver muitos alunos no dia escolhido, as reservas de proprietários podem não ser aceites (máximo 6 alunos por sessão).
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card
+                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                    selectedPlan?.duration === 30 
+                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                      : 'border-stone-200 hover:border-[#B8956A]/50'
+                  }`}
+                  onClick={() => setSelectedPlan({ label: '30 minutos', price: 0, duration: 30 })}
+                >
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">30 minutos</h3>
+                    <p className="text-sm text-stone-600">Sessão de meia hora</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                    selectedPlan?.duration === 60 
+                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                      : 'border-stone-200 hover:border-[#B8956A]/50'
+                  }`}
+                  onClick={() => setSelectedPlan({ label: '60 minutos', price: 0, duration: 60 })}
+                >
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">60 minutos</h3>
+                    <p className="text-sm text-stone-600">Sessão de uma hora</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
           {/* Fallback para outros serviços sem planos específicos */}
           {selectedService && 
            selectedService.title !== 'Aulas de Escola' && 
@@ -473,6 +526,7 @@ export default function NewBookingForm({ user, isBlocked }) {
            selectedService.title !== 'Aulas em Grupo' &&
            !selectedService.title?.toLowerCase().includes('fotográf') &&
            selectedService.title !== 'Serviços de Proprietários' &&
+           selectedService.title !== 'Proprietários' &&
            selectedService.title !== 'Hipoterapia' && (
             <div className="space-y-4">
               <Card className="border-[#B8956A] bg-[#B8956A]/5">
@@ -491,18 +545,21 @@ export default function NewBookingForm({ user, isBlocked }) {
             <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">Voltar</Button>
             <Button
               onClick={() => {
-                if (selectedService?.title === 'Hipoterapia') {
-                  setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
-                  setStep(3);
-                } else if (!selectedPlan && selectedService) {
-                  // Auto-selecionar plano para serviços genéricos
-                  setSelectedPlan({ label: selectedService.title, price: selectedService.price });
-                  setStep(3);
-                } else {
-                  setStep(3);
-                }
+               if (selectedService?.title === 'Hipoterapia') {
+                 setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
+                 setStep(3);
+               } else if (selectedService?.title === 'Proprietários' && !selectedPlan) {
+                 // Para proprietários, exigir seleção de plano
+                 toast.error('Por favor selecione a duração da sessão');
+               } else if (!selectedPlan && selectedService) {
+                 // Auto-selecionar plano para serviços genéricos
+                 setSelectedPlan({ label: selectedService.title, price: selectedService.price });
+                 setStep(3);
+               } else {
+                 setStep(3);
+               }
               }}
-              disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia' && !selectedService?.price}
+              disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia' && !selectedService?.price && selectedService?.title !== 'Proprietários'}
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
             >
               Continuar
