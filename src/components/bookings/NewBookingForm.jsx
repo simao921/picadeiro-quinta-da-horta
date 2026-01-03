@@ -27,6 +27,7 @@ const timeSlots = [
 export default function NewBookingForm({ user, isBlocked }) {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(null);
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
@@ -115,7 +116,7 @@ export default function NewBookingForm({ user, isBlocked }) {
     onSuccess: () => {
       queryClient.invalidateQueries(['my-bookings']);
       queryClient.invalidateQueries(['lessons']);
-      setStep(4);
+      setStep(5);
       toast.success('Reserva criada com sucesso!');
     }
   });
@@ -148,7 +149,7 @@ export default function NewBookingForm({ user, isBlocked }) {
     );
   }
 
-  if (step === 4) {
+  if (step === 5) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
@@ -168,6 +169,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           onClick={() => {
             setStep(1);
             setSelectedService(null);
+            setSelectedPlan(null);
             setSelectedTime(null);
           }}
           className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
@@ -181,16 +183,16 @@ export default function NewBookingForm({ user, isBlocked }) {
   return (
     <div className="space-y-6">
       {/* Progress */}
-      <div className="flex items-center justify-center mb-8 max-w-md mx-auto">
-        {[1, 2, 3].map((s) => (
+      <div className="flex items-center justify-center mb-8 max-w-xl mx-auto">
+        {[1, 2, 3, 4].map((s) => (
           <div key={s} className="flex items-center">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all
               ${step >= s ? 'bg-[#4A5D23] text-white' : 'bg-stone-200 text-stone-500'}`}
             >
               {step > s ? <CheckCircle className="w-5 h-5" /> : s}
             </div>
-            {s < 3 && (
-              <div className={`w-16 sm:w-24 h-1 mx-2 rounded transition-all
+            {s < 4 && (
+              <div className={`w-12 sm:w-20 h-1 mx-2 rounded transition-all
                 ${step > s ? 'bg-[#4A5D23]' : 'bg-stone-200'}`}
               />
             )}
@@ -254,8 +256,132 @@ export default function NewBookingForm({ user, isBlocked }) {
         </div>
       )}
 
-      {/* Step 2: Select Date & Time */}
+      {/* Step 2: Select Plan */}
       {step === 2 && (
+        <div>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha o Plano</h2>
+          
+          {selectedService?.title === 'Aulas de Escola' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { duration: 30, frequency: 1, price: 70, label: '30min - 1x/semana' },
+                  { duration: 30, frequency: 2, price: 120, label: '30min - 2x/semana' },
+                  { duration: 30, frequency: 3, price: 150, label: '30min - 3x/semana' },
+                  { duration: 60, frequency: 1, price: 90, label: '60min - 1x/semana' },
+                  { duration: 60, frequency: 2, price: 150, label: '60min - 2x/semana' },
+                  { duration: 60, frequency: 3, price: 180, label: '60min - 3x/semana' }
+                ].map((plan) => (
+                  <Card
+                    key={plan.label}
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedPlan?.label === plan.label 
+                        ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedPlan(plan)}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">{plan.label}</h3>
+                      <p className="text-2xl font-bold text-[#B8956A]">{plan.price}€<span className="text-sm text-stone-500">/mês</span></p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedService?.title === 'Aulas Particulares' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card
+                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                    selectedPlan?.label === 'Com Gilberto Filipe' 
+                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                      : 'border-stone-200 hover:border-[#B8956A]/50'
+                  }`}
+                  onClick={() => setSelectedPlan({ label: 'Com Gilberto Filipe', price: 75 })}
+                >
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Com Gilberto Filipe</h3>
+                    <p className="text-2xl font-bold text-[#B8956A]">75€<span className="text-sm text-stone-500">/aula</span></p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                    selectedPlan?.label === 'Com Monitores/Team' 
+                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                      : 'border-stone-200 hover:border-[#B8956A]/50'
+                  }`}
+                  onClick={() => setSelectedPlan({ label: 'Com Monitores/Team', price: 50 })}
+                >
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Com Monitores/Team</h3>
+                    <p className="text-2xl font-bold text-[#B8956A]">50€<span className="text-sm text-stone-500">/aula</span></p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {selectedService?.title === 'Serviços de Proprietários' && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">Em Grupo (com monitores)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {[
+                  { frequency: 1, price: 35, label: 'Grupo - 1x/semana' },
+                  { frequency: 2, price: 60, label: 'Grupo - 2x/semana' },
+                  { frequency: 3, price: 100, label: 'Grupo - 3x/semana' }
+                ].map((plan) => (
+                  <Card
+                    key={plan.label}
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedPlan?.label === plan.label 
+                        ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedPlan(plan)}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">{plan.label}</h3>
+                      <p className="text-2xl font-bold text-[#B8956A]">{plan.price}€<span className="text-sm text-stone-500">/semana</span></p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">Individual (com monitores/team)</h3>
+              <Card
+                className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                  selectedPlan?.label === 'Individual' 
+                    ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                    : 'border-stone-200 hover:border-[#B8956A]/50'
+                }`}
+                onClick={() => setSelectedPlan({ label: 'Individual', price: 50 })}
+              >
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Aula Individual</h3>
+                  <p className="text-2xl font-bold text-[#B8956A]">50€<span className="text-sm text-stone-500">/aula</span></p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-between">
+            <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">Voltar</Button>
+            <Button
+              onClick={() => setStep(3)}
+              disabled={!selectedPlan}
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
+            >
+              Continuar
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Select Date & Time */}
+      {step === 3 && (
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha a Data e Hora</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -306,9 +432,9 @@ export default function NewBookingForm({ user, isBlocked }) {
             </Card>
           </div>
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">Voltar</Button>
+            <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">Voltar</Button>
             <Button
-              onClick={() => setStep(3)}
+              onClick={() => setStep(4)}
               disabled={!selectedTime}
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white disabled:bg-stone-300"
             >
@@ -318,8 +444,8 @@ export default function NewBookingForm({ user, isBlocked }) {
         </div>
       )}
 
-      {/* Step 3: Confirmation */}
-      {step === 3 && (
+      {/* Step 4: Confirmation */}
+      {step === 4 && (
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Confirme a Reserva</h2>
           <Card className="border-stone-200 overflow-hidden">
@@ -331,6 +457,10 @@ export default function NewBookingForm({ user, isBlocked }) {
                 <div className="flex justify-between py-3 border-b border-stone-200">
                   <span className="text-stone-600">Serviço</span>
                   <span className="font-semibold text-[#2C3E1F]">{selectedService?.title}</span>
+                </div>
+                <div className="flex justify-between py-3 border-b border-stone-200">
+                  <span className="text-stone-600">Plano</span>
+                  <span className="font-semibold text-[#2C3E1F]">{selectedPlan?.label}</span>
                 </div>
                 <div className="flex justify-between py-3 border-b border-stone-200">
                   <span className="text-stone-600">Data</span>
@@ -348,13 +478,13 @@ export default function NewBookingForm({ user, isBlocked }) {
                 </div>
                 <div className="flex justify-between py-4 bg-stone-50 -mx-8 px-8 mt-4">
                   <span className="text-lg font-medium text-stone-700">Total</span>
-                  <span className="font-bold text-2xl text-[#B8956A]">{selectedService?.price}€</span>
+                  <span className="font-bold text-2xl text-[#B8956A]">{selectedPlan?.price}€</span>
                 </div>
               </div>
             </CardContent>
           </Card>
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">Voltar</Button>
+            <Button variant="outline" onClick={() => setStep(3)} className="border-stone-300">Voltar</Button>
             <Button
               onClick={() => createBookingMutation.mutate()}
               disabled={createBookingMutation.isPending}

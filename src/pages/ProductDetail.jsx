@@ -19,6 +19,7 @@ import {
 import { ShoppingCart, Star, ArrowLeft, Check, Truck, Shield, Package, Plus, Minus, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
 import ReviewSection from '@/components/product/ReviewSection';
 
 export default function ProductDetail() {
@@ -31,6 +32,7 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [user, setUser] = useState(null);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  
   const queryClient = useQueryClient();
 
   useEffect(() => {
