@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
 import { format, addDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { motion } from 'framer-motion';
