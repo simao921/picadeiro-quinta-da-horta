@@ -352,9 +352,9 @@ export default function NewBookingForm({ user, isBlocked }) {
               <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">30 minutos</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 {[
-                  { frequency: 1, price: 60, label: '1x/semana', duration: 30 },
-                  { frequency: 2, price: 100, label: '2x/semana', duration: 30 },
-                  { frequency: 3, price: 140, label: '3x/semana', duration: 30 }
+                  { frequency: 1, price: 70, label: '1x/semana', duration: 30 },
+                  { frequency: 2, price: 120, label: '2x/semana', duration: 30 },
+                  { frequency: 3, price: 150, label: '3x/semana', duration: 30 }
                 ].map((plan) => (
                   <Card
                     key={plan.label}
@@ -376,9 +376,9 @@ export default function NewBookingForm({ user, isBlocked }) {
               <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">60 minutos</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { frequency: 1, price: 80, label: '1x/semana', duration: 60 },
-                  { frequency: 2, price: 140, label: '2x/semana', duration: 60 },
-                  { frequency: 3, price: 190, label: '3x/semana', duration: 60 }
+                  { frequency: 1, price: 90, label: '1x/semana', duration: 60 },
+                  { frequency: 2, price: 150, label: '2x/semana', duration: 60 },
+                  { frequency: 3, price: 180, label: '3x/semana', duration: 60 }
                 ].map((plan) => (
                   <Card
                     key={plan.label}
