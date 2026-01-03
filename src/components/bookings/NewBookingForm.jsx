@@ -23,6 +23,8 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [selectedService, setSelectedService] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(null);
+  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+  const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
 
   const queryClient = useQueryClient();
 
