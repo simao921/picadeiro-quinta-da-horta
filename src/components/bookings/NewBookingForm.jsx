@@ -22,8 +22,8 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/components/LanguageProvider';
 
 const timeSlots = [
-  '08:00', '09:00', '10:00', '11:00', '12:00', 
-  '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
 ];
 
 export default function NewBookingForm({ user, isBlocked }) {
@@ -156,10 +156,9 @@ export default function NewBookingForm({ user, isBlocked }) {
         <div className="flex items-start gap-3">
           <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
           <div>
-            <h3 className="font-semibold text-red-800 mb-2">Conta Bloqueada</h3>
+            <h3 className="font-semibold text-red-800 mb-2">{t('account_blocked')}</h3>
             <p className="text-red-700 text-sm">
-              Não pode fazer novas reservas devido a pagamentos em atraso superiores a 30€. 
-              Por favor regularize a sua situação financeira na aba "Pagamentos".
+              {t('debt_warning')} {t('regularize_warning')}
             </p>
           </div>
         </div>
@@ -178,10 +177,10 @@ export default function NewBookingForm({ user, isBlocked }) {
           <CheckCircle className="w-10 h-10 text-green-600" />
         </div>
         <h2 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-4">
-          Reserva Confirmada!
+          {t('booking_confirmed')}
         </h2>
         <p className="text-stone-600 mb-8 max-w-md mx-auto">
-          A sua reserva foi registada. Enviámos um email de confirmação.
+          {t('booking_confirmation_message')}
         </p>
         <Button
           onClick={() => {
@@ -192,7 +191,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           }}
           className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
         >
-          Fazer Nova Reserva
+          {t('new_booking')}
         </Button>
       </motion.div>
     );
@@ -277,7 +276,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Step 2: Select Plan */}
       {step === 2 && (
         <div>
-          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha o Plano</h2>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">{t('select_plan')}</h2>
           
           {selectedService?.title === 'Aulas de Escola' && (
             <div className="space-y-4">
@@ -543,7 +542,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           )}
 
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">Voltar</Button>
+            <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">{t('back')}</Button>
             <Button
               onClick={() => {
                if (selectedService?.title === 'Hipoterapia') {
@@ -614,7 +613,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {step === 3 && (
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">
-            Escolha {selectedPlan?.frequency > 1 ? `os ${selectedPlan.frequency} Horários` : 'a Data e Hora'}
+            {t('select_date_time')}
           </h2>
 
           {selectedPlan?.frequency > 1 ? (
@@ -636,7 +635,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                           selected={selectedDate}
                           onSelect={setSelectedDate}
                           locale={pt}
-                          disabled={(date) => date < new Date() || date > addDays(new Date(), 60)}
+                          disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0}
                           className="rounded-md border"
                         />
                       </div>
@@ -679,7 +678,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     locale={pt}
-                    disabled={(date) => date < new Date() || date > addDays(new Date(), 60)}
+                    disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0}
                     className="rounded-md border-0"
                   />
                 </CardContent>
@@ -717,7 +716,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">Voltar</Button>
+            <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
             <Button
               onClick={() => setStep(4)}
               disabled={!selectedTime}
@@ -732,7 +731,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Step 4: Confirmation */}
       {step === 4 && (
         <div>
-          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Confirme a Reserva</h2>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">{t('confirm_booking')}</h2>
           
           {/* Aviso Geral */}
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -794,7 +793,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             </CardContent>
           </Card>
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(3)} className="border-stone-300">Voltar</Button>
+            <Button variant="outline" onClick={() => setStep(3)} className="border-stone-300">{t('back')}</Button>
             <Button
               onClick={() => createBookingMutation.mutate()}
               disabled={createBookingMutation.isPending}
@@ -806,7 +805,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   A processar...
                 </>
               ) : (
-                'Confirmar Reserva'
+                t('confirm_booking')
               )}
             </Button>
           </div>

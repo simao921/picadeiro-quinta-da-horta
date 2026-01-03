@@ -520,6 +520,7 @@ export const translations = {
     min: 'min',
     max: 'Max.',
     from: 'From',
+    booking_confirmation_message: 'Your booking has been registered. We have sent you a confirmation email.',
     
     // Common
     continue: 'Continue',
@@ -1144,6 +1145,7 @@ export const translations = {
     min: 'min',
     max: 'Max.',
     from: 'Depuis',
+    booking_confirmation_message: 'Votre réservation a été enregistrée. Nous vous avons envoyé un email de confirmation.',
     
     // Common
     continue: 'Continuer',
