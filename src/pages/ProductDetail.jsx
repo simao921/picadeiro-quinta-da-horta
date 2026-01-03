@@ -201,13 +201,13 @@ export default function ProductDetail() {
           <span className="text-[#2C3E1F] font-medium">{product.name}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Images */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Images - Smaller */}
+          <div className="lg:col-span-1 space-y-3">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="aspect-square rounded-2xl overflow-hidden bg-white shadow-xl"
+              className="aspect-square rounded-xl overflow-hidden bg-white shadow-md"
             >
               <LazyImage
                 src={images[selectedImage]}
@@ -217,12 +217,12 @@ export default function ProductDetail() {
             </motion.div>
 
             {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`aspect-square rounded-md overflow-hidden border-2 transition-all ${
                       selectedImage === idx
                         ? 'border-[#B8956A] ring-2 ring-[#B8956A]/30'
                         : 'border-transparent hover:border-stone-300'
@@ -240,7 +240,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             {/* Title & Price */}
             <div>
               {product.is_featured && (
