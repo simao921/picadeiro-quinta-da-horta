@@ -238,7 +238,7 @@ export default function AdminLessons() {
     return pendingBookings.map(booking => {
       const lesson = allLessons.find(l => l.id === booking.lesson_id);
       return { ...booking, lesson };
-    }).filter(b => b.lesson);
+    });
   };
 
   const getServiceName = (serviceId) => {
@@ -422,19 +422,23 @@ export default function AdminLessons() {
                           </div>
                           <p className="font-semibold text-[#2C3E1F] mb-1">{item.client_name}</p>
                           <p className="text-sm text-stone-500 mb-2">{item.client_email}</p>
-                          <div className="flex flex-wrap gap-3 text-sm text-stone-600">
-                            <span className="flex items-center gap-1">
-                              <CalendarDays className="w-4 h-4 text-[#B8956A]" />
-                              {format(new Date(item.lesson.date), "d 'de' MMMM", { locale: pt })}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4 text-[#B8956A]" />
-                              {item.lesson.start_time}
-                            </span>
-                            <span className="text-stone-500">
-                              {getServiceName(item.lesson.service_id)}
-                            </span>
-                          </div>
+                          {item.lesson ? (
+                            <div className="flex flex-wrap gap-3 text-sm text-stone-600">
+                              <span className="flex items-center gap-1">
+                                <CalendarDays className="w-4 h-4 text-[#B8956A]" />
+                                {format(new Date(item.lesson.date), "d 'de' MMMM", { locale: pt })}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-4 h-4 text-[#B8956A]" />
+                                {item.lesson.start_time}
+                              </span>
+                              <span className="text-stone-500">
+                                {getServiceName(item.lesson.service_id)}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-stone-400">ID da Aula: {item.lesson_id}</p>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button
