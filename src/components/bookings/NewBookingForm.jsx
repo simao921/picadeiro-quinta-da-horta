@@ -140,7 +140,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               end_time: format(endTime, 'HH:mm'),
               max_spots: 6,
               booked_spots: 0,
-              is_owner_service: selectedService.is_owner_service || false
+              is_owner_service: selectedService.title === 'Proprietários'
             });
           }
           
@@ -167,7 +167,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   end_time: format(endTime, 'HH:mm'),
                   max_spots: 6,
                   booked_spots: 0,
-                  is_owner_service: selectedService.is_owner_service || false
+                  is_owner_service: selectedService.title === 'Proprietários'
                 });
               }
               
@@ -260,7 +260,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             end_time: format(endTime, 'HH:mm'),
             max_spots: 6,
             booked_spots: 0,
-            is_owner_service: selectedService.is_owner_service || false
+            is_owner_service: selectedService.title === 'Proprietários'
           });
         }
 
