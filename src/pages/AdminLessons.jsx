@@ -479,109 +479,191 @@ export default function AdminLessons() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Calendar */}
-          <Card className="lg:col-span-1 border-0 shadow-md">
-            <CardHeader>
+          <Card className="lg:col-span-1 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white pb-6">
               <CardTitle className="text-lg flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-[#B8956A]" />
+                <CalendarDays className="w-5 h-5" />
                 Calendário
               </CardTitle>
+              <p className="text-sm text-white/80 mt-1">Selecione uma data</p>
             </CardHeader>
-            <CardContent className="p-3">
+            <CardContent className="p-4">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
                 locale={pt}
                 className="rounded-md border-0 w-full"
+                classNames={{
+                  months: "flex flex-col space-y-4",
+                  month: "space-y-4",
+                  caption: "flex justify-center pt-1 relative items-center mb-4",
+                  caption_label: "text-base font-bold text-[#2C3E1F]",
+                  nav: "space-x-1 flex items-center",
+                  nav_button: "h-8 w-8 bg-transparent hover:bg-[#B8956A]/10 rounded-full transition-colors border border-stone-200",
+                  nav_button_previous: "absolute left-1",
+                  nav_button_next: "absolute right-1",
+                  table: "w-full border-collapse space-y-1",
+                  head_row: "flex justify-between mb-2",
+                  head_cell: "text-stone-600 rounded-md w-10 font-semibold text-sm uppercase",
+                  row: "flex w-full mt-2 justify-between",
+                  cell: "text-center text-sm p-0 relative",
+                  day: "h-10 w-10 p-0 font-medium hover:bg-[#B8956A]/20 rounded-xl transition-all hover:scale-105",
+                  day_selected: "bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white hover:from-[#8B7355] hover:to-[#6B5845] shadow-lg scale-105",
+                  day_today: "bg-blue-50 text-blue-900 font-bold ring-2 ring-blue-400 ring-offset-2",
+                  day_outside: "text-stone-300 opacity-50",
+                  day_disabled: "text-stone-200 opacity-30 hover:bg-transparent cursor-not-allowed",
+                  day_hidden: "invisible",
+                }}
               />
+              <div className="mt-4 pt-4 border-t border-stone-200">
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                    <span className="text-stone-600">Hoje</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-[#B8956A] rounded-full"></div>
+                    <span className="text-stone-600">Selecionado</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
           {/* Lessons List */}
-          <Card className="lg:col-span-3 border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Aulas de {format(selectedDate, "d 'de' MMMM", { locale: pt })}
-              </CardTitle>
+          <Card className="lg:col-span-3 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-[#2C3E1F] to-[#4A5D23] text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl font-bold mb-1">
+                    {format(selectedDate, "EEEE", { locale: pt })}
+                  </CardTitle>
+                  <p className="text-white/80 text-sm">
+                    {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
+                  </p>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                  <span className="text-2xl font-bold">{lessons.length}</span>
+                  <span className="text-sm ml-1 text-white/80">aulas</span>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               {isLoading ? (
                 <div className="text-center py-8">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
                 </div>
               ) : lessons.length === 0 ? (
-                <div className="text-center py-8 text-stone-500">
-                  <CalendarDays className="w-12 h-12 mx-auto mb-2 text-stone-300" />
-                  <p>Sem aulas agendadas para este dia</p>
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CalendarDays className="w-12 h-12 text-stone-300" />
+                  </div>
+                  <p className="text-stone-500 font-medium">Sem aulas agendadas para este dia</p>
+                  <p className="text-sm text-stone-400 mt-1">Clique em "Nova Aula" para adicionar</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {lessons.map((lesson) => {
                     const lessonBookings = getLessonBookings(lesson.id);
                     const hasPending = lessonBookings.some(b => b.status === 'pending');
+                    const isFull = (lesson.booked_spots || 0) >= 6;
                     return (
-                      <Card key={lesson.id} className={`border ${hasPending ? 'border-amber-300 bg-amber-50/30' : ''}`}>
-                        <CardContent className="p-4">
+                      <Card key={lesson.id} className={`border-l-4 shadow-md hover:shadow-lg transition-all ${
+                        hasPending ? 'border-l-amber-500 bg-amber-50/50' : 
+                        isFull ? 'border-l-red-500 bg-red-50/30' : 
+                        'border-l-[#B8956A] hover:border-l-[#8B7355]'
+                      }`}>
+                        <CardContent className="p-5">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Clock className="w-4 h-4 text-[#B8956A]" />
-                                <span className="font-semibold">{lesson.start_time} - {lesson.end_time || '--:--'}</span>
-                                {hasPending && (
-                                  <Badge className="bg-amber-500 text-white animate-pulse">
-                                    Pendente
-                                  </Badge>
-                                )}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white rounded-lg px-3 py-2 font-bold text-lg shadow-md">
+                                  {lesson.start_time}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-bold text-[#2C3E1F] text-lg">{getServiceName(lesson.service_id)}</p>
+                                  <div className="flex items-center gap-2 text-sm text-stone-500 mt-1">
+                                    <span>Monitor: {getInstructorName(lesson.instructor_id)}</span>
+                                    <span className="text-stone-300">•</span>
+                                    <span>{lesson.end_time || '--:--'}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-stone-600">{getServiceName(lesson.service_id)}</p>
-                              <p className="text-sm text-stone-500">Monitor: {getInstructorName(lesson.instructor_id)}</p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge className={`${(lesson.booked_spots || 0) >= 6 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
-                                <Users className="w-3 h-3 mr-1" />
+                            <div className="flex items-center gap-3">
+                              {hasPending && (
+                                <Badge className="bg-amber-500 text-white animate-pulse shadow-lg">
+                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                  Pendente
+                                </Badge>
+                              )}
+                              <Badge className={`text-base px-4 py-2 font-bold shadow-md ${
+                                isFull ? 'bg-red-500 text-white' : 
+                                (lesson.booked_spots || 0) > 3 ? 'bg-amber-500 text-white' :
+                                'bg-green-500 text-white'
+                              }`}>
+                                <Users className="w-4 h-4 mr-2" />
                                 {lesson.booked_spots || 0}/6
                               </Badge>
                             </div>
                           </div>
 
                           {lessonBookings.length > 0 && (
-                            <div className="mt-4 pt-4 border-t">
-                              <p className="text-sm font-medium mb-2">Reservas:</p>
+                            <div className="mt-4 pt-4 border-t border-stone-200">
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-bold text-[#2C3E1F] flex items-center gap-2">
+                                  <Users className="w-4 h-4 text-[#B8956A]" />
+                                  Reservas ({lessonBookings.length})
+                                </p>
+                              </div>
                               <div className="space-y-2">
                                 {lessonBookings.map((booking) => (
-                                  <div key={booking.id} className="flex items-center justify-between p-2 bg-stone-50 rounded-lg">
-                                    <div>
-                                      <p className="font-medium text-sm">{booking.client_name}</p>
-                                      <p className="text-xs text-stone-500">{booking.client_email}</p>
+                                  <div key={booking.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                                    booking.status === 'pending' ? 'bg-amber-50 border-amber-200' :
+                                    booking.status === 'approved' ? 'bg-green-50 border-green-200' :
+                                    'bg-stone-50 border-stone-200'
+                                  }`}>
+                                    <div className="flex items-center gap-3">
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                                        booking.status === 'pending' ? 'bg-amber-500' :
+                                        booking.status === 'approved' ? 'bg-green-500' :
+                                        booking.status === 'rejected' ? 'bg-red-500' :
+                                        'bg-stone-400'
+                                      }`}>
+                                        {booking.client_name?.charAt(0) || '?'}
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold text-sm text-[#2C3E1F]">{booking.client_name}</p>
+                                        <p className="text-xs text-stone-500">{booking.client_email}</p>
+                                      </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       {booking.status === 'pending' ? (
                                         <>
                                           <Button
                                             size="sm"
-                                            variant="outline"
-                                            className="text-green-600 border-green-600 hover:bg-green-50"
+                                            className="bg-green-600 hover:bg-green-700 text-white shadow-md"
                                             onClick={() => updateBookingMutation.mutate({ id: booking.id, status: 'approved' })}
                                           >
                                             <CheckCircle className="w-4 h-4" />
                                           </Button>
                                           <Button
                                             size="sm"
-                                            variant="outline"
-                                            className="text-red-600 border-red-600 hover:bg-red-50"
+                                            className="bg-red-600 hover:bg-red-700 text-white shadow-md"
                                             onClick={() => updateBookingMutation.mutate({ id: booking.id, status: 'rejected' })}
                                           >
                                             <XCircle className="w-4 h-4" />
                                           </Button>
                                         </>
                                       ) : (
-                                        <Badge className={
-                                          booking.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                          booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                          'bg-stone-100 text-stone-800'
-                                        }>
-                                          {booking.status === 'approved' ? 'Aprovada' :
-                                           booking.status === 'rejected' ? 'Rejeitada' : 'Cancelada'}
+                                        <Badge className={`font-semibold px-3 py-1 ${
+                                          booking.status === 'approved' ? 'bg-green-500 text-white' :
+                                          booking.status === 'rejected' ? 'bg-red-500 text-white' :
+                                          'bg-stone-400 text-white'
+                                        }`}>
+                                          {booking.status === 'approved' ? '✓ Aprovada' :
+                                           booking.status === 'rejected' ? '✗ Rejeitada' : 'Cancelada'}
                                         </Badge>
                                       )}
                                     </div>
