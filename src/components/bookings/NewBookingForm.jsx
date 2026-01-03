@@ -74,6 +74,17 @@ export default function NewBookingForm({ user, isBlocked }) {
     initialData: []
   });
 
+  const { data: blockedSlots = [] } = useQuery({
+    queryKey: ['blocked-slots'],
+    queryFn: async () => {
+      try {
+        return await base44.entities.BlockedSlot.filter({ is_active: true });
+      } catch (e) {
+        return [];
+      }
+    }
+  });
+
   const createBookingMutation = useMutation({
     mutationFn: async () => {
       const duration = selectedPlan?.duration || selectedService.duration;
@@ -330,12 +341,26 @@ export default function NewBookingForm({ user, isBlocked }) {
     const timeSlots = dayOfWeek === 6 ? saturdayTimeSlots : weekdayTimeSlots;
     
     if (!selectedService) return timeSlots;
-    if (!lessons || lessons.length === 0) return timeSlots;
+    
+    // Verificar se o dia está bloqueado
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayBlocked = blockedSlots.some(b => b.date === dateStr && !b.time_slot);
+    if (dayBlocked) return [];
+    
+    if (!lessons || lessons.length === 0) return timeSlots.filter(slot => {
+      // Verificar se o horário específico está bloqueado
+      return !blockedSlots.some(b => b.date === dateStr && b.time_slot === slot);
+    });
     
     const serviceDuration = selectedPlan?.duration || selectedService.duration;
     
     // Para serviços de 60 minutos, verificar se as duas meias horas estão disponíveis
     return timeSlots.filter(slot => {
+      // Verificar se o horário específico está bloqueado
+      if (blockedSlots.some(b => b.date === dateStr && b.time_slot === slot)) {
+        return false;
+      }
+      
       const lessonsAtTime = lessons.filter(l => l.start_time === slot);
       const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
       
@@ -861,7 +886,12 @@ export default function NewBookingForm({ user, isBlocked }) {
                               setSelectedDates(newDates);
                             }}
                             locale={pt}
-                            disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0 || date.getDay() === 6}
+                            disabled={(date) => {
+                              if (date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0) return true;
+                              // Verificar se o dia está bloqueado
+                              const dateStr = format(date, 'yyyy-MM-dd');
+                              return blockedSlots.some(b => b.date === dateStr && !b.time_slot);
+                            }}
                             className="rounded-md border"
                           />
                         </div>
