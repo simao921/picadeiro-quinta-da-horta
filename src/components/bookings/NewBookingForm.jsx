@@ -381,7 +381,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
-          {selectedService?.title === 'Sessões Fotográficas' && (
+          {(selectedService?.title === 'Sessões Fotográficas' || selectedService?.title?.toLowerCase().includes('fotográf')) && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
@@ -464,6 +464,27 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
+          {/* Fallback para outros serviços sem planos específicos */}
+          {selectedService && 
+           selectedService.title !== 'Aulas de Escola' && 
+           selectedService.title !== 'Aulas Particulares' && 
+           selectedService.title !== 'Aulas em Grupo' &&
+           !selectedService.title?.toLowerCase().includes('fotográf') &&
+           selectedService.title !== 'Serviços de Proprietários' &&
+           selectedService.title !== 'Hipoterapia' && (
+            <div className="space-y-4">
+              <Card className="border-[#B8956A] bg-[#B8956A]/5">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">{selectedService.title}</h3>
+                  {selectedService.description && (
+                    <p className="text-sm text-stone-600 mb-4">{selectedService.description}</p>
+                  )}
+                  <p className="text-2xl font-bold text-[#B8956A]">{selectedService.price}€</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">Voltar</Button>
             <Button
@@ -471,11 +492,15 @@ export default function NewBookingForm({ user, isBlocked }) {
                 if (selectedService?.title === 'Hipoterapia') {
                   setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
                   setStep(3);
+                } else if (!selectedPlan && selectedService) {
+                  // Auto-selecionar plano para serviços genéricos
+                  setSelectedPlan({ label: selectedService.title, price: selectedService.price });
+                  setStep(3);
                 } else {
                   setStep(3);
                 }
               }}
-              disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia'}
+              disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia' && !selectedService?.price}
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
             >
               Continuar
