@@ -58,6 +58,12 @@ export default function AdminLessons() {
     initialData: []
   });
 
+  const { data: allLessons } = useQuery({
+    queryKey: ['admin-all-lessons'],
+    queryFn: () => base44.entities.Lesson.list('-created_date', 1000),
+    initialData: []
+  });
+
   const { data: bookings } = useQuery({
     queryKey: ['admin-all-bookings'],
     queryFn: () => base44.entities.Booking.list('-created_date', 500),
@@ -220,9 +226,20 @@ export default function AdminLessons() {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-all-bookings']);
+      queryClient.invalidateQueries(['admin-lessons']);
+      queryClient.invalidateQueries(['admin-all-lessons']);
       toast.success('Reserva atualizada!');
     }
   });
+
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  
+  const getPendingBookingsWithLessons = () => {
+    return pendingBookings.map(booking => {
+      const lesson = allLessons.find(l => l.id === booking.lesson_id);
+      return { ...booking, lesson };
+    }).filter(b => b.lesson);
+  };
 
   const getServiceName = (serviceId) => {
     if (!services || !Array.isArray(services)) return 'Serviço não encontrado';
@@ -379,46 +396,93 @@ export default function AdminLessons() {
           </Dialog>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Calendar + Pending Stats */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CalendarDays className="w-5 h-5 text-[#B8956A]" />
-                  Calendário
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  locale={pt}
-                  className="rounded-md border-0 w-full"
-                />
-              </CardContent>
-            </Card>
+        {/* Pending Bookings Section */}
+        {pendingBookings.length > 0 && (
+          <Card className="border-amber-300 bg-amber-50/50 shadow-lg">
+            <CardHeader className="bg-amber-100">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-amber-600" />
+                  Reservas Pendentes de Aprovação
+                </span>
+                <Badge className="bg-amber-600 text-white">
+                  {pendingBookings.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-3">
+                {getPendingBookingsWithLessons().map((item) => (
+                  <Card key={item.id} className="border-amber-200 bg-white">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className="bg-amber-500 text-white">Aguarda Aprovação</Badge>
+                          </div>
+                          <p className="font-semibold text-[#2C3E1F] mb-1">{item.client_name}</p>
+                          <p className="text-sm text-stone-500 mb-2">{item.client_email}</p>
+                          <div className="flex flex-wrap gap-3 text-sm text-stone-600">
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="w-4 h-4 text-[#B8956A]" />
+                              {format(new Date(item.lesson.date), "d 'de' MMMM", { locale: pt })}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-[#B8956A]" />
+                              {item.lesson.start_time}
+                            </span>
+                            <span className="text-stone-500">
+                              {getServiceName(item.lesson.service_id)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => updateBookingMutation.mutate({ id: item.id, status: 'approved' })}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Aprovar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 border-red-600 hover:bg-red-50"
+                            onClick={() => updateBookingMutation.mutate({ id: item.id, status: 'rejected' })}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Rejeitar
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Pending Bookings Alert */}
-            {bookings.filter(b => b.status === 'pending').length > 0 && (
-              <Card className="border-amber-200 bg-amber-50 shadow-md">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-amber-900 mb-1">
-                        {bookings.filter(b => b.status === 'pending').length} Reserva{bookings.filter(b => b.status === 'pending').length > 1 ? 's' : ''} Pendente{bookings.filter(b => b.status === 'pending').length > 1 ? 's' : ''}
-                      </h3>
-                      <p className="text-xs text-amber-700">
-                        Clique nas aulas abaixo para aprovar ou rejeitar
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Calendar */}
+          <Card className="lg:col-span-1 border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-[#B8956A]" />
+                Calendário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                locale={pt}
+                className="rounded-md border-0 w-full"
+              />
+            </CardContent>
+          </Card>
 
           {/* Lessons List */}
           <Card className="lg:col-span-3 border-0 shadow-md">
