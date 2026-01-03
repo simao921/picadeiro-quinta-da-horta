@@ -627,7 +627,7 @@ export default function AdminLessons() {
                                     <div className="flex items-center gap-3">
                                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
                                         booking.status === 'pending' ? 'bg-amber-500' :
-                                        booking.status === 'approved' ? 'bg-emerald-700' :
+                                        booking.status === 'approved' ? 'bg-[#668752]' :
                                         booking.status === 'rejected' ? 'bg-red-500' :
                                         'bg-stone-400'
                                       }`}>
@@ -658,7 +658,7 @@ export default function AdminLessons() {
                                         </>
                                       ) : (
                                         <Badge className={`font-semibold px-3 py-1 ${
-                                          booking.status === 'approved' ? 'bg-emerald-700 text-white' :
+                                          booking.status === 'approved' ? 'bg-[#668752] text-white' :
                                           booking.status === 'rejected' ? 'bg-red-500 text-white' :
                                           'bg-stone-400 text-white'
                                         }`}>
