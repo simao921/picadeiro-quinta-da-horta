@@ -572,7 +572,7 @@ export default function AdminLessons() {
                       <Card key={lesson.id} className={`border-l-4 shadow-md hover:shadow-lg transition-all ${
                         hasPending ? 'border-l-amber-500 bg-amber-50/50' : 
                         isFull ? 'border-l-red-500 bg-red-50/30' : 
-                        'border-l-[#B8956A] hover:border-l-[#8B7355]'
+                        'border-l-[#4A5D23] bg-gradient-to-br from-[#2C3E1F]/5 to-[#4A5D23]/10 hover:from-[#2C3E1F]/10 hover:to-[#4A5D23]/15'
                       }`}>
                         <CardContent className="p-5">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
