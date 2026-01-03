@@ -199,7 +199,7 @@ export default function Services() {
                             {service.price && (
                               <div className="flex items-center gap-2 px-4 py-2 bg-[#4A5D23]/10 rounded-lg">
                                 <Euro className="w-4 h-4 text-[#4A5D23]" />
-                                <span className="font-semibold text-[#2C3E1F]">{service.price}€</span>
+                                <span className="font-semibold text-[#2C3E1F]">Desde {service.price}€</span>
                               </div>
                             )}
                             {service.duration && (

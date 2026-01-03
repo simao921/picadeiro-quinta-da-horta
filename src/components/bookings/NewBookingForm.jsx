@@ -331,11 +331,36 @@ export default function NewBookingForm({ user, isBlocked }) {
 
           {selectedService?.title === 'Aulas em Grupo' && (
             <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">30 minutos</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {[
+                  { frequency: 1, price: 60, label: '1x/semana', duration: 30 },
+                  { frequency: 2, price: 100, label: '2x/semana', duration: 30 },
+                  { frequency: 3, price: 140, label: '3x/semana', duration: 30 }
+                ].map((plan) => (
+                  <Card
+                    key={plan.label}
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedPlan?.label === plan.label 
+                        ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedPlan(plan)}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">{plan.label}</h3>
+                      <p className="text-2xl font-bold text-[#B8956A]">{plan.price}€<span className="text-sm text-stone-500">/mês</span></p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">60 minutos</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { frequency: 1, price: 60, label: '1x/semana' },
-                  { frequency: 2, price: 100, label: '2x/semana' },
-                  { frequency: 3, price: 140, label: '3x/semana' }
+                  { frequency: 1, price: 80, label: '1x/semana', duration: 60 },
+                  { frequency: 2, price: 140, label: '2x/semana', duration: 60 },
+                  { frequency: 3, price: 190, label: '3x/semana', duration: 60 }
                 ].map((plan) => (
                   <Card
                     key={plan.label}
@@ -360,12 +385,10 @@ export default function NewBookingForm({ user, isBlocked }) {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { label: '10 Fotos', price: 15 },
-                  { label: '12 Fotos', price: 18 },
-                  { label: '15 Fotos', price: 22 },
-                  { label: '20 Fotos', price: 30 },
-                  { label: 'Vídeo 1min', price: 20 },
-                  { label: 'Foto Extra', price: 2 }
+                  { label: 'Pack 10 Fotografias', price: 50 },
+                  { label: 'Pack 12 Fotografias', price: 60 },
+                  { label: 'Pack 15 Fotografias', price: 70 },
+                  { label: 'Pack 20 Fotografias', price: 95 }
                 ].map((plan) => (
                   <Card
                     key={plan.label}

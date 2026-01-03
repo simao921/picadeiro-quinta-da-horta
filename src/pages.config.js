@@ -9,6 +9,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminMessages from './pages/AdminMessages';
 import AdminOrders from './pages/AdminOrders';
 import AdminPayments from './pages/AdminPayments';
+import AdminPicadeiroStudents from './pages/AdminPicadeiroStudents';
 import AdminReports from './pages/AdminReports';
 import AdminSettings from './pages/AdminSettings';
 import AdminShop from './pages/AdminShop';
@@ -25,7 +26,6 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
-import AdminPicadeiroStudents from './pages/AdminPicadeiroStudents';
 import __Layout from './Layout.jsx';
 
 
@@ -41,6 +41,7 @@ export const PAGES = {
     "AdminMessages": AdminMessages,
     "AdminOrders": AdminOrders,
     "AdminPayments": AdminPayments,
+    "AdminPicadeiroStudents": AdminPicadeiroStudents,
     "AdminReports": AdminReports,
     "AdminSettings": AdminSettings,
     "AdminShop": AdminShop,
@@ -57,7 +58,6 @@ export const PAGES = {
     "Services": Services,
     "Shop": Shop,
     "Wishlist": Wishlist,
-    "AdminPicadeiroStudents": AdminPicadeiroStudents,
 }
 
 export const pagesConfig = {
