@@ -412,8 +412,8 @@ const LayoutContent = ({ children, currentPageName }) => {
         </button>
       )}
 
-      {/* ChatBot */}
-      <ChatBot />
+      {/* ChatBot - Hidden on mobile to avoid blocking content */}
+      {!isAdminPage && <ChatBot />}
     </div>
   );
 };

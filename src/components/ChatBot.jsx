@@ -84,11 +84,12 @@ Pergunta do cliente: ${userMessage}`,
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-[#4A5D23] to-[#2C3E1F] 
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 
+                       bg-gradient-to-br from-[#4A5D23] to-[#2C3E1F] 
                        text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 
                        flex items-center justify-center z-50 group"
           >
-            <MessageCircle className="w-7 h-7 group-hover:scale-110 transition-transform" />
+            <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
           </motion.button>
         )}
@@ -101,7 +102,9 @@ Pergunta do cliente: ${userMessage}`,
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl 
+            className="fixed inset-4 sm:bottom-6 sm:right-6 sm:left-auto sm:top-auto 
+                       sm:w-96 sm:h-[600px] w-auto h-auto
+                       bg-white rounded-2xl shadow-2xl 
                        flex flex-col z-50 border border-stone-200"
           >
             {/* Header */}
