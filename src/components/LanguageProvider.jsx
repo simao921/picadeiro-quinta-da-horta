@@ -258,6 +258,15 @@ export const translations = {
     order_number: 'Número do Pedido',
     back_to_shop: 'Voltar à Loja',
     remove: 'Remover',
+    removed_from_cart: 'Produto removido do carrinho',
+    products: 'Produtos',
+    order_summary: 'Resumo',
+    coupon_applied: 'Cupão',
+    applied: 'aplicado',
+    free: 'Grátis',
+    free_shipping_note: 'Envio grátis para encomendas superiores a 50€',
+    processing: 'A processar...',
+    back_to_cart: 'Voltar ao Carrinho',
   },
   
   en: {
@@ -508,6 +517,15 @@ export const translations = {
     order_number: 'Order Number',
     back_to_shop: 'Back to Shop',
     remove: 'Remove',
+    removed_from_cart: 'Product removed from cart',
+    products: 'Products',
+    order_summary: 'Summary',
+    coupon_applied: 'Coupon',
+    applied: 'applied',
+    free: 'Free',
+    free_shipping_note: 'Free shipping for orders over 50€',
+    processing: 'Processing...',
+    back_to_cart: 'Back to Cart',
   },
   
   es: {
@@ -758,6 +776,15 @@ export const translations = {
     order_number: 'Número de Pedido',
     back_to_shop: 'Volver a la Tienda',
     remove: 'Eliminar',
+    removed_from_cart: 'Producto eliminado del carrito',
+    products: 'Productos',
+    order_summary: 'Resumen',
+    coupon_applied: 'Cupón',
+    applied: 'aplicado',
+    free: 'Gratis',
+    free_shipping_note: 'Envío gratis para pedidos superiores a 50€',
+    processing: 'Procesando...',
+    back_to_cart: 'Volver al Carrito',
   },
   
   fr: {
@@ -1008,6 +1035,15 @@ export const translations = {
     order_number: 'Numéro de Commande',
     back_to_shop: 'Retour à la Boutique',
     remove: 'Supprimer',
+    removed_from_cart: 'Produit retiré du panier',
+    products: 'Produits',
+    order_summary: 'Résumé',
+    coupon_applied: 'Coupon',
+    applied: 'appliqué',
+    free: 'Gratuit',
+    free_shipping_note: 'Livraison gratuite pour commandes supérieures à 50€',
+    processing: 'Traitement...',
+    back_to_cart: 'Retour au Panier',
   }
 };
 

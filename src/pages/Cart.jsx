@@ -14,8 +14,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function Cart() {
+  const { t } = useLanguage();
   const [cart, setCart] = useState([]);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -67,7 +69,7 @@ export default function Cart() {
   const removeItem = (productId) => {
     const newCart = cart.filter(item => item.id !== productId);
     updateCart(newCart);
-    toast.success('Produto removido do carrinho');
+    toast.success(t('removed_from_cart') || 'Produto removido do carrinho');
   };
 
   const applyCoupon = async () => {
@@ -194,14 +196,14 @@ export default function Cart() {
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
           <h1 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-4">
-            Encomenda Confirmada!
+            {t('order_success')}
           </h1>
           <p className="text-stone-600 mb-8">
-            A sua encomenda foi processada com sucesso. Receberá um email de confirmação em breve.
+            {t('order_confirmation')}
           </p>
           <Link to={createPageUrl('Shop')}>
             <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
-              Continuar a Comprar
+              {t('back_to_shop')}
             </Button>
           </Link>
         </motion.div>
@@ -219,10 +221,10 @@ export default function Cart() {
             className="inline-flex items-center text-stone-600 hover:text-[#4A5D23] mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Continuar a Comprar
+            {t('continue_shopping')}
           </Link>
           <h1 className="font-serif text-3xl font-bold text-[#2C3E1F]">
-            {step === 'cart' ? 'Carrinho de Compras' : 'Finalizar Encomenda'}
+            {step === 'cart' ? t('cart_title') : t('checkout_title')}
           </h1>
         </div>
 
@@ -231,14 +233,14 @@ export default function Cart() {
             <CardContent>
               <ShoppingCart className="w-16 h-16 text-stone-300 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-[#2C3E1F] mb-2">
-                O seu carrinho está vazio
+                {t('cart_empty')}
               </h2>
               <p className="text-stone-500 mb-6">
                 Adicione alguns produtos para começar.
               </p>
               <Link to={createPageUrl('Shop')}>
                 <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
-                  Explorar Produtos
+                  {t('continue_shopping')}
                 </Button>
               </Link>
             </CardContent>
@@ -251,7 +253,7 @@ export default function Cart() {
                 <Card className="border-0 shadow-lg">
                   <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
                     <CardTitle className="text-lg">
-                      Produtos ({cart.length})
+                      {t('products') || 'Produtos'} ({cart.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 pt-6">
@@ -313,30 +315,30 @@ export default function Cart() {
               ) : (
                 <Card className="border-0 shadow-lg">
                   <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
-                    <CardTitle className="text-lg">Morada de Envio</CardTitle>
+                    <CardTitle className="text-lg">{t('shipping_address')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 pt-6">
                     <div className="space-y-2">
-                      <Label htmlFor="street">Morada</Label>
+                      <Label htmlFor="street">{t('street')}</Label>
                       <Input
                         id="street"
                         value={shippingAddress.street}
                         onChange={(e) => setShippingAddress({...shippingAddress, street: e.target.value})}
-                        placeholder="Rua e número"
+                        placeholder={t('street')}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="city">Cidade</Label>
+                        <Label htmlFor="city">{t('city')}</Label>
                         <Input
                           id="city"
                           value={shippingAddress.city}
                           onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})}
-                          placeholder="Cidade"
+                          placeholder={t('city')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="postal_code">Código Postal</Label>
+                        <Label htmlFor="postal_code">{t('postal_code')}</Label>
                         <Input
                           id="postal_code"
                           value={shippingAddress.postal_code}
@@ -346,7 +348,7 @@ export default function Cart() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country">País</Label>
+                      <Label htmlFor="country">{t('country')}</Label>
                       <Input
                         id="country"
                         value={shippingAddress.country}
@@ -363,14 +365,14 @@ export default function Cart() {
             <div>
               <Card className="sticky top-24 border-0 shadow-lg">
                 <CardHeader className="bg-stone-50 border-b">
-                  <CardTitle className="text-lg">Resumo</CardTitle>
+                  <CardTitle className="text-lg">{t('order_summary') || 'Resumo'}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-6">
                   {/* Coupon */}
                   {step === 'cart' && (
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Código promocional"
+                        placeholder={t('coupon_code')}
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
                         className="flex-1"
@@ -387,7 +389,7 @@ export default function Cart() {
 
                   {appliedCoupon && (
                     <div className="p-3 bg-green-50 rounded-lg text-green-700 text-sm">
-                      Cupão {appliedCoupon.code} aplicado!
+                      {t('coupon_applied') || 'Cupão'} {appliedCoupon.code} {t('applied') || 'aplicado'}!
                     </div>
                   )}
 
@@ -395,31 +397,31 @@ export default function Cart() {
 
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-stone-600">Subtotal</span>
+                      <span className="text-stone-600">{t('subtotal')}</span>
                       <span>{subtotal.toFixed(2)}€</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
-                        <span>Desconto</span>
+                        <span>{t('discount')}</span>
                         <span>-{discount.toFixed(2)}€</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-stone-600">Envio</span>
-                      <span>{shipping === 0 ? 'Grátis' : `${shipping.toFixed(2)}€`}</span>
+                      <span className="text-stone-600">{t('shipping')}</span>
+                      <span>{shipping === 0 ? (t('free') || 'Grátis') : `${shipping.toFixed(2)}€`}</span>
                     </div>
                   </div>
 
                   <Separator />
 
                   <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
+                    <span>{t('total')}</span>
                     <span className="text-[#B8956A]">{total.toFixed(2)}€</span>
                   </div>
 
                   {shipping > 0 && (
                     <p className="text-xs text-stone-500">
-                      Envio grátis para encomendas superiores a 50€
+                      {t('free_shipping_note') || 'Envio grátis para encomendas superiores a 50€'}
                     </p>
                   )}
 
@@ -429,7 +431,7 @@ export default function Cart() {
                       className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
                     >
                       <CreditCard className="w-5 h-5 mr-2" />
-                      Finalizar Compra
+                      {t('proceed_checkout')}
                     </Button>
                   ) : (
                     <div className="space-y-2">
@@ -441,12 +443,12 @@ export default function Cart() {
                         {createOrderMutation.isPending ? (
                           <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            A processar...
+                            {t('processing') || 'A processar...'}
                           </>
                         ) : (
                           <>
                             <CreditCard className="w-5 h-5 mr-2" />
-                            Confirmar Encomenda
+                            {t('place_order')}
                           </>
                         )}
                       </Button>
@@ -455,7 +457,7 @@ export default function Cart() {
                         onClick={() => setStep('cart')}
                         className="w-full"
                       >
-                        Voltar ao Carrinho
+                        {t('back_to_cart') || 'Voltar ao Carrinho'}
                       </Button>
                     </div>
                   )}
