@@ -269,23 +269,33 @@ export default function AdminAI() {
                 <CardTitle className="text-lg">Otimização de Horários com IA</CardTitle>
               </CardHeader>
               <CardContent>
-                <Button
-                  onClick={analyzeScheduleOptimization}
-                  disabled={analyzing}
-                  className="bg-[#4A5D23] hover:bg-[#3A4A1B] mb-4"
-                >
-                  {analyzing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      A analisar...
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="w-4 h-4 mr-2" />
-                      Analisar Horários
-                    </>
+                <div className="space-y-3">
+                  <Button
+                    onClick={analyzeScheduleOptimization}
+                    disabled={analyzing}
+                    className="bg-[#4A5D23] hover:bg-[#3A4A1B] w-full"
+                    size="lg"
+                  >
+                    {analyzing ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        A analisar com IA (pode demorar 10-15 seg)...
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="w-5 h-5 mr-2" />
+                        Analisar Horários com IA
+                      </>
+                    )}
+                  </Button>
+                  {analyzing && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-900">
+                        🤖 A IA está a analisar todas as aulas e reservas... Aguarde alguns segundos.
+                      </p>
+                    </div>
                   )}
-                </Button>
+                </div>
 
                 {suggestions?.schedule && (
                   <div className="space-y-4">
