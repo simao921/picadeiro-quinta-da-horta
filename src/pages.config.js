@@ -27,6 +27,7 @@ import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
 import AdminBlockedSlots from './pages/AdminBlockedSlots';
+import AdminRegulations from './pages/AdminRegulations';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "Shop": Shop,
     "Wishlist": Wishlist,
     "AdminBlockedSlots": AdminBlockedSlots,
+    "AdminRegulations": AdminRegulations,
 }
 
 export const pagesConfig = {

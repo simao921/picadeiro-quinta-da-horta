@@ -720,6 +720,11 @@ export default function NewBookingForm({ user, isBlocked }) {
           {/* Proprietários */}
           {selectedService?.title === 'Proprietários' && (
             <div className="space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Nota:</strong> As aulas em grupo têm prioridade no agendamento. Os horários para proprietários estão sujeitos à disponibilidade.
+                </p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card
                   className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
