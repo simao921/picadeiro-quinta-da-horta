@@ -51,14 +51,13 @@ export default function AdminAI() {
   const analyzeScheduleOptimization = async () => {
     setAnalyzing(true);
     try {
-      const response = await base44.functions.invoke('analyzeSchedules', {
-        lessons: lessons.slice(0, 100),
-        bookings: bookings.slice(0, 100)
-      });
+      const response = await base44.functions.invoke('analyzeSchedules', {});
+
+      console.log('Response:', response.data);
 
       if (response.data.success) {
         setSuggestions({ ...suggestions, schedule: response.data.analysis });
-        toast.success('Análise de horários concluída com OpenAI!');
+        toast.success('Análise de horários concluída! ✅');
       } else {
         throw new Error(response.data.error);
       }
@@ -291,10 +290,13 @@ export default function AdminAI() {
                 {suggestions?.schedule && (
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold mb-2">Melhores Horários Sugeridos</h4>
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-green-600" />
+                        Melhores Horários Sugeridos
+                      </h4>
                       <div className="space-y-2">
                         {suggestions.schedule.best_time_slots?.map((slot, i) => (
-                          <div key={i} className="p-3 bg-green-50 border border-green-200 rounded">
+                          <div key={i} className="p-3 bg-green-50 border border-green-200 rounded-lg">
                             <p className="font-medium text-green-900">{slot.day} às {slot.time}</p>
                             <p className="text-sm text-green-700">{slot.reason}</p>
                           </div>
@@ -302,14 +304,44 @@ export default function AdminAI() {
                       </div>
                     </div>
 
+                    {suggestions.schedule.patterns && (
+                      <div>
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-blue-600" />
+                          Padrões de Ocupação
+                        </h4>
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-900">{JSON.stringify(suggestions.schedule.patterns)}</p>
+                        </div>
+                      </div>
+                    )}
+
                     <div>
-                      <h4 className="font-semibold mb-2">Recomendações</h4>
-                      <ul className="list-disc pl-5 space-y-1">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-purple-600" />
+                        Recomendações
+                      </h4>
+                      <ul className="space-y-2">
                         {suggestions.schedule.recommendations?.map((rec, i) => (
-                          <li key={i} className="text-sm text-stone-700">{rec}</li>
+                          <li key={i} className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900">
+                            {rec}
+                          </li>
                         ))}
                       </ul>
                     </div>
+
+                    {suggestions.schedule.optimization_tips && (
+                      <div>
+                        <h4 className="font-semibold mb-2">💡 Dicas de Otimização</h4>
+                        <ul className="space-y-2">
+                          {suggestions.schedule.optimization_tips?.map((tip, i) => (
+                            <li key={i} className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
