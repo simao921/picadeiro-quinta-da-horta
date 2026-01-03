@@ -21,8 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, Mail, Phone, Euro, AlertCircle, CheckCircle, Loader2, Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Users, Search, Mail, Phone, Euro, AlertCircle, CheckCircle, Loader2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -30,11 +29,11 @@ export default function AdminStudents() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [createLessonDialog, setCreateLessonDialog] = useState(false);
-  const [lessonData, setLessonData] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    time: '09:00',
-    service_id: ''
+  const [createStudentDialog, setCreateStudentDialog] = useState(false);
+  const [newStudent, setNewStudent] = useState({
+    full_name: '',
+    email: '',
+    phone: ''
   });
 
   const { data: users, isLoading } = useQuery({
@@ -62,46 +61,27 @@ export default function AdminStudents() {
     s.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const { data: services = [] } = useQuery({
-    queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list(),
-    initialData: []
-  });
-
-  const createLessonMutation = useMutation({
+  const createStudentMutation = useMutation({
     mutationFn: async () => {
-      const service = services.find(s => s.id === lessonData.service_id);
-      const endTime = new Date(`2000-01-01T${lessonData.time}:00`);
-      endTime.setMinutes(endTime.getMinutes() + (service?.duration || 60));
-
-      const lesson = await base44.entities.Lesson.create({
-        service_id: lessonData.service_id,
-        date: lessonData.date,
-        start_time: lessonData.time,
-        end_time: format(endTime, 'HH:mm'),
-        max_spots: service?.max_participants || 6,
-        booked_spots: 0
-      });
-
-      await base44.entities.Booking.create({
-        lesson_id: lesson.id,
-        client_email: selectedStudent.email,
-        client_name: selectedStudent.full_name,
-        status: 'approved'
-      });
-
-      await base44.entities.Lesson.update(lesson.id, {
-        booked_spots: 1
-      });
+      await base44.users.inviteUser(newStudent.email, 'user');
+      
+      // Atualizar o user com informações adicionais
+      const users = await base44.entities.User.filter({ email: newStudent.email });
+      if (users.length > 0) {
+        await base44.entities.User.update(users[0].id, {
+          full_name: newStudent.full_name,
+          phone: newStudent.phone
+        });
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-all-bookings']);
-      setCreateLessonDialog(false);
-      setLessonData({ date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', service_id: '' });
-      toast.success('Aula criada com sucesso!');
+      queryClient.invalidateQueries(['admin-users']);
+      setCreateStudentDialog(false);
+      setNewStudent({ full_name: '', email: '', phone: '' });
+      toast.success('Aluno criado e convite enviado!');
     },
     onError: () => {
-      toast.error('Erro ao criar aula');
+      toast.error('Erro ao criar aluno');
     }
   });
 
@@ -128,14 +108,23 @@ export default function AdminStudents() {
             <h1 className="text-2xl font-bold text-[#2C3E1F]">Gestão de Alunos</h1>
             <p className="text-stone-500">{students.length} alunos registados</p>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-            <Input
-              placeholder="Pesquisar alunos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+              <Input
+                placeholder="Pesquisar alunos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              className="bg-[#4A5D23] hover:bg-[#3A4A1B] whitespace-nowrap"
+              onClick={() => setCreateStudentDialog(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Criar Novo Aluno
+            </Button>
           </div>
         </div>
 
@@ -194,26 +183,13 @@ export default function AdminStudents() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedStudent(student)}
-                            >
-                              Ver Detalhes
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
-                              onClick={() => {
-                                setSelectedStudent(student);
-                                setCreateLessonDialog(true);
-                              }}
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Criar Aula
-                            </Button>
-                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedStudent(student)}
+                          >
+                            Ver Detalhes
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -285,48 +261,45 @@ export default function AdminStudents() {
           </DialogContent>
         </Dialog>
 
-        {/* Create Lesson Dialog */}
-        <Dialog open={createLessonDialog} onOpenChange={setCreateLessonDialog}>
+        {/* Create Student Dialog */}
+        <Dialog open={createStudentDialog} onOpenChange={setCreateStudentDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Aula para {selectedStudent?.full_name}</DialogTitle>
+              <DialogTitle>Criar Novo Aluno</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Serviço</Label>
-                <Select value={lessonData.service_id} onValueChange={(v) => setLessonData({ ...lessonData, service_id: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Escolha o serviço" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services.map(s => (
-                      <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Data</Label>
+                <Label>Nome Completo *</Label>
                 <Input
-                  type="date"
-                  value={lessonData.date}
-                  onChange={(e) => setLessonData({ ...lessonData, date: e.target.value })}
+                  placeholder="Ex: João Silva"
+                  value={newStudent.full_name}
+                  onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Hora</Label>
+                <Label>Email *</Label>
                 <Input
-                  type="time"
-                  value={lessonData.time}
-                  onChange={(e) => setLessonData({ ...lessonData, time: e.target.value })}
+                  type="email"
+                  placeholder="exemplo@email.com"
+                  value={newStudent.email}
+                  onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone (opcional)</Label>
+                <Input
+                  type="tel"
+                  placeholder="+351 912 345 678"
+                  value={newStudent.phone}
+                  onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
                 />
               </div>
               <Button
-                onClick={() => createLessonMutation.mutate()}
-                disabled={!lessonData.service_id || createLessonMutation.isPending}
+                onClick={() => createStudentMutation.mutate()}
+                disabled={!newStudent.full_name || !newStudent.email || createStudentMutation.isPending}
                 className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
               >
-                {createLessonMutation.isPending ? 'A criar...' : 'Criar Aula'}
+                {createStudentMutation.isPending ? 'A criar...' : 'Criar Aluno'}
               </Button>
             </div>
           </DialogContent>

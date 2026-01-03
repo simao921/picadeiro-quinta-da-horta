@@ -12,6 +12,7 @@ import AdminPayments from './pages/AdminPayments';
 import AdminReports from './pages/AdminReports';
 import AdminSettings from './pages/AdminSettings';
 import AdminShop from './pages/AdminShop';
+import AdminStudentSchedules from './pages/AdminStudentSchedules';
 import AdminStudents from './pages/AdminStudents';
 import AdminUsers from './pages/AdminUsers';
 import Bookings from './pages/Bookings';
@@ -24,7 +25,6 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
-import AdminStudentSchedules from './pages/AdminStudentSchedules';
 import __Layout from './Layout.jsx';
 
 
@@ -43,6 +43,7 @@ export const PAGES = {
     "AdminReports": AdminReports,
     "AdminSettings": AdminSettings,
     "AdminShop": AdminShop,
+    "AdminStudentSchedules": AdminStudentSchedules,
     "AdminStudents": AdminStudents,
     "AdminUsers": AdminUsers,
     "Bookings": Bookings,
@@ -55,7 +56,6 @@ export const PAGES = {
     "Services": Services,
     "Shop": Shop,
     "Wishlist": Wishlist,
-    "AdminStudentSchedules": AdminStudentSchedules,
 }
 
 export const pagesConfig = {
