@@ -51,54 +51,20 @@ export default function AdminAI() {
   const analyzeScheduleOptimization = async () => {
     setAnalyzing(true);
     try {
-      const analysis = await base44.integrations.Core.InvokeLLM({
-        prompt: `
-          Analisa os seguintes dados de um centro equestre e sugere otimizações de horários:
-          
-          **Aulas Agendadas (últimos 30 dias):**
-          ${JSON.stringify(lessons.slice(0, 50), null, 2)}
-          
-          **Reservas:**
-          ${JSON.stringify(bookings.slice(0, 50), null, 2)}
-          
-          Com base nestes dados, fornece:
-          1. Melhores horários e dias da semana para oferecer novas aulas
-          2. Padrões de ocupação (horários mais procurados vs menos procurados)
-          3. Sugestões de distribuição de aulas ao longo da semana
-          4. Alertas sobre potenciais conflitos ou sobreposições
-          5. Recomendações para maximizar ocupação sem sobrecarregar instrutores
-        `,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            best_time_slots: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  day: { type: "string" },
-                  time: { type: "string" },
-                  reason: { type: "string" }
-                }
-              }
-            },
-            occupancy_patterns: {
-              type: "object",
-              properties: {
-                high_demand: { type: "array", items: { type: "string" } },
-                low_demand: { type: "array", items: { type: "string" } }
-              }
-            },
-            recommendations: { type: "array", items: { type: "string" } },
-            conflicts: { type: "array", items: { type: "string" } }
-          }
-        }
+      const response = await base44.functions.invoke('analyzeSchedules', {
+        lessons: lessons.slice(0, 100),
+        bookings: bookings.slice(0, 100)
       });
 
-      setSuggestions({ ...suggestions, schedule: analysis });
-      toast.success('Análise de horários concluída!');
+      if (response.data.success) {
+        setSuggestions({ ...suggestions, schedule: response.data.analysis });
+        toast.success('Análise de horários concluída com OpenAI!');
+      } else {
+        throw new Error(response.data.error);
+      }
     } catch (e) {
-      toast.error('Erro ao analisar horários');
+      console.error('Error:', e);
+      toast.error('Erro ao analisar horários: ' + (e.message || 'Erro desconhecido'));
     } finally {
       setAnalyzing(false);
     }
