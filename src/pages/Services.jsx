@@ -71,6 +71,18 @@ const defaultServices = [
     icon: 'PartyPopper',
     image_url: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80',
     features: ['Espaço privativo', 'Decoração incluída', 'Atividades opcionais', 'Catering disponível']
+  },
+  {
+    id: '5',
+    title: 'Proprietários',
+    short_description: 'Reservas para proprietários',
+    description: 'Serviço exclusivo para proprietários de cavalos. Permite marcação de horários com prioridade secundária em relação aos alunos regulares.',
+    price: null,
+    duration: 30,
+    max_participants: 1,
+    icon: 'Users',
+    image_url: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80',
+    features: ['Horários flexíveis', 'Sujeito a disponibilidade', 'Máximo 6 alunos por sessão', 'Prioridade para alunos regulares']
   }
 ];
 
