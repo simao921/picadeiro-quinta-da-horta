@@ -268,9 +268,9 @@ export default function ClientDashboard() {
                         size="sm"
                         className="border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A] hover:text-white"
                       >
-                        <a href={reg.file_url} target="_blank" rel="noopener noreferrer" download>
-                          <Download className="w-4 h-4 mr-2" />
-                          Descarregar
+                        <a href={reg.file_url} target="_blank" rel="noopener noreferrer">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Ver Documento
                         </a>
                       </Button>
                     </div>

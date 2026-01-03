@@ -1,4 +1,5 @@
 import AdminAI from './pages/AdminAI';
+import AdminBlockedSlots from './pages/AdminBlockedSlots';
 import AdminContent from './pages/AdminContent';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
@@ -10,6 +11,7 @@ import AdminMessages from './pages/AdminMessages';
 import AdminOrders from './pages/AdminOrders';
 import AdminPayments from './pages/AdminPayments';
 import AdminPicadeiroStudents from './pages/AdminPicadeiroStudents';
+import AdminRegulations from './pages/AdminRegulations';
 import AdminReports from './pages/AdminReports';
 import AdminSettings from './pages/AdminSettings';
 import AdminShop from './pages/AdminShop';
@@ -26,13 +28,12 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
-import AdminBlockedSlots from './pages/AdminBlockedSlots';
-import AdminRegulations from './pages/AdminRegulations';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminAI": AdminAI,
+    "AdminBlockedSlots": AdminBlockedSlots,
     "AdminContent": AdminContent,
     "AdminCoupons": AdminCoupons,
     "AdminDashboard": AdminDashboard,
@@ -44,6 +45,7 @@ export const PAGES = {
     "AdminOrders": AdminOrders,
     "AdminPayments": AdminPayments,
     "AdminPicadeiroStudents": AdminPicadeiroStudents,
+    "AdminRegulations": AdminRegulations,
     "AdminReports": AdminReports,
     "AdminSettings": AdminSettings,
     "AdminShop": AdminShop,
@@ -60,8 +62,6 @@ export const PAGES = {
     "Services": Services,
     "Shop": Shop,
     "Wishlist": Wishlist,
-    "AdminBlockedSlots": AdminBlockedSlots,
-    "AdminRegulations": AdminRegulations,
 }
 
 export const pagesConfig = {
