@@ -33,6 +33,7 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedTimes, setSelectedTimes] = useState([]);
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
   const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
   const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
@@ -188,6 +189,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             setSelectedService(null);
             setSelectedPlan(null);
             setSelectedTime(null);
+            setSelectedTimes([]);
           }}
           className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
         >
@@ -621,47 +623,69 @@ export default function NewBookingForm({ user, isBlocked }) {
               <p className="text-stone-600">
                 Selecione {selectedPlan.frequency} horários diferentes para as suas aulas semanais
               </p>
-              {[...Array(selectedPlan.frequency)].map((_, index) => (
-                <Card key={index} className="border-stone-200">
-                  <CardHeader className="bg-stone-50">
-                    <CardTitle className="text-lg">Aula {index + 1}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="mb-2 block">Data da 1ª Aula</Label>
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          locale={pt}
-                          disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0}
-                          className="rounded-md border"
-                        />
-                      </div>
-                      <div>
-                        <Label className="mb-2 block">Horário</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {getAvailableSlots().map((slot) => (
-                            <Button
-                              key={slot}
-                              variant={selectedTime === slot ? 'default' : 'outline'}
-                              size="sm"
-                              className={selectedTime === slot 
-                                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]' 
-                                : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
-                              }
-                              onClick={() => setSelectedTime(slot)}
-                            >
-                              {slot}
-                            </Button>
-                          ))}
+              {[...Array(selectedPlan.frequency)].map((_, index) => {
+                const currentTime = selectedTimes[index];
+                return (
+                  <Card key={index} className="border-stone-200">
+                    <CardHeader className="bg-stone-50">
+                      <CardTitle className="text-lg flex items-center justify-between">
+                        Aula {index + 1}
+                        {currentTime && (
+                          <span className="text-[#B8956A] text-sm font-normal">
+                            Selecionado: {currentTime}
+                          </span>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="mb-2 block">Data da 1ª Aula</Label>
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            locale={pt}
+                            disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0}
+                            className="rounded-md border"
+                          />
+                        </div>
+                        <div>
+                          <Label className="mb-2 block">Horário</Label>
+                          <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                            {getAvailableSlots().map((slot) => {
+                              const isSelected = currentTime === slot;
+                              const isAlreadyUsed = selectedTimes.includes(slot) && !isSelected;
+                              return (
+                                <Button
+                                  key={slot}
+                                  variant={isSelected ? 'default' : 'outline'}
+                                  size="sm"
+                                  disabled={isAlreadyUsed}
+                                  className={
+                                    isSelected
+                                      ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]'
+                                      : isAlreadyUsed
+                                      ? 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed'
+                                      : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                                  }
+                                  onClick={() => {
+                                    const newTimes = [...selectedTimes];
+                                    newTimes[index] = slot;
+                                    setSelectedTimes(newTimes);
+                                  }}
+                                >
+                                  {slot}
+                                </Button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
               <p className="text-sm text-stone-500 italic">
                 Nota: As aulas seguintes serão criadas automaticamente nas mesmas horas todas as semanas
               </p>
