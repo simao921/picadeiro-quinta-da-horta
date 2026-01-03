@@ -30,9 +30,12 @@ const LayoutContent = ({ children, currentPageName }) => {
         if (isAuth) {
           const userData = await base44.auth.me();
           setUser(userData);
+        } else {
+          setUser(null);
         }
       } catch (e) {
         console.log('Not authenticated');
+        setUser(null);
       }
     };
     checkAuth();
@@ -99,7 +102,11 @@ const LayoutContent = ({ children, currentPageName }) => {
         try {
           const wishlist = await base44.entities.Wishlist.filter({ client_email: user.email });
           setWishlistCount(wishlist.length);
-        } catch (e) {}
+        } catch (e) {
+          setWishlistCount(0);
+        }
+      } else {
+        setWishlistCount(0);
       }
     };
     updateWishlistCount();
