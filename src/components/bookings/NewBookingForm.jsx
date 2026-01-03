@@ -732,6 +732,23 @@ export default function NewBookingForm({ user, isBlocked }) {
       {step === 4 && (
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Confirme a Reserva</h2>
+          
+          {/* Aviso Geral */}
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Importante:</strong> As aulas devem ser previamente agendadas.
+            </p>
+          </div>
+
+          {/* Aviso Proprietários */}
+          {(selectedService?.title === 'Proprietários' || selectedService?.is_owner_service) && (
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                <strong>Nota para Proprietários:</strong> O cavalo deve apresentar-se limpo e equipado antes da aula.
+              </p>
+            </div>
+          )}
+
           <Card className="border-stone-200 overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
               <CardTitle className="text-xl">Resumo da Reserva</CardTitle>
