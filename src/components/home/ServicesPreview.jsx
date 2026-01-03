@@ -28,13 +28,7 @@ export default function ServicesPreview() {
       color: 'from-[#8B7355]/80 to-[#A68B6A]/80',
       image: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80'
     },
-    {
-      icon: Heart,
-      titleKey: 'service_3_title',
-      descKey: 'service_3_desc',
-      color: 'from-[#C9A961]/80 to-[#DFC17A]/80',
-      image: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=600&q=80'
-    },
+
     {
       icon: PartyPopper,
       titleKey: 'service_4_title',
