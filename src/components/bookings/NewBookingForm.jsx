@@ -172,7 +172,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             client_email: user.email,
             client_name: user.full_name,
             status: 'pending',
-            is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários'
+            is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários' || false
           });
           
           await base44.entities.Lesson.update(lesson.id, {
@@ -290,7 +290,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           client_email: user.email,
           client_name: user.full_name,
           status: selectedService.auto_approve ? 'approved' : 'pending',
-          is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários'
+          is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários' || false
         });
 
         await base44.entities.Lesson.update(lesson.id, {
