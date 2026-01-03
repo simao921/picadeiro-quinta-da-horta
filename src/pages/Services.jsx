@@ -95,7 +95,7 @@ export default function Services() {
         keywords="aulas equitação, aulas particulares cavalos, hipoterapia, eventos cavalos, gilberto filipe"
       />
       {/* Hero Section */}
-      <section className="relative py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+      <section className="relative py-12 sm:py-16 md:py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
             src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
@@ -104,8 +104,8 @@ export default function Services() {
           />
         </div>
         {/* Decorative Elements */}
-        <div className="absolute top-20 right-20 w-72 h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
+        <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-48 h-48 sm:w-72 sm:h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 sm:bottom-20 sm:left-20 w-64 h-64 sm:w-96 sm:h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
@@ -113,15 +113,15 @@ export default function Services() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
-                           rounded-full text-[#B8956A] text-sm font-medium mb-6">
-              <Trophy className="w-4 h-4" />
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#B8956A]/20 backdrop-blur-sm 
+                           rounded-full text-[#B8956A] text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
               {t('services_title')}
             </span>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4 sm:mb-6 px-4">
               {t('services_page_title')}
             </h1>
-            <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed px-4">
               {t('services_page_subtitle')}
             </p>
           </motion.div>
@@ -129,9 +129,9 @@ export default function Services() {
       </section>
 
       {/* Services Grid */}
-      <section className="py-24">
+      <section className="py-12 sm:py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-16">
+          <div className="space-y-8 sm:space-y-12 md:space-y-16">
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {[1, 2, 3, 4].map((i) => (
@@ -161,60 +161,60 @@ export default function Services() {
                     <Card className="overflow-hidden border-0 shadow-xl bg-white">
                       <div className={`grid grid-cols-1 lg:grid-cols-2 ${isEven ? '' : 'lg:flex-row-reverse'}`}>
                         {/* Image */}
-                        <div className={`relative h-80 lg:h-auto ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
+                        <div className={`relative h-56 sm:h-72 md:h-80 lg:h-auto ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                           <img
                             src={service.image_url}
                             alt={service.title}
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent lg:hidden" />
-                          <div className="absolute top-4 left-4">
-                            <Badge className="bg-[#C9A961] text-[#2C3E1F] px-3 py-1">
-                              <Icon className="w-4 h-4 mr-1" />
+                          <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                            <Badge className="bg-[#C9A961] text-[#2C3E1F] px-2 py-1 text-xs sm:px-3 sm:py-1 sm:text-sm">
+                              <Icon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               {service.short_description || 'Destaque'}
                             </Badge>
                           </div>
                         </div>
 
                         {/* Content */}
-                        <CardContent className={`p-8 lg:p-12 flex flex-col justify-center ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
-                          <h2 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-4">
+                        <CardContent className={`p-5 sm:p-6 md:p-8 lg:p-12 flex flex-col justify-center ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+                          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2C3E1F] mb-3 sm:mb-4">
                             {service.title}
                           </h2>
-                          <p className="text-stone-600 leading-relaxed mb-6">
+                          <p className="text-sm sm:text-base text-stone-600 leading-relaxed mb-4 sm:mb-6">
                             {service.description}
                           </p>
 
                           {/* Features */}
                           {service.features && (
-                            <div className="grid grid-cols-2 gap-3 mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
                               {service.features.map((feature, i) => (
-                                <div key={i} className="flex items-center gap-2 text-sm text-stone-600">
-                                  <CheckCircle className="w-4 h-4 text-[#4A5D23]" />
-                                  {feature}
+                                <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-stone-600">
+                                  <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4A5D23] flex-shrink-0 mt-0.5" />
+                                  <span>{feature}</span>
                                 </div>
                               ))}
                             </div>
                           )}
 
                           {/* Info Cards */}
-                          <div className="flex flex-wrap gap-4 mb-8">
+                          <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8">
                             {service.price && (
-                              <div className="flex items-center gap-2 px-4 py-2 bg-[#4A5D23]/10 rounded-lg">
-                                <Euro className="w-4 h-4 text-[#4A5D23]" />
-                                <span className="font-semibold text-[#2C3E1F]">{service.price}€</span>
+                              <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#4A5D23]/10 rounded-lg">
+                                <Euro className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4A5D23]" />
+                                <span className="font-semibold text-sm sm:text-base text-[#2C3E1F]">{service.price}€</span>
                               </div>
                             )}
                             {service.duration && (
-                              <div className="flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 rounded-lg">
-                                <Clock className="w-4 h-4 text-[#C9A961]" />
-                                <span className="text-[#2C3E1F]">{service.duration} min</span>
+                              <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#C9A961]/10 rounded-lg">
+                                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C9A961]" />
+                                <span className="text-sm sm:text-base text-[#2C3E1F]">{service.duration} min</span>
                               </div>
                             )}
                             {service.max_participants && (
-                              <div className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-lg">
-                                <Users2 className="w-4 h-4 text-stone-600" />
-                                <span className="text-stone-600">Máx. {service.max_participants}</span>
+                              <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-stone-100 rounded-lg">
+                                <Users2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600" />
+                                <span className="text-sm sm:text-base text-stone-600">Máx. {service.max_participants}</span>
                               </div>
                             )}
                           </div>
@@ -222,10 +222,10 @@ export default function Services() {
                           <Link to={createPageUrl('Bookings')}>
                             <Button 
                               size="lg" 
-                              className="bg-[#B8956A] hover:bg-[#8B7355] text-white w-fit shadow-lg shadow-[#B8956A]/30"
+                              className="bg-[#B8956A] hover:bg-[#8B7355] text-white w-full sm:w-fit shadow-lg shadow-[#B8956A]/30 text-sm sm:text-base"
                             >
                               {t('book_now')}
-                              <ArrowRight className="w-5 h-5 ml-2" />
+                              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                             </Button>
                           </Link>
                         </CardContent>
@@ -240,25 +240,25 @@ export default function Services() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-20 bg-gradient-to-r from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+      <section className="relative py-12 sm:py-16 md:py-20 bg-gradient-to-r from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#B8956A] rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8B7355] rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-[#B8956A] rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-[#8B7355] rounded-full blur-3xl" />
         </div>
-        <div className="max-w-4xl mx-auto px-4 text-center relative">
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative">
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
             {t('not_found_services') || 'Não encontrou o que procurava?'}
           </h2>
-          <p className="text-stone-300 text-lg mb-8">
+          <p className="text-stone-300 text-sm sm:text-base md:text-lg mb-6 sm:mb-8">
             {t('not_found_services_desc') || 'Entre em contacto connosco para soluções personalizadas.'}
           </p>
           <Link to={createPageUrl('Contact')}>
             <Button 
               size="lg" 
-              className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-8"
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-6 sm:px-8 w-full sm:w-auto text-sm sm:text-base"
             >
               {t('talk_to_us') || 'Fale Connosco'}
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
             </Button>
           </Link>
         </div>

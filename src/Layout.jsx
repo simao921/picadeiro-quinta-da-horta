@@ -385,7 +385,7 @@ const LayoutContent = ({ children, currentPageName }) => {
           </div>
 
           <div className="border-t border-stone-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-stone-400 text-sm">
+            <p className="text-stone-400 text-xs sm:text-sm text-center md:text-left">
               © {new Date().getFullYear()} Picadeiro Quinta da Horta - Rua das Hortas - Fonte da Senhora, 2890-106 Alcochete
             </p>
             <div className="flex items-center gap-4">
@@ -404,11 +404,12 @@ const LayoutContent = ({ children, currentPageName }) => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-24 right-6 w-12 h-12 bg-[#2D2D2D] text-white rounded-full shadow-lg 
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 
+                     bg-[#2D2D2D] text-white rounded-full shadow-lg 
                      flex items-center justify-center hover:bg-[#1A1A1A] transition-all duration-300
                      animate-in fade-in slide-in-from-bottom-4 z-40"
         >
-          <ChevronUp className="w-6 h-6" />
+          <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       )}
 
