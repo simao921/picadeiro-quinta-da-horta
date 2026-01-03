@@ -30,9 +30,6 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import AdminBlog from './pages/AdminBlog';
 import __Layout from './Layout.jsx';
 
 
@@ -69,9 +66,6 @@ export const PAGES = {
     "Services": Services,
     "Shop": Shop,
     "Wishlist": Wishlist,
-    "Blog": Blog,
-    "BlogPost": BlogPost,
-    "AdminBlog": AdminBlog,
 }
 
 export const pagesConfig = {
