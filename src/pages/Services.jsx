@@ -14,6 +14,7 @@ import {
   Star, CheckCircle 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/components/LanguageProvider';
 
 const iconMap = {
   'GraduationCap': GraduationCap,
@@ -74,6 +75,7 @@ const defaultServices = [
 ];
 
 export default function Services() {
+  const { t } = useLanguage();
   const { data: services, isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.list(),
@@ -111,15 +113,13 @@ export default function Services() {
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
               <Trophy className="w-4 h-4" />
-              Nossos Serviços
+              {t('services_title')}
             </span>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Experiências<br />
-              <span className="text-[#B8956A]">Personalizadas</span>
+              {t('hero_title')}
             </h1>
             <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
-              Descubra os nossos serviços e encontre a experiência perfeita para si. 
-              Desde aulas para iniciantes até treinos avançados.
+              {t('hero_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -221,7 +221,7 @@ export default function Services() {
                               size="lg" 
                               className="bg-[#B8956A] hover:bg-[#8B7355] text-white w-fit shadow-lg shadow-[#B8956A]/30"
                             >
-                              Reservar Agora
+                              {t('book_now')}
                               <ArrowRight className="w-5 h-5 ml-2" />
                             </Button>
                           </Link>

@@ -26,6 +26,7 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
+import app from './pages/_app';
 import __Layout from './Layout.jsx';
 
 
@@ -58,6 +59,7 @@ export const PAGES = {
     "Services": Services,
     "Shop": Shop,
     "Wishlist": Wishlist,
+    "_app": app,
 }
 
 export const pagesConfig = {
