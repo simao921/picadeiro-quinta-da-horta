@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +17,24 @@ export default function ChatBot() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+
+  const { data: services } = useQuery({
+    queryKey: ['chatbot-services'],
+    queryFn: () => base44.entities.Service.list(),
+    initialData: []
+  });
+
+  const { data: instructors } = useQuery({
+    queryKey: ['chatbot-instructors'],
+    queryFn: () => base44.entities.Instructor.list(),
+    initialData: []
+  });
+
+  const { data: horses } = useQuery({
+    queryKey: ['chatbot-horses'],
+    queryFn: () => base44.entities.Horse.list(),
+    initialData: []
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,6 +53,23 @@ export default function ChatBot() {
     setLoading(true);
 
     try {
+      // Construir informação dos serviços dinamicamente
+      const servicesInfo = services.map((s, i) => 
+        `${i + 1}. ${s.title} - ${s.price ? `€${s.price}` : 'Preço sob consulta'} ${s.duration ? `(${s.duration} minutos)` : ''} - ${s.short_description || s.description}`
+      ).join('\n');
+
+      // Informação dos monitores
+      const instructorsInfo = instructors
+        .filter(i => i.is_active)
+        .map(i => `- ${i.name}${i.is_champion ? ' (Bi-Campeão Mundial)' : ''}${i.specialties?.length ? ` - Especialidades: ${i.specialties.join(', ')}` : ''}`)
+        .join('\n');
+
+      // Informação dos cavalos
+      const horsesInfo = horses
+        .filter(h => h.is_active)
+        .map(h => `- ${h.name}${h.breed ? ` (${h.breed})` : ''}${h.specialties?.length ? ` - ${h.specialties.join(', ')}` : ''}`)
+        .join('\n');
+
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `És o assistente virtual do Picadeiro Quinta da Horta, um centro equestre em Alcochete, Portugal.
 
@@ -42,16 +78,14 @@ INFORMAÇÕES DO PICADEIRO:
 - Telefone: +351 932 111 786
 - Email: picadeiroquintadahortagf@gmail.com
 
-SERVIÇOS E PREÇOS (VALORES EXATOS):
-1. Aulas Particulares - €45 por aula (60 minutos) - Atendimento personalizado 1-1
-2. Aulas de Grupo - €30 por aula (60 minutos) - Máximo 4 alunos por aula
-3. Aluguer de Picadeiro para Eventos - €200 (3 horas) - Até 30 pessoas
-4. Serviços para Proprietários - Preço sob consulta (contactar diretamente)
+SERVIÇOS E PREÇOS (DADOS REAIS DO SISTEMA):
+${servicesInfo || 'Nenhum serviço disponível no momento. Contacte-nos para mais informações.'}
 
-MONITOR PRINCIPAL:
-- Gilberto Filipe - Bi-Campeão Mundial de Equitação
-- Especialista em ensino de alta qualidade
-- Todas as aulas particulares são com Gilberto Filipe ou monitores qualificados da equipa
+MONITORES/INSTRUTORES:
+${instructorsInfo || 'Gilberto Filipe - Bi-Campeão Mundial de Equitação'}
+
+CAVALOS DISPONÍVEIS:
+${horsesInfo || 'Vários cavalos disponíveis. Contacte-nos para mais detalhes.'}
 
 HORÁRIOS:
 - Segunda a Sexta: 09:00 - 19:00
@@ -63,9 +97,9 @@ COMO RESERVAR:
 - Por telefone: +351 932 111 786
 - Por email: picadeiroquintadahortagf@gmail.com
 
-IMPORTANTE: Usa SEMPRE os preços EXATOS indicados acima. Não inventes valores diferentes.
+IMPORTANTE: Usa SEMPRE os preços e informações EXATOS indicados acima vindos do sistema. Não inventes valores diferentes.
 
-Responde de forma amigável, profissional e concisa. Se não souberes algo específico, sugere contactar diretamente.
+Responde de forma amigável, profissional e concisa em português. Se não souberes algo específico, sugere contactar diretamente.
 
 Pergunta do cliente: ${userMessage}`,
       });
