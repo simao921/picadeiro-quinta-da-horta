@@ -231,6 +231,7 @@ export const translations = {
     
     // Footer
     quick_links: 'Links Rápidos',
+    footer_description: 'Centro equestre de excelência em Alcochete, oferecendo aulas de equitação e experiências únicas com cavalos.',
     
     // Cart & Checkout
     cart_title: 'Carrinho de Compras',
@@ -490,6 +491,7 @@ export const translations = {
     
     // Footer
     quick_links: 'Quick Links',
+    footer_description: 'Equestrian center of excellence in Alcochete, offering riding lessons and unique experiences with horses.',
     
     // Cart & Checkout
     cart_title: 'Shopping Cart',
@@ -749,6 +751,7 @@ export const translations = {
     
     // Footer
     quick_links: 'Enlaces Rápidos',
+    footer_description: 'Centro ecuestre de excelencia en Alcochete, ofreciendo clases de equitación y experiencias únicas con caballos.',
     
     // Cart & Checkout
     cart_title: 'Carrito de Compras',
@@ -1008,6 +1011,7 @@ export const translations = {
     
     // Footer
     quick_links: 'Liens Rapides',
+    footer_description: 'Centre équestre d\'excellence à Alcochete, proposant des cours d\'équitation et des expériences uniques avec les chevaux.',
     
     // Cart & Checkout
     cart_title: 'Panier',

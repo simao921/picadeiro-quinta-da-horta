@@ -318,8 +318,7 @@ const LayoutContent = ({ children, currentPageName }) => {
                 </div>
               </Link>
               <p className="text-stone-300 text-sm leading-relaxed">
-                Centro equestre de excelência em Alcochete, oferecendo aulas de equitação, 
-                hipoterapia e experiências únicas com cavalos.
+                {t('footer_description')}
               </p>
             </div>
 
