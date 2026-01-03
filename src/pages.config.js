@@ -25,6 +25,7 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
+import AdminPicadeiroStudents from './pages/AdminPicadeiroStudents';
 import __Layout from './Layout.jsx';
 
 
@@ -56,6 +57,7 @@ export const PAGES = {
     "Services": Services,
     "Shop": Shop,
     "Wishlist": Wishlist,
+    "AdminPicadeiroStudents": AdminPicadeiroStudents,
 }
 
 export const pagesConfig = {

@@ -48,7 +48,15 @@ export default function FixedStudentsManager() {
     initialData: []
   });
 
-  const fixedStudents = allUsers.filter(u => u.student_type === 'fixo');
+  const { data: picadeiroStudents = [] } = useQuery({
+    queryKey: ['picadeiro-students'],
+    queryFn: () => base44.entities.PicadeiroStudent.list('-created_date'),
+    initialData: []
+  });
+
+  const fixedStudentsFromUsers = allUsers.filter(u => u.student_type === 'fixo');
+  const fixedStudentsFromPicadeiro = picadeiroStudents.filter(s => s.student_type === 'fixo');
+  const fixedStudents = [...fixedStudentsFromUsers, ...fixedStudentsFromPicadeiro];
 
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
@@ -57,18 +65,33 @@ export default function FixedStudentsManager() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, data }) => {
-      await base44.entities.User.update(userId, data);
-      return { userId, data };
+    mutationFn: async ({ userId, data, isPicadeiro }) => {
+      if (isPicadeiro) {
+        await base44.entities.PicadeiroStudent.update(userId, data);
+      } else {
+        await base44.entities.User.update(userId, data);
+      }
+      return { userId, data, isPicadeiro };
     },
     onSuccess: async (result) => {
       // Buscar o aluno atualizado com os novos dados
-      const updatedStudent = {
-        id: result.userId,
-        email: allUsers.find(u => u.id === result.userId)?.email,
-        full_name: allUsers.find(u => u.id === result.userId)?.full_name,
-        ...result.data
-      };
+      let updatedStudent;
+      if (result.isPicadeiro) {
+        const student = picadeiroStudents.find(s => s.id === result.userId);
+        updatedStudent = {
+          id: result.userId,
+          email: student?.email || '',
+          full_name: student?.name,
+          ...result.data
+        };
+      } else {
+        updatedStudent = {
+          id: result.userId,
+          email: allUsers.find(u => u.id === result.userId)?.email,
+          full_name: allUsers.find(u => u.id === result.userId)?.full_name,
+          ...result.data
+        };
+      }
       
       if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0) {
         toast.loading('A criar aulas automáticas...');
@@ -77,6 +100,7 @@ export default function FixedStudentsManager() {
       }
       
       queryClient.invalidateQueries(['all-users']);
+      queryClient.invalidateQueries(['picadeiro-students']);
       queryClient.invalidateQueries(['lessons']);
       setDialogOpen(false);
       setEditingStudent(null);
@@ -191,9 +215,12 @@ export default function FixedStudentsManager() {
     }
 
     const monthlyFee = monthlyFees[formData.duration][formData.weekly_frequency];
+    const isPicadeiro = formData.user_id.startsWith('picadeiro-');
+    const actualId = formData.user_id.replace('user-', '').replace('picadeiro-', '');
 
     updateUserMutation.mutate({
-      userId: formData.user_id,
+      userId: actualId,
+      isPicadeiro,
       data: {
         student_type: 'fixo',
         assigned_horse: formData.assigned_horse,
@@ -216,10 +243,12 @@ export default function FixedStudentsManager() {
     setFormData({ ...formData, schedules: newSchedules });
   };
 
-  const removeFixedStudent = (userId) => {
+  const removeFixedStudent = (student) => {
     if (confirm('Remover aluno da lista de fixos?')) {
+      const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
       updateUserMutation.mutate({
-        userId,
+        userId: student.id,
+        isPicadeiro,
         data: { student_type: 'avulso', fixed_schedule: [], monthly_fee: 0 }
       });
     }
@@ -227,8 +256,9 @@ export default function FixedStudentsManager() {
 
   const editFixedStudent = (student) => {
     setEditingStudent(student);
+    const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
     setFormData({
-      user_id: student.id,
+      user_id: `${isPicadeiro ? 'picadeiro' : 'user'}-${student.id}`,
       assigned_horse: student.assigned_horse || '',
       student_level: student.student_level || 'iniciante',
       duration: student.fixed_schedule?.[0]?.duration || 30,
@@ -269,11 +299,20 @@ export default function FixedStudentsManager() {
                       <SelectValue placeholder="Escolha um aluno" />
                     </SelectTrigger>
                     <SelectContent>
-                      {allUsers.filter(u => u.student_type !== 'fixo' || u.id === editingStudent?.id).map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.full_name || u.email}
-                        </SelectItem>
-                      ))}
+                      <optgroup label="Utilizadores do Site">
+                        {allUsers.filter(u => u.student_type !== 'fixo' || u.id === editingStudent?.id).map(u => (
+                          <SelectItem key={`user-${u.id}`} value={`user-${u.id}`}>
+                            {u.full_name || u.email}
+                          </SelectItem>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Alunos do Picadeiro">
+                        {picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => (
+                          <SelectItem key={`picadeiro-${s.id}`} value={`picadeiro-${s.id}`}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </optgroup>
                     </SelectContent>
                   </Select>
                 </div>
@@ -473,11 +512,11 @@ export default function FixedStudentsManager() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeFixedStudent(student.id)}
+                      onClick={() => removeFixedStudent(student)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
+                      >
                       <Trash2 className="w-4 h-4" />
-                    </Button>
+                      </Button>
                   </div>
                 </div>
               </div>
