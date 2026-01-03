@@ -1,9 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import OpenAI from 'npm:openai';
-
-const openai = new OpenAI({
-    apiKey: Deno.env.get("OPENAI_API_KEY"),
-});
 
 Deno.serve(async (req) => {
     try {
@@ -18,16 +13,8 @@ Deno.serve(async (req) => {
         const allLessons = await base44.asServiceRole.entities.Lesson.list();
         const allBookings = await base44.asServiceRole.entities.Booking.list();
 
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "system",
-                    content: "És um consultor especializado em otimização de horários para centros equestres. Analisa dados e fornece insights práticos e acionáveis em português."
-                },
-                {
-                    role: "user",
-                    content: `Analisa os seguintes dados de um centro equestre e sugere otimizações de horários:
+        const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: `Analisa os seguintes dados de um centro equestre e sugere otimizações de horários:
           
 **Aulas Agendadas:**
 ${JSON.stringify(allLessons, null, 2)}
@@ -40,7 +27,7 @@ Com base nestes dados, fornece OBRIGATORIAMENTE:
 1. **best_time_slots** - Array com 5 sugestões de melhores horários para novas aulas
    Formato: [{ "day": "Segunda-feira", "time": "10:00", "reason": "explicação detalhada" }]
 
-2. **patterns** - Análise dos padrões de ocupação (objeto com texto descritivo)
+2. **patterns** - Análise dos padrões de ocupação (string descritiva)
 
 3. **recommendations** - Array com 5 recomendações práticas para otimizar horários
    Formato: ["recomendação 1", "recomendação 2", ...]
@@ -49,19 +36,32 @@ Com base nestes dados, fornece OBRIGATORIAMENTE:
 
 5. **optimization_tips** - Array com 3 dicas para maximizar ocupação
 
-Responde APENAS em JSON válido com esta estrutura exata.`
+Responde APENAS em JSON válido com esta estrutura exata em português.`,
+            response_json_schema: {
+                type: "object",
+                properties: {
+                    best_time_slots: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                day: { type: "string" },
+                                time: { type: "string" },
+                                reason: { type: "string" }
+                            }
+                        }
+                    },
+                    patterns: { type: "string" },
+                    recommendations: { type: "array", items: { type: "string" } },
+                    conflicts: { type: "array", items: { type: "string" } },
+                    optimization_tips: { type: "array", items: { type: "string" } }
                 }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.7
+            }
         });
-
-        const analysis = JSON.parse(response.choices[0].message.content);
 
         return Response.json({
             success: true,
-            analysis: analysis,
-            tokens_used: response.usage.total_tokens
+            analysis: analysis
         });
 
     } catch (error) {
