@@ -36,11 +36,11 @@ function WeeklyLessonSelector({
   index, currentDate, currentTime, selectedDates, selectedTimes, 
   setSelectedDates, setSelectedTimes, blockedSlots, getAvailableSlots, getLessonsForDate 
 }) {
-  const [dateLessons, setDateLessons] = useState([]);
-  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [dateLessons, setDateLessons] = React.useState([]);
+  const [isLoadingSlots, setIsLoadingSlots] = React.useState(false);
 
   // Buscar aulas quando a data muda
-  useEffect(() => {
+  React.useEffect(() => {
     if (currentDate) {
       setIsLoadingSlots(true);
       getLessonsForDate(currentDate).then(lessons => {
