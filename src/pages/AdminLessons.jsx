@@ -220,15 +220,22 @@ export default function AdminLessons() {
   });
 
   const updateBookingMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Booking.update(id, { 
-      status,
-      approved_at: status === 'approved' ? new Date().toISOString() : null
-    }),
+    mutationFn: async ({ id, status }) => {
+      await base44.entities.Booking.update(id, { 
+        status,
+        approved_at: status === 'approved' ? new Date().toISOString() : null,
+        approved_by: status === 'approved' ? 'admin' : null
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-all-bookings']);
       queryClient.invalidateQueries(['admin-lessons']);
       queryClient.invalidateQueries(['admin-all-lessons']);
       toast.success('Reserva atualizada!');
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar reserva:', error);
+      toast.error('Erro ao atualizar reserva');
     }
   });
 
