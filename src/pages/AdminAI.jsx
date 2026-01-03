@@ -321,7 +321,7 @@ export default function AdminAI() {
                           Padrões de Ocupação
                         </h4>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-900">{JSON.stringify(suggestions.schedule.patterns)}</p>
+                          <p className="text-sm text-blue-900">{suggestions.schedule.patterns}</p>
                         </div>
                       </div>
                     )}
