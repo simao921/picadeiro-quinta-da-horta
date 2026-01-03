@@ -77,72 +77,55 @@ export default function NewBookingForm({ user, isBlocked }) {
   const createBookingMutation = useMutation({
     mutationFn: async () => {
       const duration = selectedPlan?.duration || selectedService.duration;
+      const bookingsToCreate = [];
       
-      // Verificar disponibilidade no horário principal
-      const lessonsAtTime = lessons.filter(l => l.start_time === selectedTime);
-      const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-      
-      if (totalBooked >= 6) {
-        throw new Error('Horário indisponível - máximo de 6 alunos por meia hora');
-      }
-      
-      // Se for 60 minutos, verificar a meia hora seguinte
-      if (duration === 60) {
-        const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-        const slotIndex = timeSlots.indexOf(selectedTime);
-        const nextSlot = timeSlots[slotIndex + 1];
-        
-        if (nextSlot) {
-          const lessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
-          const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+      // Se tem múltiplos horários (planos com frequency > 1)
+      if (selectedPlan?.frequency > 1) {
+        for (let i = 0; i < selectedPlan.frequency; i++) {
+          const date = selectedDates[i];
+          const time = selectedTimes[i];
           
-          if (totalBookedNext >= 6) {
-            throw new Error('Horário indisponível - próxima meia hora está cheia (máximo 6 alunos)');
+          // Buscar aulas para esta data
+          const dateLessons = await base44.entities.Lesson.filter({ date: format(date, 'yyyy-MM-dd') });
+          
+          // Verificar disponibilidade
+          const lessonsAtTime = dateLessons.filter(l => l.start_time === time);
+          const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+          
+          if (totalBooked >= 6) {
+            throw new Error(`Horário ${time} de ${format(date, "dd/MM")} indisponível - máximo 6 alunos`);
           }
-        }
-      }
-
-      // Criar ou encontrar a lição no horário principal
-      let lesson = lessons.find(l => 
-        l.service_id === selectedService.id && 
-        l.start_time === selectedTime
-      );
-
-      if (!lesson) {
-        const startTime = new Date(`2000-01-01T${selectedTime}:00`);
-        const endTime = new Date(startTime.getTime() + duration * 60000);
-        
-        lesson = await base44.entities.Lesson.create({
-          service_id: selectedService.id,
-          date: format(selectedDate, 'yyyy-MM-dd'),
-          start_time: selectedTime,
-          end_time: format(endTime, 'HH:mm'),
-          max_spots: 6,
-          booked_spots: 0,
-          is_owner_service: selectedService.is_owner_service || false
-        });
-      }
-
-      // Se for 60 minutos, criar/atualizar também a lição da meia hora seguinte
-      if (duration === 60) {
-        const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-        const slotIndex = timeSlots.indexOf(selectedTime);
-        const nextSlot = timeSlots[slotIndex + 1];
-        
-        if (nextSlot) {
-          let nextLesson = lessons.find(l => 
+          
+          // Se for 60 minutos, verificar próxima meia hora
+          if (duration === 60) {
+            const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+            const slotIndex = timeSlots.indexOf(time);
+            const nextSlot = timeSlots[slotIndex + 1];
+            
+            if (nextSlot) {
+              const lessonsAtNextTime = dateLessons.filter(l => l.start_time === nextSlot);
+              const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+              
+              if (totalBookedNext >= 6) {
+                throw new Error(`Horário ${time} de ${format(date, "dd/MM")} indisponível - próxima meia hora cheia`);
+              }
+            }
+          }
+          
+          // Criar ou encontrar a lição
+          let lesson = dateLessons.find(l => 
             l.service_id === selectedService.id && 
-            l.start_time === nextSlot
+            l.start_time === time
           );
           
-          if (!nextLesson) {
-            const startTime = new Date(`2000-01-01T${nextSlot}:00`);
-            const endTime = new Date(startTime.getTime() + 30 * 60000);
+          if (!lesson) {
+            const startTime = new Date(`2000-01-01T${time}:00`);
+            const endTime = new Date(startTime.getTime() + duration * 60000);
             
-            nextLesson = await base44.entities.Lesson.create({
+            lesson = await base44.entities.Lesson.create({
               service_id: selectedService.id,
-              date: format(selectedDate, 'yyyy-MM-dd'),
-              start_time: nextSlot,
+              date: format(date, 'yyyy-MM-dd'),
+              start_time: time,
               end_time: format(endTime, 'HH:mm'),
               max_spots: 6,
               booked_spots: 0,
@@ -150,43 +133,189 @@ export default function NewBookingForm({ user, isBlocked }) {
             });
           }
           
-          // Atualizar a próxima meia hora também
-          await base44.entities.Lesson.update(nextLesson.id, {
-            booked_spots: (nextLesson.booked_spots || 0) + 1
+          // Se for 60 minutos, criar/atualizar próxima meia hora
+          if (duration === 60) {
+            const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+            const slotIndex = timeSlots.indexOf(time);
+            const nextSlot = timeSlots[slotIndex + 1];
+            
+            if (nextSlot) {
+              let nextLesson = dateLessons.find(l => 
+                l.service_id === selectedService.id && 
+                l.start_time === nextSlot
+              );
+              
+              if (!nextLesson) {
+                const startTime = new Date(`2000-01-01T${nextSlot}:00`);
+                const endTime = new Date(startTime.getTime() + 30 * 60000);
+                
+                nextLesson = await base44.entities.Lesson.create({
+                  service_id: selectedService.id,
+                  date: format(date, 'yyyy-MM-dd'),
+                  start_time: nextSlot,
+                  end_time: format(endTime, 'HH:mm'),
+                  max_spots: 6,
+                  booked_spots: 0,
+                  is_owner_service: selectedService.is_owner_service || false
+                });
+              }
+              
+              await base44.entities.Lesson.update(nextLesson.id, {
+                booked_spots: (nextLesson.booked_spots || 0) + 1
+              });
+            }
+          }
+          
+          // Criar reserva (sempre pendente para planos múltiplos)
+          const booking = await base44.entities.Booking.create({
+            lesson_id: lesson.id,
+            client_email: user.email,
+            client_name: user.full_name,
+            status: 'pending',
+            is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários'
+          });
+          
+          await base44.entities.Lesson.update(lesson.id, {
+            booked_spots: (lesson.booked_spots || 0) + 1
+          });
+          
+          bookingsToCreate.push({ date, time, booking });
+        }
+        
+        // Enviar email com todas as reservas
+        const bookingsList = bookingsToCreate.map(b => 
+          `<li>${format(b.date, "EEEE, d 'de' MMMM", { locale: pt })} às ${b.time}</li>`
+        ).join('');
+        
+        await base44.integrations.Core.SendEmail({
+          to: user.email,
+          subject: `Reservas Registadas - ${selectedService.title}`,
+          body: `
+            <h2>Olá ${user.full_name}!</h2>
+            <p>As suas reservas foram registadas e estão <strong>pendentes de aprovação</strong>.</p>
+            <h3>Detalhes das Reservas</h3>
+            <ul>
+              <li><strong>Serviço:</strong> ${selectedService.title}</li>
+              <li><strong>Plano:</strong> ${selectedPlan.label}</li>
+              <li><strong>Duração:</strong> ${duration} minutos</li>
+            </ul>
+            <h3>Horários Selecionados</h3>
+            <ul>
+              ${bookingsList}
+            </ul>
+            <p>Aguarde a confirmação da nossa equipa.</p>
+            <p>Obrigado por escolher o Picadeiro Quinta da Horta!</p>
+          `
+        });
+        
+        return bookingsToCreate;
+      } else {
+        // Reserva única
+        const lessonsAtTime = lessons.filter(l => l.start_time === selectedTime);
+        const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+        
+        if (totalBooked >= 6) {
+          throw new Error('Horário indisponível - máximo de 6 alunos por meia hora');
+        }
+        
+        if (duration === 60) {
+          const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+          const slotIndex = timeSlots.indexOf(selectedTime);
+          const nextSlot = timeSlots[slotIndex + 1];
+          
+          if (nextSlot) {
+            const lessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
+            const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+            
+            if (totalBookedNext >= 6) {
+              throw new Error('Horário indisponível - próxima meia hora está cheia (máximo 6 alunos)');
+            }
+          }
+        }
+
+        let lesson = lessons.find(l => 
+          l.service_id === selectedService.id && 
+          l.start_time === selectedTime
+        );
+
+        if (!lesson) {
+          const startTime = new Date(`2000-01-01T${selectedTime}:00`);
+          const endTime = new Date(startTime.getTime() + duration * 60000);
+          
+          lesson = await base44.entities.Lesson.create({
+            service_id: selectedService.id,
+            date: format(selectedDate, 'yyyy-MM-dd'),
+            start_time: selectedTime,
+            end_time: format(endTime, 'HH:mm'),
+            max_spots: 6,
+            booked_spots: 0,
+            is_owner_service: selectedService.is_owner_service || false
           });
         }
+
+        if (duration === 60) {
+          const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+          const slotIndex = timeSlots.indexOf(selectedTime);
+          const nextSlot = timeSlots[slotIndex + 1];
+          
+          if (nextSlot) {
+            let nextLesson = lessons.find(l => 
+              l.service_id === selectedService.id && 
+              l.start_time === nextSlot
+            );
+            
+            if (!nextLesson) {
+              const startTime = new Date(`2000-01-01T${nextSlot}:00`);
+              const endTime = new Date(startTime.getTime() + 30 * 60000);
+              
+              nextLesson = await base44.entities.Lesson.create({
+                service_id: selectedService.id,
+                date: format(selectedDate, 'yyyy-MM-dd'),
+                start_time: nextSlot,
+                end_time: format(endTime, 'HH:mm'),
+                max_spots: 6,
+                booked_spots: 0,
+                is_owner_service: selectedService.is_owner_service || false
+              });
+            }
+            
+            await base44.entities.Lesson.update(nextLesson.id, {
+              booked_spots: (nextLesson.booked_spots || 0) + 1
+            });
+          }
+        }
+
+        const booking = await base44.entities.Booking.create({
+          lesson_id: lesson.id,
+          client_email: user.email,
+          client_name: user.full_name,
+          status: selectedService.auto_approve ? 'approved' : 'pending',
+          is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários'
+        });
+
+        await base44.entities.Lesson.update(lesson.id, {
+          booked_spots: (lesson.booked_spots || 0) + 1
+        });
+
+        await base44.integrations.Core.SendEmail({
+          to: user.email,
+          subject: `Reserva ${selectedService.auto_approve ? 'Confirmada' : 'Pendente'} - ${selectedService.title}`,
+          body: `
+            <h2>Olá ${user.full_name}!</h2>
+            <p>A sua reserva foi ${selectedService.auto_approve ? '<strong>confirmada</strong>' : 'registada e está <strong>pendente de aprovação</strong>'}.</p>
+            <h3>Detalhes da Reserva</h3>
+            <ul>
+              <li><strong>Serviço:</strong> ${selectedService.title}</li>
+              <li><strong>Data:</strong> ${format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}</li>
+              <li><strong>Hora:</strong> ${selectedTime}</li>
+              <li><strong>Duração:</strong> ${duration} minutos</li>
+            </ul>
+            <p>Obrigado por escolher o Picadeiro Quinta da Horta!</p>
+          `
+        });
+
+        return booking;
       }
-
-      const booking = await base44.entities.Booking.create({
-        lesson_id: lesson.id,
-        client_email: user.email,
-        client_name: user.full_name,
-        status: selectedService.auto_approve ? 'approved' : 'pending',
-        is_owner_booking: selectedService.is_owner_service || selectedService.title === 'Proprietários'
-      });
-
-      await base44.entities.Lesson.update(lesson.id, {
-        booked_spots: (lesson.booked_spots || 0) + 1
-      });
-
-      await base44.integrations.Core.SendEmail({
-        to: user.email,
-        subject: `Reserva ${selectedService.auto_approve ? 'Confirmada' : 'Pendente'} - ${selectedService.title}`,
-        body: `
-          <h2>Olá ${user.full_name}!</h2>
-          <p>A sua reserva foi ${selectedService.auto_approve ? '<strong>confirmada</strong>' : 'registada e está <strong>pendente de aprovação</strong>'}.</p>
-          <h3>Detalhes da Reserva</h3>
-          <ul>
-            <li><strong>Serviço:</strong> ${selectedService.title}</li>
-            <li><strong>Data:</strong> ${format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}</li>
-            <li><strong>Hora:</strong> ${selectedTime}</li>
-            <li><strong>Duração:</strong> ${selectedService.duration} minutos</li>
-          </ul>
-          <p>Obrigado por escolher o Picadeiro Quinta da Horta!</p>
-        `
-      });
-
-      return booking;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['my-bookings']);
@@ -877,19 +1006,39 @@ export default function NewBookingForm({ user, isBlocked }) {
                   <span className="text-stone-600">Plano</span>
                   <span className="font-semibold text-[#2C3E1F]">{selectedPlan?.label}</span>
                 </div>
-                <div className="flex justify-between py-3 border-b border-stone-200">
-                  <span className="text-stone-600">Data</span>
-                  <span className="font-semibold text-[#2C3E1F]">
-                    {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
-                  </span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-stone-200">
-                  <span className="text-stone-600">Hora</span>
-                  <span className="font-semibold text-[#2C3E1F]">{selectedTime}</span>
-                </div>
+                
+                {selectedPlan?.frequency > 1 ? (
+                  <div className="py-3 border-b border-stone-200">
+                    <p className="text-stone-600 mb-3">Horários Selecionados</p>
+                    <div className="space-y-2">
+                      {selectedDates.map((date, index) => selectedTimes[index] && (
+                        <div key={index} className="flex items-center justify-between p-2 bg-stone-50 rounded">
+                          <span className="text-sm font-medium text-[#2C3E1F]">Aula {index + 1}</span>
+                          <span className="text-sm text-stone-700">
+                            {format(date, "EEEE, d 'de' MMMM", { locale: pt })} às {selectedTimes[index]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between py-3 border-b border-stone-200">
+                      <span className="text-stone-600">Data</span>
+                      <span className="font-semibold text-[#2C3E1F]">
+                        {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-3 border-b border-stone-200">
+                      <span className="text-stone-600">Hora</span>
+                      <span className="font-semibold text-[#2C3E1F]">{selectedTime}</span>
+                    </div>
+                  </>
+                )}
+                
                 <div className="flex justify-between py-3 border-b border-stone-200">
                   <span className="text-stone-600">Duração</span>
-                  <span className="font-semibold text-[#2C3E1F]">{selectedService?.duration} minutos</span>
+                  <span className="font-semibold text-[#2C3E1F]">{selectedPlan?.duration || selectedService?.duration} minutos</span>
                 </div>
                 {wantsPhotoVideo && selectedPlan?.label === 'Com Gilberto Filipe' && (
                   <div className="flex justify-between py-3 border-b border-stone-200">
@@ -897,8 +1046,17 @@ export default function NewBookingForm({ user, isBlocked }) {
                     <span className="font-semibold text-[#2C3E1F]">50€</span>
                   </div>
                 )}
+                
+                {selectedPlan?.frequency > 1 && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-800">
+                      <strong>Nota:</strong> As suas reservas ficarão pendentes de aprovação pela administração.
+                    </p>
+                  </div>
+                )}
+                
                 <div className="flex justify-between py-4 bg-stone-50 -mx-8 px-8 mt-4">
-                  <span className="text-lg font-medium text-stone-700">Total</span>
+                  <span className="text-lg font-medium text-stone-700">Total Mensal</span>
                   <span className="font-bold text-2xl text-[#B8956A]">
                     {(selectedPlan?.price || 0) + (wantsPhotoVideo && selectedPlan?.label === 'Com Gilberto Filipe' ? 50 : 0)}€
                   </span>
