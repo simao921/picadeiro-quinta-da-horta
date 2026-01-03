@@ -183,7 +183,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             client_email: user.email,
             client_name: user.full_name,
             status: 'pending',
-            is_owner_booking: (selectedService.title === 'Proprietários' || selectedService.title === 'Aulas em Grupo') ? true : false
+            is_owner_booking: selectedService.title === 'Aulas em Grupo' ? true : false
           });
           
           await base44.entities.Lesson.update(lesson.id, {
@@ -301,7 +301,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           client_email: user.email,
           client_name: user.full_name,
           status: selectedService.auto_approve ? 'approved' : 'pending',
-          is_owner_booking: (selectedService.title === 'Proprietários' || selectedService.title === 'Aulas em Grupo') ? true : false
+          is_owner_booking: selectedService.title === 'Aulas em Grupo' ? true : false
         });
 
         await base44.entities.Lesson.update(lesson.id, {
@@ -720,11 +720,6 @@ export default function NewBookingForm({ user, isBlocked }) {
           {/* Proprietários */}
           {selectedService?.title === 'Proprietários' && (
             <div className="space-y-4">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-                <p className="text-sm text-amber-800">
-                  <strong>Atenção:</strong> Reservas de proprietários têm prioridade secundária. Se houver muitos alunos no dia escolhido, as reservas de proprietários podem não ser aceites (máximo 6 alunos por sessão).
-                </p>
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card
                   className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
