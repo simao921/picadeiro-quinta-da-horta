@@ -9,9 +9,11 @@ import AdminLogin from './pages/AdminLogin';
 import AdminMessages from './pages/AdminMessages';
 import AdminOrders from './pages/AdminOrders';
 import AdminPayments from './pages/AdminPayments';
+import AdminReports from './pages/AdminReports';
 import AdminSettings from './pages/AdminSettings';
 import AdminShop from './pages/AdminShop';
 import AdminStudents from './pages/AdminStudents';
+import AdminUsers from './pages/AdminUsers';
 import Bookings from './pages/Bookings';
 import Cart from './pages/Cart';
 import ClientDashboard from './pages/ClientDashboard';
@@ -21,9 +23,8 @@ import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
-import AdminUsers from './pages/AdminUsers';
-import AdminReports from './pages/AdminReports';
 import Wishlist from './pages/Wishlist';
+import AdminStudentSchedules from './pages/AdminStudentSchedules';
 import __Layout from './Layout.jsx';
 
 
@@ -39,9 +40,11 @@ export const PAGES = {
     "AdminMessages": AdminMessages,
     "AdminOrders": AdminOrders,
     "AdminPayments": AdminPayments,
+    "AdminReports": AdminReports,
     "AdminSettings": AdminSettings,
     "AdminShop": AdminShop,
     "AdminStudents": AdminStudents,
+    "AdminUsers": AdminUsers,
     "Bookings": Bookings,
     "Cart": Cart,
     "ClientDashboard": ClientDashboard,
@@ -51,9 +54,8 @@ export const PAGES = {
     "ProductDetail": ProductDetail,
     "Services": Services,
     "Shop": Shop,
-    "AdminUsers": AdminUsers,
-    "AdminReports": AdminReports,
     "Wishlist": Wishlist,
+    "AdminStudentSchedules": AdminStudentSchedules,
 }
 
 export const pagesConfig = {
