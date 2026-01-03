@@ -380,24 +380,45 @@ export default function AdminLessons() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Calendar */}
-          <Card className="lg:col-span-1 border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-[#B8956A]" />
-                Calendário
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                locale={pt}
-                className="rounded-md border-0 w-full"
-              />
-            </CardContent>
-          </Card>
+          {/* Calendar + Pending Stats */}
+          <div className="lg:col-span-1 space-y-4">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-[#B8956A]" />
+                  Calendário
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  locale={pt}
+                  className="rounded-md border-0 w-full"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Pending Bookings Alert */}
+            {bookings.filter(b => b.status === 'pending').length > 0 && (
+              <Card className="border-amber-200 bg-amber-50 shadow-md">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-amber-900 mb-1">
+                        {bookings.filter(b => b.status === 'pending').length} Reserva{bookings.filter(b => b.status === 'pending').length > 1 ? 's' : ''} Pendente{bookings.filter(b => b.status === 'pending').length > 1 ? 's' : ''}
+                      </h3>
+                      <p className="text-xs text-amber-700">
+                        Clique nas aulas abaixo para aprovar ou rejeitar
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
           {/* Lessons List */}
           <Card className="lg:col-span-3 border-0 shadow-md">
@@ -420,14 +441,20 @@ export default function AdminLessons() {
                 <div className="space-y-4">
                   {lessons.map((lesson) => {
                     const lessonBookings = getLessonBookings(lesson.id);
+                    const hasPending = lessonBookings.some(b => b.status === 'pending');
                     return (
-                      <Card key={lesson.id} className="border">
+                      <Card key={lesson.id} className={`border ${hasPending ? 'border-amber-300 bg-amber-50/30' : ''}`}>
                         <CardContent className="p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <Clock className="w-4 h-4 text-[#B8956A]" />
                                 <span className="font-semibold">{lesson.start_time} - {lesson.end_time || '--:--'}</span>
+                                {hasPending && (
+                                  <Badge className="bg-amber-500 text-white animate-pulse">
+                                    Pendente
+                                  </Badge>
+                                )}
                               </div>
                               <p className="text-stone-600">{getServiceName(lesson.service_id)}</p>
                               <p className="text-sm text-stone-500">Monitor: {getInstructorName(lesson.instructor_id)}</p>
