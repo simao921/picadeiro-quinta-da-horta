@@ -229,9 +229,10 @@ export default function AdminLessons() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-all-bookings']);
-      queryClient.invalidateQueries(['admin-lessons']);
-      queryClient.invalidateQueries(['admin-all-lessons']);
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
       toast.success('Reserva atualizada!');
     },
     onError: (error) => {
