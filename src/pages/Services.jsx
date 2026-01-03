@@ -23,71 +23,73 @@ const iconMap = {
   'PartyPopper': PartyPopper,
 };
 
-const defaultServices = [
+const getDefaultServices = (t) => [
   {
     id: '1',
-    title: 'Aulas Particulares',
-    short_description: 'Aulas individuais personalizadas',
-    description: 'Aulas particulares com monitores experientes e com o Bi-Campeão do Mundo de Equitação – Gilberto Filipe. Programa totalmente adaptado ao seu nível e objetivos.',
+    title: t('service_private_title'),
+    short_description: t('service_private_short'),
+    description: t('service_private_desc'),
     price: 45,
     duration: 60,
     max_participants: 1,
     icon: 'GraduationCap',
     image_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-    features: ['Instrutor dedicado', 'Programa personalizado', 'Acompanhamento individual', 'Flexibilidade horária']
+    features: [t('service_private_feat_1'), t('service_private_feat_2'), t('service_private_feat_3'), t('service_private_feat_4')]
   },
   {
     id: '2',
-    title: 'Aulas em Grupo',
-    short_description: 'Máximo de 4 alunos por aula',
-    description: 'Aulas em grupo com até 4 alunos, promovendo a aprendizagem colaborativa, socialização e espírito de equipa num ambiente divertido.',
+    title: t('service_group_title'),
+    short_description: t('service_group_short'),
+    description: t('service_group_desc'),
     price: 30,
     duration: 60,
     max_participants: 4,
     icon: 'Users',
     image_url: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800&q=80',
-    features: ['Máximo 4 alunos', 'Ambiente social', 'Aprendizagem em equipa', 'Preço acessível']
+    features: [t('service_group_feat_1'), t('service_group_feat_2'), t('service_group_feat_3'), t('service_group_feat_4')]
   },
   {
     id: '3',
-    title: 'Hipoterapia',
-    short_description: 'Terapia assistida por cavalos',
-    description: 'Terapia especializada que utiliza o cavalo como instrumento terapêutico para promover ganhos físicos, psicológicos e educacionais.',
+    title: t('service_hippo_title'),
+    short_description: t('service_hippo_short'),
+    description: t('service_hippo_desc'),
     price: 50,
     duration: 45,
     max_participants: 1,
     icon: 'Heart',
     image_url: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=800&q=80',
-    features: ['Profissionais especializados', 'Cavalos treinados', 'Programa adaptado', 'Acompanhamento contínuo']
+    features: [t('service_hippo_feat_1'), t('service_hippo_feat_2'), t('service_hippo_feat_3'), t('service_hippo_feat_4')]
   },
   {
     id: '4',
-    title: 'Aluguer de Espaço',
-    short_description: 'Eventos e festas de aniversário',
-    description: 'Espaço único e acolhedor para eventos especiais, festas de aniversário e celebrações. Inclui atividades com cavalos opcionais.',
+    title: t('service_rental_title'),
+    short_description: t('service_rental_short'),
+    description: t('service_rental_desc'),
     price: 200,
     duration: 180,
     max_participants: 30,
     icon: 'PartyPopper',
     image_url: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80',
-    features: ['Espaço privativo', 'Decoração incluída', 'Atividades opcionais', 'Catering disponível']
+    features: [t('service_rental_feat_1'), t('service_rental_feat_2'), t('service_rental_feat_3'), t('service_rental_feat_4')]
   },
   {
     id: '5',
-    title: 'Proprietários',
-    short_description: 'Reservas para proprietários',
-    description: 'Serviço exclusivo para proprietários de cavalos. Permite marcação de horários com prioridade secundária em relação aos alunos regulares.',
+    title: t('service_owners_title'),
+    short_description: t('service_owners_short'),
+    description: t('service_owners_desc'),
     price: null,
     duration: 30,
     max_participants: 1,
     icon: 'Users',
     image_url: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80',
-    features: ['Horários flexíveis', 'Sujeito a disponibilidade', 'Máximo 6 alunos por sessão', 'Prioridade para alunos regulares']
+    features: [t('service_owners_feat_1'), t('service_owners_feat_2'), t('service_owners_feat_3'), t('service_owners_feat_4')]
   }
 ];
 
 export default function Services() {
   const { t } = useLanguage();
+  const defaultServices = getDefaultServices(t);
+  
   const { data: services, isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.list(),
@@ -128,10 +130,10 @@ export default function Services() {
               {t('services_title')}
             </span>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              {t('hero_title')}
+              {t('services_page_title')}
             </h1>
             <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
-              {t('hero_subtitle')}
+              {t('services_page_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -256,17 +258,17 @@ export default function Services() {
         </div>
         <div className="max-w-4xl mx-auto px-4 text-center relative">
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">
-            {t('not_found_services')}
+            {t('not_found_services') || 'Não encontrou o que procurava?'}
           </h2>
           <p className="text-stone-300 text-lg mb-8">
-            {t('not_found_services_desc')}
+            {t('not_found_services_desc') || 'Entre em contacto connosco para soluções personalizadas.'}
           </p>
           <Link to={createPageUrl('Contact')}>
             <Button 
               size="lg" 
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-8"
             >
-              {t('talk_to_us')}
+              {t('talk_to_us') || 'Fale Connosco'}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
