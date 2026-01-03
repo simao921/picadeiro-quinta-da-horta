@@ -31,6 +31,108 @@ const saturdayTimeSlots = [
   '14:30', '15:00', '15:30', '16:00'
 ];
 
+// Componente para seleção de aula semanal
+function WeeklyLessonSelector({ 
+  index, currentDate, currentTime, selectedDates, selectedTimes, 
+  setSelectedDates, setSelectedTimes, blockedSlots, getAvailableSlots, getLessonsForDate 
+}) {
+  const [dateLessons, setDateLessons] = useState([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
+  // Buscar aulas quando a data muda
+  useEffect(() => {
+    if (currentDate) {
+      setIsLoadingSlots(true);
+      getLessonsForDate(currentDate).then(lessons => {
+        setDateLessons(lessons);
+        setIsLoadingSlots(false);
+      });
+    }
+  }, [currentDate]);
+
+  const availableSlots = getAvailableSlots(currentDate, dateLessons);
+
+  return (
+    <Card className="border-stone-200">
+      <CardHeader className="bg-stone-50">
+        <CardTitle className="text-lg flex items-center justify-between">
+          Aula {index + 1}
+          {currentTime && currentDate && (
+            <span className="text-[#B8956A] text-sm font-normal">
+              {format(currentDate, "EEE dd/MM", { locale: pt })} às {currentTime}
+            </span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <Label className="mb-2 block">Dia da Semana</Label>
+            <Calendar
+              mode="single"
+              selected={currentDate}
+              onSelect={(date) => {
+                const newDates = [...selectedDates];
+                newDates[index] = date;
+                setSelectedDates(newDates);
+                // Limpar o horário quando a data muda
+                const newTimes = [...selectedTimes];
+                newTimes[index] = null;
+                setSelectedTimes(newTimes);
+              }}
+              locale={pt}
+              disabled={(date) => {
+                if (date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0) return true;
+                // Verificar se o dia está bloqueado
+                const dateStr = format(date, 'yyyy-MM-dd');
+                return blockedSlots.some(b => b.date === dateStr && !b.time_slot);
+              }}
+              className="rounded-md border"
+            />
+          </div>
+          <div>
+            <Label className="mb-2 block">Horário</Label>
+            {isLoadingSlots ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-6 h-6 animate-spin text-[#B8956A]" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                {availableSlots.map((slot) => {
+                  const isSelected = currentTime === slot;
+                  const isAlreadyUsed = selectedTimes.includes(slot) && !isSelected;
+                  return (
+                    <Button
+                      key={slot}
+                      variant={isSelected ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isAlreadyUsed}
+                      className={
+                        isSelected
+                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]'
+                          : isAlreadyUsed
+                          ? 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed'
+                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                      }
+                      onClick={() => {
+                        const newTimes = [...selectedTimes];
+                        newTimes[index] = slot;
+                        setSelectedTimes(newTimes);
+                      }}
+                    >
+                      {slot}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function NewBookingForm({ user, isBlocked }) {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
@@ -47,14 +149,21 @@ export default function NewBookingForm({ user, isBlocked }) {
 
   const queryClient = useQueryClient();
 
-  // Reset selected times when date changes
+  // Reset selected time when date changes
   useEffect(() => {
     setSelectedTime(null);
   }, [selectedDate]);
 
+  // Reset selected times when dates array changes
   useEffect(() => {
-    setSelectedTimes([]);
-  }, [selectedDates.length]);
+    const newTimes = [];
+    selectedDates.forEach((_, index) => {
+      newTimes[index] = selectedTimes[index] || null;
+    });
+    if (selectedDates.length < selectedTimes.length) {
+      setSelectedTimes(newTimes.slice(0, selectedDates.length));
+    }
+  }, [selectedDates]);
 
   const defaultServices = [
     { id: '1', title: t('service_private_title'), price: 45, duration: 60, max_participants: 1, short_description: t('service_private_short') },
@@ -82,6 +191,16 @@ export default function NewBookingForm({ user, isBlocked }) {
     enabled: !!selectedDate,
     initialData: []
   });
+
+  // Buscar aulas para cada data selecionada no plano semanal
+  const getLessonsForDate = async (date) => {
+    try {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      return await base44.entities.Lesson.filter({ date: dateStr });
+    } catch (e) {
+      return [];
+    }
+  };
 
   const { data: blockedSlots = [] } = useQuery({
     queryKey: ['blocked-slots'],
@@ -345,7 +464,7 @@ export default function NewBookingForm({ user, isBlocked }) {
     }
   });
 
-  const getAvailableSlots = (date = selectedDate) => {
+  const getAvailableSlots = (date = selectedDate, dateLessons = null) => {
     const dayOfWeek = date.getDay();
     const timeSlots = dayOfWeek === 6 ? saturdayTimeSlots : weekdayTimeSlots;
     
@@ -356,10 +475,15 @@ export default function NewBookingForm({ user, isBlocked }) {
     const dayBlocked = blockedSlots.some(b => b.date === dateStr && !b.time_slot);
     if (dayBlocked) return [];
     
-    if (!lessons || lessons.length === 0) return timeSlots.filter(slot => {
-      // Verificar se o horário específico está bloqueado
-      return !blockedSlots.some(b => b.date === dateStr && b.time_slot === slot);
-    });
+    // Usar as lições fornecidas ou as lições do dia selecionado
+    const lessonsToCheck = dateLessons !== null ? dateLessons : lessons;
+    
+    if (!lessonsToCheck || lessonsToCheck.length === 0) {
+      return timeSlots.filter(slot => {
+        // Verificar se o horário específico está bloqueado
+        return !blockedSlots.some(b => b.date === dateStr && b.time_slot === slot);
+      });
+    }
     
     const serviceDuration = selectedPlan?.duration || selectedService.duration;
     
@@ -370,7 +494,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         return false;
       }
       
-      const lessonsAtTime = lessons.filter(l => l.start_time === slot);
+      const lessonsAtTime = lessonsToCheck.filter(l => l.start_time === slot);
       const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
       
       // Se já tem 6 pessoas neste horário, não está disponível
@@ -382,7 +506,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         const nextSlot = timeSlots[slotIndex + 1];
         
         if (nextSlot) {
-          const lessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
+          const lessonsAtNextTime = lessonsToCheck.filter(l => l.start_time === nextSlot);
           const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
           
           // Se a próxima meia hora tem 6 pessoas, este horário não está disponível
@@ -867,77 +991,24 @@ export default function NewBookingForm({ user, isBlocked }) {
               <p className="text-stone-600">
                 Selecione {selectedPlan.frequency} horários diferentes para as suas aulas semanais
               </p>
-              {[...Array(selectedPlan.frequency)].map((_, index) => {
+{[...Array(selectedPlan.frequency)].map((_, index) => {
                 const currentTime = selectedTimes[index];
                 const currentDate = selectedDates[index] || new Date();
+                
                 return (
-                  <Card key={index} className="border-stone-200">
-                    <CardHeader className="bg-stone-50">
-                      <CardTitle className="text-lg flex items-center justify-between">
-                        Aula {index + 1}
-                        {currentTime && currentDate && (
-                          <span className="text-[#B8956A] text-sm font-normal">
-                            {format(currentDate, "EEE dd/MM", { locale: pt })} às {currentTime}
-                          </span>
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="mb-2 block">Dia da Semana</Label>
-                          <Calendar
-                            mode="single"
-                            selected={currentDate}
-                            onSelect={(date) => {
-                              const newDates = [...selectedDates];
-                              newDates[index] = date;
-                              setSelectedDates(newDates);
-                            }}
-                            locale={pt}
-                            disabled={(date) => {
-                              if (date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0) return true;
-                              // Verificar se o dia está bloqueado
-                              const dateStr = format(date, 'yyyy-MM-dd');
-                              return blockedSlots.some(b => b.date === dateStr && !b.time_slot);
-                            }}
-                            className="rounded-md border"
-                          />
-                        </div>
-                        <div>
-                          <Label className="mb-2 block">Horário</Label>
-                          <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
-                            {getAvailableSlots(currentDate).map((slot) => {
-                              const isSelected = currentTime === slot;
-                              const isAlreadyUsed = selectedTimes.includes(slot) && !isSelected;
-                              return (
-                                <Button
-                                  key={slot}
-                                  variant={isSelected ? 'default' : 'outline'}
-                                  size="sm"
-                                  disabled={isAlreadyUsed}
-                                  className={
-                                    isSelected
-                                      ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]'
-                                      : isAlreadyUsed
-                                      ? 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed'
-                                      : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
-                                  }
-                                  onClick={() => {
-                                    const newTimes = [...selectedTimes];
-                                    newTimes[index] = slot;
-                                    setSelectedTimes(newTimes);
-                                  }}
-                                >
-                                  {slot}
-                                </Button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <WeeklyLessonSelector
+                    key={index}
+                    index={index}
+                    currentDate={currentDate}
+                    currentTime={currentTime}
+                    selectedDates={selectedDates}
+                    selectedTimes={selectedTimes}
+                    setSelectedDates={setSelectedDates}
+                    setSelectedTimes={setSelectedTimes}
+                    blockedSlots={blockedSlots}
+                    getAvailableSlots={getAvailableSlots}
+                    getLessonsForDate={getLessonsForDate}
+                  />
                 );
               })}
               <p className="text-sm text-stone-500 italic">
