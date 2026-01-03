@@ -45,7 +45,7 @@ export default function AdminLessons() {
     service_id: '',
     instructor_id: '',
     start_time: '09:00',
-    max_spots: 4,
+    duration: 30,
     client_email: '',
     client_name: ''
   });
@@ -110,17 +110,81 @@ export default function AdminLessons() {
         throw new Error('Service required');
       }
       
+      const duration = data.duration || 30;
+      const startTime = new Date(`2000-01-01T${data.start_time}:00`);
+      const endTime = new Date(startTime.getTime() + duration * 60000);
+      
+      // Verificar disponibilidade no horário principal (máximo 6 por meia hora)
+      const existingLessonsAtTime = lessons.filter(l => l.start_time === data.start_time);
+      const totalBookedAtTime = existingLessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+      
+      if (totalBookedAtTime >= 6) {
+        toast.error('Horário indisponível - máximo 6 alunos por meia hora');
+        throw new Error('Time slot full');
+      }
+      
+      // Se for 60 minutos, verificar próxima meia hora também
+      if (duration === 60) {
+        const timeSlots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'];
+        const slotIndex = timeSlots.indexOf(data.start_time);
+        const nextSlot = timeSlots[slotIndex + 1];
+        
+        if (nextSlot) {
+          const existingLessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
+          const totalBookedAtNextTime = existingLessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+          
+          if (totalBookedAtNextTime >= 6) {
+            toast.error('Horário indisponível - próxima meia hora está cheia');
+            throw new Error('Next time slot full');
+          }
+        }
+      }
+      
       const lessonData = {
         service_id: data.service_id,
         instructor_id: data.instructor_id,
         date: format(selectedDate, 'yyyy-MM-dd'),
         start_time: data.start_time,
-        max_spots: data.max_spots,
+        end_time: format(endTime, 'HH:mm'),
+        max_spots: 6,
         status: 'scheduled',
         booked_spots: data.client_email ? 1 : 0
       };
       
       const lesson = await base44.entities.Lesson.create(lessonData);
+      
+      // Se for 60 minutos, criar/atualizar a próxima meia hora também
+      if (duration === 60) {
+        const timeSlots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'];
+        const slotIndex = timeSlots.indexOf(data.start_time);
+        const nextSlot = timeSlots[slotIndex + 1];
+        
+        if (nextSlot) {
+          const existingNextLesson = lessons.find(l => l.start_time === nextSlot && l.service_id === data.service_id);
+          
+          if (existingNextLesson) {
+            // Atualizar lição existente
+            await base44.entities.Lesson.update(existingNextLesson.id, {
+              booked_spots: (existingNextLesson.booked_spots || 0) + 1
+            });
+          } else {
+            // Criar nova lição para a próxima meia hora
+            const nextStartTime = new Date(`2000-01-01T${nextSlot}:00`);
+            const nextEndTime = new Date(nextStartTime.getTime() + 30 * 60000);
+            
+            await base44.entities.Lesson.create({
+              service_id: data.service_id,
+              instructor_id: data.instructor_id,
+              date: format(selectedDate, 'yyyy-MM-dd'),
+              start_time: nextSlot,
+              end_time: format(nextEndTime, 'HH:mm'),
+              max_spots: 6,
+              status: 'scheduled',
+              booked_spots: data.client_email ? 1 : 0
+            });
+          }
+        }
+      }
       
       // Se cliente selecionado, criar reserva
       if (data.client_email && data.client_name) {
@@ -139,7 +203,7 @@ export default function AdminLessons() {
       queryClient.invalidateQueries(['admin-lessons']);
       queryClient.invalidateQueries(['admin-all-bookings']);
       setDialogOpen(false);
-      setNewLesson({ service_id: '', instructor_id: '', start_time: '09:00', max_spots: 4, client_email: '', client_name: '' });
+      setNewLesson({ service_id: '', instructor_id: '', start_time: '09:00', duration: 30, client_email: '', client_name: '' });
       toast.success('Aula criada com sucesso!');
     },
     onError: (error) => {
@@ -239,19 +303,34 @@ export default function AdminLessons() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Hora de Início</Label>
-                    <Input
-                      type="time"
+                    <Select
                       value={newLesson.start_time}
-                      onChange={(e) => setNewLesson({...newLesson, start_time: e.target.value})}
-                    />
+                      onValueChange={(v) => setNewLesson({...newLesson, start_time: v})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'].map(time => (
+                          <SelectItem key={time} value={time}>{time}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Vagas</Label>
-                    <Input
-                      type="number"
-                      value={newLesson.max_spots}
-                      onChange={(e) => setNewLesson({...newLesson, max_spots: parseInt(e.target.value)})}
-                    />
+                    <Label>Duração</Label>
+                    <Select
+                      value={String(newLesson.duration)}
+                      onValueChange={(v) => setNewLesson({...newLesson, duration: parseInt(v)})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30">30 minutos</SelectItem>
+                        <SelectItem value="60">60 minutos</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 
@@ -354,9 +433,9 @@ export default function AdminLessons() {
                               <p className="text-sm text-stone-500">Monitor: {getInstructorName(lesson.instructor_id)}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge className="bg-blue-100 text-blue-800">
+                              <Badge className={`${(lesson.booked_spots || 0) >= 6 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
                                 <Users className="w-3 h-3 mr-1" />
-                                {lesson.booked_spots || 0}/{lesson.max_spots}
+                                {lesson.booked_spots || 0}/6
                               </Badge>
                             </div>
                           </div>
