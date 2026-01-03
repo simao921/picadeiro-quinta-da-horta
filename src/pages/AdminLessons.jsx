@@ -601,7 +601,7 @@ export default function AdminLessons() {
                               <Badge className={`text-base px-4 py-2 font-bold shadow-md ${
                                 isFull ? 'bg-red-500 text-white' : 
                                 (lesson.booked_spots || 0) > 3 ? 'bg-amber-500 text-white' :
-                                'bg-emerald-700 text-white'
+                                'bg-[#668752] text-white'
                               }`}>
                                 <Users className="w-4 h-4 mr-2" />
                                 {lesson.booked_spots || 0}/6
