@@ -265,6 +265,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           
           {selectedService?.title === 'Aulas de Escola' && (
             <div className="space-y-4">
+              <p className="text-sm text-stone-600 mb-4">Selecione o plano para alunos fixos. No próximo passo poderá escolher os horários.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
                   { duration: 30, frequency: 1, price: 70, label: '30min - 1x/semana' },
@@ -553,54 +554,109 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Step 3: Select Date & Time */}
       {step === 3 && (
         <div>
-          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha a Data e Hora</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-stone-200">
-              <CardHeader className="bg-stone-50">
-                <CardTitle className="text-lg">Data</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  locale={pt}
-                  disabled={(date) => date < new Date() || date > addDays(new Date(), 60)}
-                  className="rounded-md border-0"
-                />
-              </CardContent>
-            </Card>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">
+            Escolha {selectedPlan?.frequency > 1 ? `os ${selectedPlan.frequency} Horários` : 'a Data e Hora'}
+          </h2>
 
-            <Card className="border-stone-200">
-              <CardHeader className="bg-stone-50">
-                <CardTitle className="text-lg">Horários Disponíveis</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-3 gap-2">
-                  {getAvailableSlots().map((slot) => (
-                    <Button
-                      key={slot}
-                      variant={selectedTime === slot ? 'default' : 'outline'}
-                      className={selectedTime === slot 
-                        ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]' 
-                        : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
-                      }
-                      onClick={() => setSelectedTime(slot)}
-                    >
-                      {slot}
-                    </Button>
-                  ))}
-                </div>
-                {getAvailableSlots().length === 0 && (
-                  <div className="text-center py-8 text-stone-500">
-                    <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
-                    <p>Não há horários disponíveis para esta data.</p>
-                    <p className="text-sm mt-2">Por favor selecione outra data.</p>
+          {selectedPlan?.frequency > 1 ? (
+            <div className="space-y-6">
+              <p className="text-stone-600">
+                Selecione {selectedPlan.frequency} horários diferentes para as suas aulas semanais
+              </p>
+              {[...Array(selectedPlan.frequency)].map((_, index) => (
+                <Card key={index} className="border-stone-200">
+                  <CardHeader className="bg-stone-50">
+                    <CardTitle className="text-lg">Aula {index + 1}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="mb-2 block">Data da 1ª Aula</Label>
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          locale={pt}
+                          disabled={(date) => date < new Date() || date > addDays(new Date(), 60)}
+                          className="rounded-md border"
+                        />
+                      </div>
+                      <div>
+                        <Label className="mb-2 block">Horário</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {getAvailableSlots().map((slot) => (
+                            <Button
+                              key={slot}
+                              variant={selectedTime === slot ? 'default' : 'outline'}
+                              size="sm"
+                              className={selectedTime === slot 
+                                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]' 
+                                : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                              }
+                              onClick={() => setSelectedTime(slot)}
+                            >
+                              {slot}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              <p className="text-sm text-stone-500 italic">
+                Nota: As aulas seguintes serão criadas automaticamente nas mesmas horas todas as semanas
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="border-stone-200">
+                <CardHeader className="bg-stone-50">
+                  <CardTitle className="text-lg">Data</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    locale={pt}
+                    disabled={(date) => date < new Date() || date > addDays(new Date(), 60)}
+                    className="rounded-md border-0"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card className="border-stone-200">
+                <CardHeader className="bg-stone-50">
+                  <CardTitle className="text-lg">Horários Disponíveis</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-3 gap-2">
+                    {getAvailableSlots().map((slot) => (
+                      <Button
+                        key={slot}
+                        variant={selectedTime === slot ? 'default' : 'outline'}
+                        className={selectedTime === slot 
+                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]' 
+                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                        }
+                        onClick={() => setSelectedTime(slot)}
+                      >
+                        {slot}
+                      </Button>
+                    ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  {getAvailableSlots().length === 0 && (
+                    <div className="text-center py-8 text-stone-500">
+                      <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+                      <p>Não há horários disponíveis para esta data.</p>
+                      <p className="text-sm mt-2">Por favor selecione outra data.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">Voltar</Button>
             <Button

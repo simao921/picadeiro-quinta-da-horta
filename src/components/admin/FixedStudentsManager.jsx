@@ -403,7 +403,25 @@ export default function FixedStudentsManager() {
                     <Label>Frequência Semanal</Label>
                     <Select
                       value={String(formData.weekly_frequency)}
-                      onValueChange={(v) => setFormData({ ...formData, weekly_frequency: parseInt(v) })}
+                      onValueChange={(v) => {
+                        const newFreq = parseInt(v);
+                        const currentSchedules = formData.schedules;
+                        // Ajustar número de horários ao mudar frequência
+                        if (currentSchedules.length < newFreq) {
+                          // Adicionar horários vazios se necessário
+                          const needToAdd = newFreq - currentSchedules.length;
+                          const newSchedules = [...currentSchedules];
+                          for (let i = 0; i < needToAdd; i++) {
+                            newSchedules.push({ day: 'monday', time: '09:00', duration: formData.duration });
+                          }
+                          setFormData({ ...formData, weekly_frequency: newFreq, schedules: newSchedules });
+                        } else if (currentSchedules.length > newFreq) {
+                          // Remover horários extra se reduzir frequência
+                          setFormData({ ...formData, weekly_frequency: newFreq, schedules: currentSchedules.slice(0, newFreq) });
+                        } else {
+                          setFormData({ ...formData, weekly_frequency: newFreq });
+                        }
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
