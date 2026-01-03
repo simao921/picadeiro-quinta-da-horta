@@ -325,7 +325,7 @@ const LayoutContent = ({ children, currentPageName }) => {
 
             {/* Quick Links */}
             <div>
-              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">{t('nav_home')}</h4>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">{t('quick_links')}</h4>
               <ul className="space-y-3">
                 {navLinks.map((link) => (
                 <li key={link.page}>
@@ -342,12 +342,12 @@ const LayoutContent = ({ children, currentPageName }) => {
 
             {/* Services */}
             <div>
-              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Serviços</h4>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">{t('services_title')}</h4>
               <ul className="space-y-3 text-sm text-stone-300">
-                <li>Aulas Particulares</li>
-                <li>Aulas em Grupo</li>
-                <li>Aluguer de Espaço</li>
-                <li>Proprietários</li>
+                <li>{t('service_private_title')}</li>
+                <li>{t('service_group_title')}</li>
+                <li>{t('service_rental_title')}</li>
+                <li>{t('service_owners_title')}</li>
               </ul>
             </div>
 

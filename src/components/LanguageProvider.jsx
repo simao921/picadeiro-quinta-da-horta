@@ -228,6 +228,36 @@ export const translations = {
     new_booking: 'Nova Reserva',
     payments: 'Pagamentos',
     filters: 'Filtros',
+    
+    // Footer
+    quick_links: 'Links Rápidos',
+    
+    // Cart & Checkout
+    cart_title: 'Carrinho de Compras',
+    your_cart: 'O Seu Carrinho',
+    cart_empty: 'O seu carrinho está vazio',
+    continue_shopping: 'Continuar a Comprar',
+    quantity: 'Quantidade',
+    subtotal: 'Subtotal',
+    discount: 'Desconto',
+    shipping: 'Envio',
+    total: 'Total',
+    apply_coupon: 'Aplicar Cupão',
+    coupon_code: 'Código do Cupão',
+    apply: 'Aplicar',
+    proceed_checkout: 'Finalizar Compra',
+    checkout_title: 'Finalizar Compra',
+    shipping_address: 'Morada de Envio',
+    street: 'Rua',
+    city: 'Cidade',
+    postal_code: 'Código Postal',
+    country: 'País',
+    place_order: 'Fazer Pedido',
+    order_success: 'Pedido Realizado!',
+    order_confirmation: 'O seu pedido foi recebido e será processado em breve.',
+    order_number: 'Número do Pedido',
+    back_to_shop: 'Voltar à Loja',
+    remove: 'Remover',
   },
   
   en: {
@@ -448,6 +478,36 @@ export const translations = {
     new_booking: 'New Booking',
     payments: 'Payments',
     filters: 'Filters',
+    
+    // Footer
+    quick_links: 'Quick Links',
+    
+    // Cart & Checkout
+    cart_title: 'Shopping Cart',
+    your_cart: 'Your Cart',
+    cart_empty: 'Your cart is empty',
+    continue_shopping: 'Continue Shopping',
+    quantity: 'Quantity',
+    subtotal: 'Subtotal',
+    discount: 'Discount',
+    shipping: 'Shipping',
+    total: 'Total',
+    apply_coupon: 'Apply Coupon',
+    coupon_code: 'Coupon Code',
+    apply: 'Apply',
+    proceed_checkout: 'Proceed to Checkout',
+    checkout_title: 'Checkout',
+    shipping_address: 'Shipping Address',
+    street: 'Street',
+    city: 'City',
+    postal_code: 'Postal Code',
+    country: 'Country',
+    place_order: 'Place Order',
+    order_success: 'Order Placed!',
+    order_confirmation: 'Your order has been received and will be processed shortly.',
+    order_number: 'Order Number',
+    back_to_shop: 'Back to Shop',
+    remove: 'Remove',
   },
   
   es: {
@@ -668,6 +728,36 @@ export const translations = {
     new_booking: 'Nueva Reserva',
     payments: 'Pagos',
     filters: 'Filtros',
+    
+    // Footer
+    quick_links: 'Enlaces Rápidos',
+    
+    // Cart & Checkout
+    cart_title: 'Carrito de Compras',
+    your_cart: 'Tu Carrito',
+    cart_empty: 'Tu carrito está vacío',
+    continue_shopping: 'Seguir Comprando',
+    quantity: 'Cantidad',
+    subtotal: 'Subtotal',
+    discount: 'Descuento',
+    shipping: 'Envío',
+    total: 'Total',
+    apply_coupon: 'Aplicar Cupón',
+    coupon_code: 'Código del Cupón',
+    apply: 'Aplicar',
+    proceed_checkout: 'Finalizar Compra',
+    checkout_title: 'Finalizar Compra',
+    shipping_address: 'Dirección de Envío',
+    street: 'Calle',
+    city: 'Ciudad',
+    postal_code: 'Código Postal',
+    country: 'País',
+    place_order: 'Realizar Pedido',
+    order_success: '¡Pedido Realizado!',
+    order_confirmation: 'Tu pedido ha sido recibido y será procesado pronto.',
+    order_number: 'Número de Pedido',
+    back_to_shop: 'Volver a la Tienda',
+    remove: 'Eliminar',
   },
   
   fr: {
@@ -888,6 +978,36 @@ export const translations = {
     new_booking: 'Nouvelle Réservation',
     payments: 'Paiements',
     filters: 'Filtres',
+    
+    // Footer
+    quick_links: 'Liens Rapides',
+    
+    // Cart & Checkout
+    cart_title: 'Panier',
+    your_cart: 'Votre Panier',
+    cart_empty: 'Votre panier est vide',
+    continue_shopping: 'Continuer les Achats',
+    quantity: 'Quantité',
+    subtotal: 'Sous-total',
+    discount: 'Réduction',
+    shipping: 'Livraison',
+    total: 'Total',
+    apply_coupon: 'Appliquer le Coupon',
+    coupon_code: 'Code du Coupon',
+    apply: 'Appliquer',
+    proceed_checkout: 'Passer Commande',
+    checkout_title: 'Finaliser la Commande',
+    shipping_address: 'Adresse de Livraison',
+    street: 'Rue',
+    city: 'Ville',
+    postal_code: 'Code Postal',
+    country: 'Pays',
+    place_order: 'Passer Commande',
+    order_success: 'Commande Passée!',
+    order_confirmation: 'Votre commande a été reçue et sera traitée sous peu.',
+    order_number: 'Numéro de Commande',
+    back_to_shop: 'Retour à la Boutique',
+    remove: 'Supprimer',
   }
 };
 
