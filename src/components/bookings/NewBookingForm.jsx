@@ -32,6 +32,8 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [selectedTime, setSelectedTime] = useState(null);
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
   const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
+  const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
+  const [wantsPhotoVideo, setWantsPhotoVideo] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -300,7 +302,10 @@ export default function NewBookingForm({ user, isBlocked }) {
                       ? 'border-[#B8956A] bg-[#B8956A]/5' 
                       : 'border-stone-200 hover:border-[#B8956A]/50'
                   }`}
-                  onClick={() => setSelectedPlan({ label: 'Com Gilberto Filipe', price: 75 })}
+                  onClick={() => {
+                    setSelectedPlan({ label: 'Com Gilberto Filipe', price: 75 });
+                    setShowPhotoVideoDialog(true);
+                  }}
                 >
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Com Gilberto Filipe</h3>
@@ -456,6 +461,47 @@ export default function NewBookingForm({ user, isBlocked }) {
         </div>
       )}
 
+      {/* Photo/Video Service Dialog */}
+      <Dialog open={showPhotoVideoDialog} onOpenChange={setShowPhotoVideoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="w-5 h-5 text-[#B8956A]" />
+              Serviço Extra
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-stone-600">
+              Deseja registo de fotos/vídeo da aula?
+            </p>
+            <div className="p-4 bg-[#B8956A]/10 rounded-lg border border-[#B8956A]/30">
+              <p className="font-semibold text-[#2C3E1F]">Valor: 50€</p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                className="flex-1 bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                onClick={() => {
+                  setWantsPhotoVideo(true);
+                  setShowPhotoVideoDialog(false);
+                }}
+              >
+                Sim
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setWantsPhotoVideo(false);
+                  setShowPhotoVideoDialog(false);
+                }}
+              >
+                Não
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Step 3: Select Date & Time */}
       {step === 3 && (
         <div>
@@ -552,9 +598,17 @@ export default function NewBookingForm({ user, isBlocked }) {
                   <span className="text-stone-600">Duração</span>
                   <span className="font-semibold text-[#2C3E1F]">{selectedService?.duration} minutos</span>
                 </div>
+                {wantsPhotoVideo && selectedPlan?.label === 'Com Gilberto Filipe' && (
+                  <div className="flex justify-between py-3 border-b border-stone-200">
+                    <span className="text-stone-600">Registo Fotos/Vídeo</span>
+                    <span className="font-semibold text-[#2C3E1F]">50€</span>
+                  </div>
+                )}
                 <div className="flex justify-between py-4 bg-stone-50 -mx-8 px-8 mt-4">
                   <span className="text-lg font-medium text-stone-700">Total</span>
-                  <span className="font-bold text-2xl text-[#B8956A]">{selectedPlan?.price}€</span>
+                  <span className="font-bold text-2xl text-[#B8956A]">
+                    {(selectedPlan?.price || 0) + (wantsPhotoVideo && selectedPlan?.label === 'Com Gilberto Filipe' ? 50 : 0)}€
+                  </span>
                 </div>
               </div>
             </CardContent>
