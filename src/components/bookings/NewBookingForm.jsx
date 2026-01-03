@@ -19,6 +19,7 @@ import { format, addDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { useLanguage } from '@/components/LanguageProvider';
 
 const timeSlots = [
   '08:00', '09:00', '10:00', '11:00', '12:00', 
@@ -26,6 +27,7 @@ const timeSlots = [
 ];
 
 export default function NewBookingForm({ user, isBlocked }) {
+  const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -39,10 +41,9 @@ export default function NewBookingForm({ user, isBlocked }) {
   const queryClient = useQueryClient();
 
   const defaultServices = [
-    { id: '1', title: 'Aulas Particulares', price: 45, duration: 60, max_participants: 1, short_description: 'Aulas individuais personalizadas' },
-    { id: '2', title: 'Aulas em Grupo', price: 30, duration: 60, max_participants: 4, short_description: 'Máximo de 4 alunos por aula' },
-    { id: '3', title: 'Hipoterapia', price: 50, duration: 45, max_participants: 1, short_description: 'Terapia assistida por cavalos' },
-    { id: '5', title: 'Proprietários', price: null, duration: 30, max_participants: 1, short_description: 'Reservas para proprietários', is_owner_service: true }
+    { id: '1', title: t('service_private_title'), price: 45, duration: 60, max_participants: 1, short_description: t('service_private_short') },
+    { id: '2', title: t('service_group_title'), price: 30, duration: 60, max_participants: 4, short_description: t('service_group_short') },
+    { id: '5', title: t('service_owners_title'), price: null, duration: 30, max_participants: 1, short_description: t('service_owners_short'), is_owner_service: true }
   ];
 
   const { data: services } = useQuery({
@@ -220,7 +221,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Step 1: Select Service */}
       {step === 1 && (
         <div>
-          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Escolha o Serviço</h2>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">{t('select_service')}</h2>
           {displayServices.length === 0 ? (
             <Card className="p-8 text-center">
               <p className="text-stone-500">Nenhum serviço disponível no momento. Por favor contacte-nos.</p>
@@ -244,15 +245,15 @@ export default function NewBookingForm({ user, isBlocked }) {
                       <div className="flex flex-wrap gap-3 text-sm text-stone-600">
                         <span className="flex items-center gap-1">
                           <Euro className="w-4 h-4 text-[#B8956A]" />
-                          <strong>Desde {service.price}€</strong>
+                          <strong>{t('from_price')} {service.price}€</strong>
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4 text-[#B8956A]" />
-                          {service.duration} min
+                          {service.duration} {t('min') || 'min'}
                         </span>
                         <span className="flex items-center gap-1">
                           <Users className="w-4 h-4 text-[#B8956A]" />
-                          Máx. {service.max_participants}
+                          {t('max') || 'Máx.'} {service.max_participants}
                         </span>
                       </div>
                     </CardContent>
@@ -265,7 +266,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   disabled={!selectedService}
                   className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
                 >
-                  Continuar
+                  {t('continue')}
                 </Button>
               </div>
             </>

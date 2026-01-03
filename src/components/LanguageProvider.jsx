@@ -205,6 +205,9 @@ export const translations = {
     regularize_warning: 'Por favor regularize os seus pagamentos para evitar penalizações.',
     amount_owed: 'Valor em dívida',
     overdue: 'Em Atraso',
+    min: 'min',
+    max: 'Máx.',
+    from: 'Desde',
     
     // Common
     continue: 'Continuar',
@@ -514,6 +517,9 @@ export const translations = {
     regularize_warning: 'Please settle your payments to avoid penalties.',
     amount_owed: 'Amount owed',
     overdue: 'Overdue',
+    min: 'min',
+    max: 'Max.',
+    from: 'From',
     
     // Common
     continue: 'Continue',
@@ -823,6 +829,9 @@ export const translations = {
     regularize_warning: 'Por favor regularice sus pagos para evitar penalizaciones.',
     amount_owed: 'Importe adeudado',
     overdue: 'Atrasado',
+    min: 'min',
+    max: 'Máx.',
+    from: 'Desde',
     
     // Common
     continue: 'Continuar',
@@ -1132,6 +1141,9 @@ export const translations = {
     regularize_warning: 'Veuillez régulariser vos paiements pour éviter les pénalités.',
     amount_owed: 'Montant dû',
     overdue: 'En retard',
+    min: 'min',
+    max: 'Max.',
+    from: 'Depuis',
     
     // Common
     continue: 'Continuer',
