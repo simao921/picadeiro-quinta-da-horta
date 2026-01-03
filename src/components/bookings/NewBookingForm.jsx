@@ -76,21 +76,37 @@ export default function NewBookingForm({ user, isBlocked }) {
 
   const createBookingMutation = useMutation({
     mutationFn: async () => {
-      // Para proprietários, verificar se já existem 6 alunos nesse horário
-      if (selectedService.is_owner_service || selectedService.title === 'Proprietários') {
-        const existingLesson = lessons.find(l => l.start_time === selectedTime);
-        if (existingLesson && existingLesson.booked_spots >= 6) {
-          throw new Error('Horário indisponível - prioridade para alunos (máximo 6 alunos por sessão)');
+      const duration = selectedPlan?.duration || selectedService.duration;
+      
+      // Verificar disponibilidade no horário principal
+      const lessonsAtTime = lessons.filter(l => l.start_time === selectedTime);
+      const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+      
+      if (totalBooked >= 6) {
+        throw new Error('Horário indisponível - máximo de 6 alunos por meia hora');
+      }
+      
+      // Se for 60 minutos, verificar a meia hora seguinte
+      if (duration === 60) {
+        const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+        const slotIndex = timeSlots.indexOf(selectedTime);
+        const nextSlot = timeSlots[slotIndex + 1];
+        
+        if (nextSlot) {
+          const lessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
+          const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+          
+          if (totalBookedNext >= 6) {
+            throw new Error('Horário indisponível - próxima meia hora está cheia (máximo 6 alunos)');
+          }
         }
       }
 
+      // Criar ou encontrar a lição no horário principal
       let lesson = lessons.find(l => 
         l.service_id === selectedService.id && 
         l.start_time === selectedTime
       );
-
-      // Calcular duração baseado no plano (para proprietários)
-      const duration = selectedPlan?.duration || selectedService.duration;
 
       if (!lesson) {
         const startTime = new Date(`2000-01-01T${selectedTime}:00`);
@@ -105,6 +121,40 @@ export default function NewBookingForm({ user, isBlocked }) {
           booked_spots: 0,
           is_owner_service: selectedService.is_owner_service || false
         });
+      }
+
+      // Se for 60 minutos, criar/atualizar também a lição da meia hora seguinte
+      if (duration === 60) {
+        const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+        const slotIndex = timeSlots.indexOf(selectedTime);
+        const nextSlot = timeSlots[slotIndex + 1];
+        
+        if (nextSlot) {
+          let nextLesson = lessons.find(l => 
+            l.service_id === selectedService.id && 
+            l.start_time === nextSlot
+          );
+          
+          if (!nextLesson) {
+            const startTime = new Date(`2000-01-01T${nextSlot}:00`);
+            const endTime = new Date(startTime.getTime() + 30 * 60000);
+            
+            nextLesson = await base44.entities.Lesson.create({
+              service_id: selectedService.id,
+              date: format(selectedDate, 'yyyy-MM-dd'),
+              start_time: nextSlot,
+              end_time: format(endTime, 'HH:mm'),
+              max_spots: 6,
+              booked_spots: 0,
+              is_owner_service: selectedService.is_owner_service || false
+            });
+          }
+          
+          // Atualizar a próxima meia hora também
+          await base44.entities.Lesson.update(nextLesson.id, {
+            booked_spots: (nextLesson.booked_spots || 0) + 1
+          });
+        }
       }
 
       const booking = await base44.entities.Booking.create({
@@ -153,11 +203,32 @@ export default function NewBookingForm({ user, isBlocked }) {
     if (!selectedService) return timeSlots;
     if (!lessons || lessons.length === 0) return timeSlots;
     
-    const bookedSlots = lessons
-      .filter(l => l.service_id === selectedService.id && (l.booked_spots >= l.max_spots))
-      .map(l => l.start_time);
+    const serviceDuration = selectedPlan?.duration || selectedService.duration;
     
-    return timeSlots.filter(slot => !bookedSlots.includes(slot));
+    // Para serviços de 60 minutos, verificar se as duas meias horas estão disponíveis
+    return timeSlots.filter(slot => {
+      const lessonsAtTime = lessons.filter(l => l.start_time === slot);
+      const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+      
+      // Se já tem 6 pessoas neste horário, não está disponível
+      if (totalBooked >= 6) return false;
+      
+      // Se o serviço dura 60 minutos, verificar a meia hora seguinte
+      if (serviceDuration === 60) {
+        const slotIndex = timeSlots.indexOf(slot);
+        const nextSlot = timeSlots[slotIndex + 1];
+        
+        if (nextSlot) {
+          const lessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
+          const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+          
+          // Se a próxima meia hora tem 6 pessoas, este horário não está disponível
+          if (totalBookedNext >= 6) return false;
+        }
+      }
+      
+      return true;
+    });
   };
 
   if (isBlocked) {
