@@ -3,17 +3,28 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { bookingId, lessonId, clientEmail, clientName } = await req.json();
+    const { bookingId, lessonId, clientEmail, clientName, lessonDate, lessonTime, serviceName } = await req.json();
 
-    // Buscar detalhes da aula e serviço
-    const lessons = await base44.asServiceRole.entities.Lesson.filter({ id: lessonId });
-    const lessonData = lessons[0] || {};
-    
+    // Tentar buscar detalhes da aula
+    let lessonData = {};
     let serviceData = {};
-    if (lessonData.service_id) {
-      const services = await base44.asServiceRole.entities.Service.filter({ id: lessonData.service_id });
-      serviceData = services[0] || {};
+    
+    try {
+      const lessons = await base44.asServiceRole.entities.Lesson.filter({ id: lessonId });
+      lessonData = lessons[0] || {};
+      
+      if (lessonData.service_id) {
+        const services = await base44.asServiceRole.entities.Service.filter({ id: lessonData.service_id });
+        serviceData = services[0] || {};
+      }
+    } catch (e) {
+      console.log('Could not fetch lesson details, using provided data');
     }
+    
+    // Usar dados fornecidos se não conseguir buscar
+    const date = lessonData.date || lessonDate;
+    const time = lessonData.start_time || lessonTime;
+    const service = serviceData.title || serviceName || 'Aula';
 
     // Enviar email de confirmação
     await base44.asServiceRole.integrations.Core.SendEmail({
@@ -39,15 +50,14 @@ Deno.serve(async (req) => {
 
             <div style="border-left: 4px solid #4A5D23; padding-left: 20px; margin: 25px 0;">
               <h3 style="color: #2C3E1F; margin-bottom: 15px;">📋 Detalhes da Aula:</h3>
-              <p style="margin: 8px 0; color: #555;"><strong>Serviço:</strong> ${serviceData.title || 'Aula'}</p>
-              <p style="margin: 8px 0; color: #555;"><strong>Data:</strong> ${new Date(lessonData.date).toLocaleDateString('pt-PT', { 
+              <p style="margin: 8px 0; color: #555;"><strong>Serviço:</strong> ${service}</p>
+              ${date ? `<p style="margin: 8px 0; color: #555;"><strong>Data:</strong> ${new Date(date).toLocaleDateString('pt-PT', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
-              })}</p>
-              <p style="margin: 8px 0; color: #555;"><strong>Horário:</strong> ${lessonData.start_time || 'A confirmar'}</p>
-              ${lessonData.duration ? `<p style="margin: 8px 0; color: #555;"><strong>Duração:</strong> ${lessonData.duration} minutos</p>` : ''}
+              })}</p>` : ''}
+              ${time ? `<p style="margin: 8px 0; color: #555;"><strong>Horário:</strong> ${time}</p>` : ''}
             </div>
 
             <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 25px 0;">

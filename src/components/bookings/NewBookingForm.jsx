@@ -463,7 +463,10 @@ export default function NewBookingForm({ user, isBlocked }) {
             bookingId: booking.id,
             lessonId: lesson.id,
             clientEmail: user.email,
-            clientName: user.full_name
+            clientName: user.full_name,
+            lessonDate: format(selectedDate, 'yyyy-MM-dd'),
+            lessonTime: selectedTime,
+            serviceName: selectedService.title
           });
         } catch (e) {
           console.log('Erro ao enviar email:', e);
