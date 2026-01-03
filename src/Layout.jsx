@@ -22,6 +22,9 @@ const LayoutContent = ({ children, currentPageName }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  const isAdminPage = currentPageName?.startsWith('Admin');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -61,7 +64,6 @@ const LayoutContent = ({ children, currentPageName }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Admin shortcut CTRL+SHIFT+6
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === '6') {
@@ -71,30 +73,6 @@ const LayoutContent = ({ children, currentPageName }) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleLogout = () => {
-    base44.auth.logout();
-  };
-
-  const isAdminPage = currentPageName?.startsWith('Admin');
-  if (isAdminPage) {
-    return <>{children}</>;
-  }
-
-  const navLinks = [
-    { name: t('nav_home'), page: 'Home' },
-    { name: t('nav_services'), page: 'Services' },
-    { name: t('nav_gallery'), page: 'Gallery' },
-    { name: t('nav_shop'), page: 'Shop' },
-    { name: t('nav_bookings'), page: 'Bookings' },
-    { name: t('nav_contact'), page: 'Contact' },
-  ];
-
-  const [wishlistCount, setWishlistCount] = useState(0);
 
   useEffect(() => {
     const updateWishlistCount = async () => {
@@ -111,6 +89,27 @@ const LayoutContent = ({ children, currentPageName }) => {
     };
     updateWishlistCount();
   }, [user]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLogout = () => {
+    base44.auth.logout();
+  };
+
+  if (isAdminPage) {
+    return <>{children}</>;
+  }
+
+  const navLinks = [
+    { name: t('nav_home'), page: 'Home' },
+    { name: t('nav_services'), page: 'Services' },
+    { name: t('nav_gallery'), page: 'Gallery' },
+    { name: t('nav_shop'), page: 'Shop' },
+    { name: t('nav_bookings'), page: 'Bookings' },
+    { name: t('nav_contact'), page: 'Contact' },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
