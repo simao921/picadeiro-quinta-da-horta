@@ -1013,7 +1013,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               </p>
 {[...Array(selectedPlan.frequency)].map((_, index) => {
                 const currentTime = selectedTimes[index];
-                const currentDate = selectedDates[index] || new Date();
+                const currentDate = selectedDates[index];
                 
                 return (
                   <WeeklyLessonSelector
