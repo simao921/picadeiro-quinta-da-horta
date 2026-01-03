@@ -1045,7 +1045,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-[#B8956A]" />
+                    <CalendarDays className="w-5 h-5 text-[#B8956A]" />
                     Data
                   </CardTitle>
                 </CardHeader>
