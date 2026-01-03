@@ -35,6 +35,17 @@ export default function ProductDetail() {
   
   const queryClient = useQueryClient();
 
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ['product', productId],
+    queryFn: async () => {
+      if (!productId) return null;
+      const products = await base44.entities.Product.filter({ id: productId });
+      return products?.[0] || null;
+    },
+    enabled: !!productId,
+    retry: 1
+  });
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -77,17 +88,6 @@ export default function ProductDetail() {
       queryClient.invalidateQueries(['wishlist']);
       toast.success(isInWishlist ? 'Removido da lista de desejos' : 'Adicionado à lista de desejos');
     }
-  });
-
-  const { data: product, isLoading, error } = useQuery({
-    queryKey: ['product', productId],
-    queryFn: async () => {
-      if (!productId) return null;
-      const products = await base44.entities.Product.filter({ id: productId });
-      return products?.[0] || null;
-    },
-    enabled: !!productId,
-    retry: 1
   });
 
   useEffect(() => {
