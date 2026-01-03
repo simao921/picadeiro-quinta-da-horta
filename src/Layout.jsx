@@ -346,8 +346,8 @@ const LayoutContent = ({ children, currentPageName }) => {
               <ul className="space-y-3 text-sm text-stone-300">
                 <li>Aulas Particulares</li>
                 <li>Aulas em Grupo</li>
-                <li>Hipoterapia</li>
                 <li>Aluguer de Espaço</li>
+                <li>Proprietários</li>
               </ul>
             </div>
 

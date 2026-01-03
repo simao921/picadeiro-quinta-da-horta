@@ -44,8 +44,7 @@ export const translations = {
     service_1_desc: 'Aulas individuais com monitores experientes ou com o Bi-Campeão Mundial Gilberto Filipe.',
     service_2_title: 'Aulas em Grupo',
     service_2_desc: 'Aulas com até 4 alunos, promovendo aprendizagem colaborativa e socialização.',
-    service_3_title: 'Hipoterapia',
-    service_3_desc: 'Terapia assistida por cavalos para desenvolvimento físico, emocional e cognitivo.',
+
     service_4_title: 'Aluguer de Espaço',
     service_4_desc: 'Espaço único para eventos, festas de aniversário e celebrações especiais.',
     services_view_all: 'Ver Todos os Serviços',
@@ -108,14 +107,7 @@ export const translations = {
     service_group_feat_3: 'Aprendizagem em equipa',
     service_group_feat_4: 'Preço acessível',
     
-    service_hippo_title: 'Hipoterapia',
-    service_hippo_short: 'Terapia assistida por cavalos',
-    service_hippo_desc: 'Terapia especializada que utiliza o cavalo como instrumento terapêutico para promover ganhos físicos, psicológicos e educacionais.',
-    service_hippo_feat_1: 'Profissionais especializados',
-    service_hippo_feat_2: 'Cavalos treinados',
-    service_hippo_feat_3: 'Programa adaptado',
-    service_hippo_feat_4: 'Acompanhamento contínuo',
-    
+
     service_rental_title: 'Aluguer de Espaço',
     service_rental_short: 'Eventos e festas de aniversário',
     service_rental_desc: 'Espaço único e acolhedor para eventos especiais, festas de aniversário e celebrações. Inclui atividades com cavalos opcionais.',
@@ -202,8 +194,7 @@ export const translations = {
     private_lessons_desc: 'Aulas individuais com monitores experientes ou com o Bi-Campeão Mundial Gilberto Filipe.',
     group_lessons: 'Aulas em Grupo',
     group_lessons_desc: 'Aulas com até 4 alunos, promovendo aprendizagem colaborativa e socialização.',
-    hippotherapy: 'Hipoterapia',
-    hippotherapy_desc: 'Terapia assistida por cavalos para desenvolvimento físico, emocional e cognitivo.',
+
     space_rental: 'Aluguer de Espaço',
     space_rental_desc: 'Espaço único para eventos, festas de aniversário e celebrações especiais.',
     view_all_services: 'Ver Todos os Serviços',
@@ -336,14 +327,7 @@ export const translations = {
     service_group_feat_3: 'Team learning',
     service_group_feat_4: 'Affordable price',
     
-    service_hippo_title: 'Hippotherapy',
-    service_hippo_short: 'Horse-assisted therapy',
-    service_hippo_desc: 'Specialized therapy that uses the horse as a therapeutic instrument to promote physical, psychological and educational gains.',
-    service_hippo_feat_1: 'Specialized professionals',
-    service_hippo_feat_2: 'Trained horses',
-    service_hippo_feat_3: 'Adapted program',
-    service_hippo_feat_4: 'Continuous monitoring',
-    
+
     service_rental_title: 'Space Rental',
     service_rental_short: 'Events and birthday parties',
     service_rental_desc: 'Unique and welcoming space for special events, birthday parties and celebrations. Optional horse activities included.',
@@ -430,8 +414,7 @@ export const translations = {
     private_lessons_desc: 'Individual lessons with experienced instructors or with 2x World Champion Gilberto Filipe.',
     group_lessons: 'Group Lessons',
     group_lessons_desc: 'Classes with up to 4 students, promoting collaborative learning and socialization.',
-    hippotherapy: 'Hippotherapy',
-    hippotherapy_desc: 'Horse-assisted therapy for physical, emotional and cognitive development.',
+
     space_rental: 'Space Rental',
     space_rental_desc: 'Unique space for events, birthday parties and special celebrations.',
     view_all_services: 'View All Services',
@@ -564,14 +547,7 @@ export const translations = {
     service_group_feat_3: 'Aprendizaje en equipo',
     service_group_feat_4: 'Precio accesible',
     
-    service_hippo_title: 'Hipoterapia',
-    service_hippo_short: 'Terapia asistida por caballos',
-    service_hippo_desc: 'Terapia especializada que utiliza el caballo como instrumento terapéutico para promover ganancias físicas, psicológicas y educativas.',
-    service_hippo_feat_1: 'Profesionales especializados',
-    service_hippo_feat_2: 'Caballos entrenados',
-    service_hippo_feat_3: 'Programa adaptado',
-    service_hippo_feat_4: 'Seguimiento continuo',
-    
+
     service_rental_title: 'Alquiler de Espacio',
     service_rental_short: 'Eventos y fiestas de cumpleaños',
     service_rental_desc: 'Espacio único y acogedor para eventos especiales, fiestas de cumpleaños y celebraciones. Incluye actividades opcionales con caballos.',
@@ -658,8 +634,7 @@ export const translations = {
     private_lessons_desc: 'Clases individuales con monitores experimentados o con el Bicampeón Mundial Gilberto Filipe.',
     group_lessons: 'Clases en Grupo',
     group_lessons_desc: 'Clases con hasta 4 alumnos, promoviendo el aprendizaje colaborativo y la socialización.',
-    hippotherapy: 'Hipoterapia',
-    hippotherapy_desc: 'Terapia asistida por caballos para desarrollo físico, emocional y cognitivo.',
+
     space_rental: 'Alquiler de Espacio',
     space_rental_desc: 'Espacio único para eventos, fiestas de cumpleaños y celebraciones especiales.',
     view_all_services: 'Ver Todos los Servicios',
@@ -792,14 +767,7 @@ export const translations = {
     service_group_feat_3: 'Apprentissage en équipe',
     service_group_feat_4: 'Prix accessible',
     
-    service_hippo_title: 'Hippothérapie',
-    service_hippo_short: 'Thérapie assistée par chevaux',
-    service_hippo_desc: 'Thérapie spécialisée qui utilise le cheval comme instrument thérapeutique pour favoriser les gains physiques, psychologiques et éducatifs.',
-    service_hippo_feat_1: 'Professionnels spécialisés',
-    service_hippo_feat_2: 'Chevaux entraînés',
-    service_hippo_feat_3: 'Programme adapté',
-    service_hippo_feat_4: 'Suivi continu',
-    
+
     service_rental_title: 'Location d\'Espace',
     service_rental_short: 'Événements et fêtes d\'anniversaire',
     service_rental_desc: 'Espace unique et accueillant pour événements spéciaux, fêtes d\'anniversaire et célébrations. Activités optionnelles avec chevaux incluses.',
@@ -886,8 +854,7 @@ export const translations = {
     private_lessons_desc: 'Cours individuels avec des moniteurs expérimentés ou avec le Double Champion du Monde Gilberto Filipe.',
     group_lessons: 'Cours en Groupe',
     group_lessons_desc: 'Cours avec jusqu\'à 4 élèves, favorisant l\'apprentissage collaboratif et la socialisation.',
-    hippotherapy: 'Hippothérapie',
-    hippotherapy_desc: 'Thérapie assistée par chevaux pour le développement physique, émotionnel et cognitif.',
+
     space_rental: 'Location d\'Espace',
     space_rental_desc: 'Espace unique pour événements, anniversaires et célébrations spéciales.',
     view_all_services: 'Voir Tous les Services',

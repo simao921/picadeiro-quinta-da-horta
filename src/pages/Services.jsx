@@ -48,18 +48,7 @@ const getDefaultServices = (t) => [
     image_url: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800&q=80',
     features: [t('service_group_feat_1'), t('service_group_feat_2'), t('service_group_feat_3'), t('service_group_feat_4')]
   },
-  {
-    id: '3',
-    title: t('service_hippo_title'),
-    short_description: t('service_hippo_short'),
-    description: t('service_hippo_desc'),
-    price: 50,
-    duration: 45,
-    max_participants: 1,
-    icon: 'Heart',
-    image_url: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=800&q=80',
-    features: [t('service_hippo_feat_1'), t('service_hippo_feat_2'), t('service_hippo_feat_3'), t('service_hippo_feat_4')]
-  },
+
   {
     id: '4',
     title: t('service_rental_title'),
