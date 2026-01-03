@@ -360,20 +360,11 @@ export default function FixedStudentsManager() {
                       <SelectValue placeholder="Escolha um aluno" />
                     </SelectTrigger>
                     <SelectContent>
-                      <optgroup label="Utilizadores do Site">
-                        {allUsers.filter(u => u.student_type !== 'fixo' || u.id === editingStudent?.id).map(u => (
-                          <SelectItem key={`user-${u.id}`} value={`user-${u.id}`}>
-                            {u.full_name || u.email}
-                          </SelectItem>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Alunos do Picadeiro">
-                        {picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => (
-                          <SelectItem key={`picadeiro-${s.id}`} value={`picadeiro-${s.id}`}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </optgroup>
+                      {picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => (
+                        <SelectItem key={`picadeiro-${s.id}`} value={`picadeiro-${s.id}`}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
