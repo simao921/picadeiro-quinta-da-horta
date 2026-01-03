@@ -55,6 +55,7 @@ export default function AdminEmails() {
     }
 
     setSending(true);
+    
     try {
       const response = await base44.functions.invoke('sendBulkEmail', {
         subject,
@@ -62,7 +63,9 @@ export default function AdminEmails() {
         recipients: selectedEmails
       });
 
-      if (response.data.success) {
+      console.log('Response:', response);
+
+      if (response?.data?.success) {
         const { sent, failed, total } = response.data.results;
         toast.success(`✅ Emails enviados: ${sent}/${total}`);
         if (failed > 0) {
@@ -75,10 +78,11 @@ export default function AdminEmails() {
         setSelectedEmails([]);
         setSelectAll(false);
       } else {
-        toast.error('Erro ao enviar emails');
+        toast.error('Erro ao enviar emails: ' + (response?.data?.error || 'Erro desconhecido'));
       }
     } catch (error) {
-      toast.error('Erro: ' + error.message);
+      console.error('Erro ao enviar:', error);
+      toast.error('Erro ao enviar: ' + (error?.message || 'Erro desconhecido'));
     } finally {
       setSending(false);
     }
