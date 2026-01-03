@@ -621,7 +621,7 @@ export default function AdminLessons() {
                                 {lessonBookings.map((booking) => (
                                   <div key={booking.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                                     booking.status === 'pending' ? 'bg-amber-50 border-amber-200' :
-                                    booking.status === 'approved' ? 'bg-emerald-50/50 border-emerald-200/70' :
+                                    booking.status === 'approved' ? 'bg-[#668752]/10 border-[#668752]/30' :
                                     'bg-stone-50 border-stone-200'
                                   }`}>
                                     <div className="flex items-center gap-3">
