@@ -88,7 +88,12 @@ function WeeklyLessonSelector({
                 if (date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0) return true;
                 // Verificar se o dia está bloqueado
                 const dateStr = format(date, 'yyyy-MM-dd');
-                return blockedSlots.some(b => b.date === dateStr && !b.time_slot);
+                if (blockedSlots.some(b => b.date === dateStr && !b.time_slot)) return true;
+                // Verificar se o dia já foi selecionado em outro calendário
+                return selectedDates.some((selectedDate, i) => {
+                  if (i === index || !selectedDate) return false;
+                  return format(selectedDate, 'yyyy-MM-dd') === dateStr;
+                });
               }}
               className="rounded-md border-0 mx-auto"
               classNames={{
