@@ -9,10 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import FeedbackModal from '@/components/FeedbackModal';
 import {
   CalendarDays, Clock, CheckCircle, XCircle, 
   AlertCircle, Euro, ShoppingBag, User, LogOut,
-  Calendar as CalendarIcon, FileText, Download, Eye, X
+  Calendar as CalendarIcon, FileText, Download, Eye, X, Star
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -22,6 +23,7 @@ import { toast } from 'sonner';
 export default function ClientDashboard() {
   const [user, setUser] = useState(null);
   const [selectedRegulation, setSelectedRegulation] = useState(null);
+  const [feedbackBooking, setFeedbackBooking] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -328,13 +330,24 @@ export default function ClientDashboard() {
                           key={booking.id}
                           className="p-4 bg-stone-50 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                         >
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               {getStatusBadge(booking.status)}
                               {booking.attendance && (
                                 <Badge variant="outline">
                                   Presença: {booking.attendance === 'confirmed' ? 'Confirmada' : booking.attendance === 'absent' ? 'Ausente' : 'Pendente'}
                                 </Badge>
+                              )}
+                              {booking.status === 'approved' && lesson && new Date(lesson.date) < new Date() && (
+                                <Button
+                                  onClick={() => setFeedbackBooking(booking)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="ml-auto"
+                                >
+                                  <Star className="w-4 h-4 mr-1" />
+                                  Deixar Feedback
+                                </Button>
                               )}
                             </div>
                             <p className="font-semibold text-[#2C3E1F]">
@@ -536,6 +549,18 @@ export default function ClientDashboard() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Feedback Modal */}
+        {feedbackBooking && (
+          <FeedbackModal
+            booking={feedbackBooking}
+            onClose={() => setFeedbackBooking(null)}
+            onSuccess={() => {
+              queryClient.invalidateQueries(['reviews']);
+              setFeedbackBooking(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
