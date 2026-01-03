@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,6 +46,15 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [wantsPhotoVideo, setWantsPhotoVideo] = useState(false);
 
   const queryClient = useQueryClient();
+
+  // Reset selected times when date changes
+  useEffect(() => {
+    setSelectedTime(null);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    setSelectedTimes([]);
+  }, [selectedDates.length]);
 
   const defaultServices = [
     { id: '1', title: t('service_private_title'), price: 45, duration: 60, max_participants: 1, short_description: t('service_private_short') },
