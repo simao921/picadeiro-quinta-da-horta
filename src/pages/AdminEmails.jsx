@@ -210,9 +210,9 @@ export default function AdminEmails() {
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-green-900">Email Automático de Confirmação</h4>
+                  <h4 className="font-semibold text-green-900">Apenas Utilizadores Registados</h4>
                   <p className="text-sm text-green-700 mt-1">
-                    Quando um cliente faz uma reserva, recebe automaticamente um email de confirmação com todos os detalhes.
+                    Os emails só podem ser enviados para utilizadores registados na app. Para adicionar novos destinatários, convide-os na página AdminUsers primeiro.
                   </p>
                 </div>
               </div>
