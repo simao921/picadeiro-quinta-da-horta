@@ -56,7 +56,7 @@ export default function AdminAI() {
       console.log('Response:', response.data);
 
       if (response.data.success) {
-        setSuggestions({ ...suggestions, schedule: response.data.analysis });
+        setSuggestions(prev => ({ ...prev, schedule: response.data.analysis }));
         toast.success('Análise de horários concluída! ✅');
       } else {
         throw new Error(response.data.error);
@@ -120,7 +120,7 @@ export default function AdminAI() {
         }
       });
 
-      setSuggestions({ ...suggestions, products: analysis });
+      setSuggestions(prev => ({ ...prev, products: analysis }));
       toast.success('Análise de produtos concluída!');
     } catch (e) {
       toast.error('Erro ao analisar produtos');
