@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   CalendarDays, Clock, CheckCircle, XCircle, 
   AlertCircle, Euro, ShoppingBag, User, LogOut,
-  Calendar as CalendarIcon, FileText, Download
+  Calendar as CalendarIcon, FileText, Download, Eye, X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -20,6 +21,7 @@ import { toast } from 'sonner';
 
 export default function ClientDashboard() {
   const [user, setUser] = useState(null);
+  const [selectedRegulation, setSelectedRegulation] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -263,15 +265,13 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                       <Button
-                        asChild
                         variant="outline"
                         size="sm"
                         className="border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A] hover:text-white"
+                        onClick={() => setSelectedRegulation(reg)}
                       >
-                        <a href={reg.file_url} target="_blank" rel="noopener noreferrer">
-                          <FileText className="w-4 h-4 mr-2" />
-                          Ver Documento
-                        </a>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver Documento
                       </Button>
                     </div>
                   ))}
@@ -506,6 +506,36 @@ export default function ClientDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Regulation Viewer Dialog */}
+        <Dialog open={!!selectedRegulation} onOpenChange={() => setSelectedRegulation(null)}>
+          <DialogContent className="max-w-6xl h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#B8956A]" />
+                  {selectedRegulation?.title}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedRegulation(null)}
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 h-full">
+              {selectedRegulation && (
+                <iframe
+                  src={selectedRegulation.file_url}
+                  className="w-full h-full rounded-lg"
+                  title={selectedRegulation.title}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
