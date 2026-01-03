@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Star, Loader2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function ReviewSection({ entityType, entityId }) {
+  const { t } = useLanguage();
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState('');
@@ -47,17 +49,17 @@ export default function ReviewSection({ entityType, entityId }) {
       setRating(0);
       setTitle('');
       setComment('');
-      toast.success('Avaliação enviada! Aguarde aprovação.');
+      toast.success(t('review_sent'));
     }
   });
 
   const handleSubmit = () => {
     if (!user) {
-      toast.error('Faça login para avaliar');
+      toast.error(t('login_to_review'));
       return;
     }
     if (rating === 0 || !comment) {
-      toast.error('Preencha todos os campos');
+      toast.error(t('fill_all_fields'));
       return;
     }
 
@@ -95,7 +97,7 @@ export default function ReviewSection({ entityType, entityId }) {
                   />
                 ))}
               </div>
-              <p className="text-sm text-stone-500">{reviews.length} avaliações</p>
+              <p className="text-sm text-stone-500">{reviews.length} {t('reviews')}</p>
             </div>
             <div className="flex-1">
               {[5, 4, 3, 2, 1].map((star) => {
@@ -123,10 +125,10 @@ export default function ReviewSection({ entityType, entityId }) {
       {user && (
         <Card className="border-0 shadow-md">
           <CardContent className="p-6">
-            <h3 className="font-semibold text-lg text-[#2C3E1F] mb-4">Escrever Avaliação</h3>
+            <h3 className="font-semibold text-lg text-[#2C3E1F] mb-4">{t('write_review')}</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Classificação</label>
+                <label className="block text-sm font-medium mb-2">{t('rating')}</label>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -147,17 +149,17 @@ export default function ReviewSection({ entityType, entityId }) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Título</label>
+                <label className="block text-sm font-medium mb-2">{t('review_title')}</label>
                 <Input
-                  placeholder="Resumo da sua experiência"
+                  placeholder={t('review_title')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Comentário</label>
+                <label className="block text-sm font-medium mb-2">{t('review_comment')}</label>
                 <Textarea
-                  placeholder="Conte-nos sobre a sua experiência..."
+                  placeholder={t('review_placeholder')}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={4}
@@ -171,10 +173,10 @@ export default function ReviewSection({ entityType, entityId }) {
                 {createReviewMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    A enviar...
+                    {t('sending')}
                   </>
                 ) : (
-                  'Publicar Avaliação'
+                  t('publish_review')
                 )}
               </Button>
             </div>
@@ -199,7 +201,7 @@ export default function ReviewSection({ entityType, entityId }) {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-semibold text-[#2C3E1F]">{review.client_name}</span>
                         {review.is_verified && (
-                          <CheckCircle className="w-4 h-4 text-green-600" title="Compra verificada" />
+                          <CheckCircle className="w-4 h-4 text-green-600" title={t('verified_purchase')} />
                         )}
                       </div>
                       <div className="flex gap-1">
