@@ -363,8 +363,8 @@ const LayoutContent = ({ children, currentPageName }) => {
                 <li className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-[#B8956A] flex-shrink-0 mt-0.5" />
                   <span className="text-stone-300 text-sm">
-                    Rua das Hortas 83 – Fonte da Senhora<br />
-                    Alcochete, Portugal
+                    Rua das Hortas - Picadeiro Quinta da Horta - Fonte da Senhora<br />
+                    2890-106 Alcochete
                   </span>
                 </li>
                 <li className="flex items-center gap-3">
@@ -385,7 +385,7 @@ const LayoutContent = ({ children, currentPageName }) => {
 
           <div className="border-t border-stone-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-stone-400 text-sm">
-              © {new Date().getFullYear()} Picadeiro Quinta da Horta. Todos os direitos reservados.
+              © {new Date().getFullYear()} Picadeiro Quinta da Horta - Rua das Hortas - Fonte da Senhora, 2890-106 Alcochete
             </p>
             <div className="flex items-center gap-4">
               <a href="https://www.facebook.com/Picadeiroquintadahortaoficial/" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-[#B8956A] transition-colors">
