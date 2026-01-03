@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, Edit } from 'lucide-react';
+import { Calendar, Plus, Trash2, Edit, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -32,6 +32,7 @@ export default function FixedStudentsManager() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [formData, setFormData] = useState({
     user_id: '',
@@ -58,9 +59,16 @@ export default function FixedStudentsManager() {
   const fixedStudentsFromPicadeiro = picadeiroStudents.filter(s => s.student_type === 'fixo').map(s => ({
     ...s,
     full_name: s.name,
-    email: s.email || s.phone
+    email: s.email || s.phone || ''
   }));
-  const fixedStudents = [...fixedStudentsFromUsers, ...fixedStudentsFromPicadeiro];
+  const allFixedStudents = [...fixedStudentsFromUsers, ...fixedStudentsFromPicadeiro];
+  
+  const fixedStudents = allFixedStudents.filter(student => {
+    const name = (student.full_name || student.name || '').toLowerCase();
+    const email = (student.email || '').toLowerCase();
+    const query = searchQuery.toLowerCase();
+    return name.includes(query) || email.includes(query);
+  });
 
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
@@ -323,12 +331,13 @@ export default function FixedStudentsManager() {
   return (
     <Card className="border-0 shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-[#4A5D23]" />
-            Alunos Fixos
-          </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <CardTitle className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-[#4A5D23]" />
+              Alunos Fixos ({allFixedStudents.length})
+            </div>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
                 <Plus className="w-4 h-4 mr-2" />
@@ -518,6 +527,16 @@ export default function FixedStudentsManager() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <Input
+              placeholder="Pesquisar alunos fixos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -529,10 +548,13 @@ export default function FixedStudentsManager() {
               <div key={student.id} className="p-4 bg-stone-50 rounded-lg border">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold">{student.full_name || student.email}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold">{student.full_name || student.name || 'Sem nome'}</h3>
                       <Badge className="bg-[#4A5D23]">{student.student_level || 'N/A'}</Badge>
                     </div>
+                    {student.email && (
+                      <p className="text-xs text-stone-500 mb-2">{student.email}</p>
+                    )}
                     <p className="text-sm text-stone-600">
                       🐴 Cavalo: <strong>{student.assigned_horse}</strong>
                     </p>
