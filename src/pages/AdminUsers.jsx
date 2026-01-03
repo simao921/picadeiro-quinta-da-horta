@@ -19,7 +19,19 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Users, Shield, UserPlus, Trash2, Mail, Loader2, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,6 +40,8 @@ export default function AdminUsers() {
   const [inviteRole, setInviteRole] = useState('user');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading, refetch } = useQuery({
@@ -70,6 +84,23 @@ export default function AdminUsers() {
     onError: (error) => {
       console.error('Update error:', error);
       toast.error('Erro ao atualizar permissões');
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId) => {
+      await base44.entities.User.delete(userId);
+      return userId;
+    },
+    onSuccess: async () => {
+      await refetch();
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      toast.success('Utilizador removido com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Delete error:', error);
+      toast.error('Erro ao remover utilizador');
     }
   });
 
@@ -237,6 +268,17 @@ export default function AdminUsers() {
                               )}
                             </Button>
                           )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setUserToDelete(user);
+                              setDeleteDialogOpen(true);
+                            }}
+                            className="text-red-600 border-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -246,6 +288,36 @@ export default function AdminUsers() {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover Utilizador?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem a certeza que deseja remover <strong>{userToDelete?.full_name || userToDelete?.email}</strong>? 
+                Esta ação não pode ser revertida.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteUserMutation.mutate(userToDelete?.id)}
+                disabled={deleteUserMutation.isPending}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleteUserMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    A remover...
+                  </>
+                ) : (
+                  'Remover'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Invite Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
