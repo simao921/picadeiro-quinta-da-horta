@@ -65,7 +65,47 @@ export default function FixedStudentsManager() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, data, isPicadeiro }) => {
+    mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail }) => {
+      // Se está editando, apagar aulas antigas automáticas
+      if (isEditing && studentEmail) {
+        toast.loading('A atualizar aulas...');
+        
+        // Buscar todas as reservas do aluno
+        const bookings = await base44.entities.Booking.filter({ 
+          client_email: studentEmail,
+          is_fixed_student: true
+        });
+        
+        // Para cada reserva, buscar a aula e apagar se for auto-gerada
+        for (const booking of bookings) {
+          try {
+            const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
+            if (lessons.length > 0 && lessons[0].is_auto_generated) {
+              // Apagar a reserva
+              await base44.entities.Booking.delete(booking.id);
+              
+              // Atualizar contadores da aula
+              const lesson = lessons[0];
+              const newBookedSpots = Math.max(0, (lesson.booked_spots || 0) - 1);
+              const newFixedCount = Math.max(0, (lesson.fixed_students_count || 0) - 1);
+              
+              if (newBookedSpots === 0) {
+                // Se não tem mais reservas, apagar a aula
+                await base44.entities.Lesson.delete(lesson.id);
+              } else {
+                // Senão, só atualizar os contadores
+                await base44.entities.Lesson.update(lesson.id, {
+                  booked_spots: newBookedSpots,
+                  fixed_students_count: newFixedCount
+                });
+              }
+            }
+          } catch (e) {
+            console.error('Erro ao apagar aula:', e);
+          }
+        }
+      }
+      
       if (isPicadeiro) {
         await base44.entities.PicadeiroStudent.update(userId, data);
       } else {
@@ -94,7 +134,7 @@ export default function FixedStudentsManager() {
       }
       
       if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0) {
-        toast.loading('A criar aulas automáticas...');
+        toast.loading('A criar novas aulas automáticas...');
         await createRecurringLessons(updatedStudent);
         toast.dismiss();
       }
@@ -112,7 +152,7 @@ export default function FixedStudentsManager() {
         weekly_frequency: 1,
         schedules: []
       });
-      toast.success('Aluno fixo criado e aulas agendadas!');
+      toast.success('Aluno fixo atualizado e aulas reagendadas!');
     }
   });
 
@@ -217,10 +257,18 @@ export default function FixedStudentsManager() {
     const monthlyFee = monthlyFees[formData.duration][formData.weekly_frequency];
     const isPicadeiro = formData.user_id.startsWith('picadeiro-');
     const actualId = formData.user_id.replace('user-', '').replace('picadeiro-', '');
+    
+    // Obter email do aluno para apagar aulas antigas
+    let studentEmail = '';
+    if (editingStudent) {
+      studentEmail = editingStudent.email || editingStudent.full_name;
+    }
 
     updateUserMutation.mutate({
       userId: actualId,
       isPicadeiro,
+      isEditing: !!editingStudent,
+      studentEmail,
       data: {
         student_type: 'fixo',
         assigned_horse: formData.assigned_horse,
