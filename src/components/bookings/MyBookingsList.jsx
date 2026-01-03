@@ -38,7 +38,8 @@ export default function MyBookingsList({ user }) {
     mutationFn: ({ bookingId, attendance }) => 
       base44.entities.Booking.update(bookingId, { attendance }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['my-bookings']);
+      queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['all-lessons'] });
       toast.success('Presença atualizada!');
     }
   });
