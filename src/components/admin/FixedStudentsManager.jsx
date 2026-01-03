@@ -57,12 +57,23 @@ export default function FixedStudentsManager() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
-    onSuccess: async (_, variables) => {
-      // Criar aulas automáticas para o aluno fixo
-      const student = allUsers.find(u => u.id === variables.userId);
-      if (student?.fixed_schedule) {
-        await createRecurringLessons(student);
+    mutationFn: async ({ userId, data }) => {
+      await base44.entities.User.update(userId, data);
+      return { userId, data };
+    },
+    onSuccess: async (result) => {
+      // Buscar o aluno atualizado com os novos dados
+      const updatedStudent = {
+        id: result.userId,
+        email: allUsers.find(u => u.id === result.userId)?.email,
+        full_name: allUsers.find(u => u.id === result.userId)?.full_name,
+        ...result.data
+      };
+      
+      if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0) {
+        toast.loading('A criar aulas automáticas...');
+        await createRecurringLessons(updatedStudent);
+        toast.dismiss();
       }
       
       queryClient.invalidateQueries(['all-users']);
@@ -77,7 +88,7 @@ export default function FixedStudentsManager() {
         weekly_frequency: 1,
         schedules: []
       });
-      toast.success('Aluno fixo atualizado!');
+      toast.success('Aluno fixo criado e aulas agendadas!');
     }
   });
 
@@ -85,22 +96,33 @@ export default function FixedStudentsManager() {
     if (!student.fixed_schedule || student.fixed_schedule.length === 0) return;
     
     const service = services.find(s => s.title === 'Aulas de Escola') || services[0];
-    if (!service) return;
+    if (!service) {
+      toast.error('Nenhum serviço disponível');
+      return;
+    }
 
     const today = new Date();
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
     
-    // Criar aulas para as próximas 8 semanas
-    for (let week = 0; week < 8; week++) {
+    let created = 0;
+    
+    // Criar aulas para as próximas 12 semanas
+    for (let week = 0; week < 12; week++) {
       for (const schedule of student.fixed_schedule) {
         const targetDay = daysMap[schedule.day];
+        const currentDay = today.getDay();
+        
+        // Calcular próxima ocorrência do dia da semana
+        let daysUntilTarget = (targetDay - currentDay + 7) % 7;
+        if (daysUntilTarget === 0 && week === 0) daysUntilTarget = 7; // Se for hoje, começar na próxima semana
+        
         const lessonDate = new Date(today);
-        lessonDate.setDate(today.getDate() + (targetDay - today.getDay() + 7) % 7 + week * 7);
+        lessonDate.setDate(today.getDate() + daysUntilTarget + (week * 7));
         
         const dateStr = format(lessonDate, 'yyyy-MM-dd');
         
         try {
-          // Verificar se já existe aula
+          // Verificar se já existe aula neste horário
           const existingLessons = await base44.entities.Lesson.filter({ 
             date: dateStr,
             start_time: schedule.time,
@@ -110,24 +132,26 @@ export default function FixedStudentsManager() {
           let lesson;
           if (existingLessons.length === 0) {
             // Criar nova aula
-            const endTime = new Date(`2000-01-01T${schedule.time}:00`);
+            const [hours, minutes] = schedule.time.split(':');
+            const endTime = new Date(2000, 0, 1, parseInt(hours), parseInt(minutes));
             endTime.setMinutes(endTime.getMinutes() + (schedule.duration || 30));
             
             lesson = await base44.entities.Lesson.create({
               service_id: service.id,
               date: dateStr,
               start_time: schedule.time,
-              end_time: format(endTime, 'HH:mm'),
+              end_time: `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`,
               max_spots: 6,
-              booked_spots: 0,
-              fixed_students_count: 0,
+              booked_spots: 1,
+              fixed_students_count: 1,
               is_auto_generated: true
             });
+            created++;
           } else {
             lesson = existingLessons[0];
           }
 
-          // Verificar se já existe reserva
+          // Verificar se já existe reserva do aluno
           const existingBookings = await base44.entities.Booking.filter({
             lesson_id: lesson.id,
             client_email: student.email
@@ -143,17 +167,21 @@ export default function FixedStudentsManager() {
               is_fixed_student: true
             });
 
-            // Atualizar contadores
-            await base44.entities.Lesson.update(lesson.id, {
-              booked_spots: (lesson.booked_spots || 0) + 1,
-              fixed_students_count: (lesson.fixed_students_count || 0) + 1
-            });
+            // Atualizar contadores se a aula já existia
+            if (existingLessons.length > 0) {
+              await base44.entities.Lesson.update(lesson.id, {
+                booked_spots: (lesson.booked_spots || 0) + 1,
+                fixed_students_count: (lesson.fixed_students_count || 0) + 1
+              });
+            }
           }
         } catch (e) {
           console.error('Erro ao criar aula:', e);
         }
       }
     }
+    
+    console.log(`Criadas ${created} aulas automáticas`);
   };
 
   const handleSave = () => {
