@@ -4,8 +4,10 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar, Phone, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function CTASection() {
+  const { t } = useLanguage();
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background */}
@@ -27,14 +29,12 @@ export default function CTASection() {
             viewport={{ once: true }}
           >
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
-              Pronto para Começar a Sua
-              <span className="text-[#B8956A]"> Jornada Equestre?</span>
+              {t('cta_title')}
+              <span className="text-[#B8956A]">{t('cta_title_highlight')}</span>
             </h2>
             
             <p className="text-lg text-stone-300 leading-relaxed mb-8">
-              Dê o primeiro passo para uma experiência única com cavalos. 
-              Reserve a sua primeira aula experimental ou entre em contacto 
-              para mais informações.
+              {t('cta_subtitle')}
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -45,7 +45,7 @@ export default function CTASection() {
                              shadow-lg shadow-[#B8956A]/30"
                 >
                   <Calendar className="w-5 h-5 mr-2" />
-                  Reservar Aula
+                  {t('cta_book')}
                 </Button>
               </Link>
               <a href="tel:+351932111786">
@@ -55,7 +55,7 @@ export default function CTASection() {
                   className="border-white/30 text-white hover:bg-white/10 px-8"
                 >
                   <Phone className="w-5 h-5 mr-2" />
-                  Ligar Agora
+                  {t('cta_call')}
                 </Button>
               </a>
             </div>
@@ -73,9 +73,9 @@ export default function CTASection() {
                            hover:bg-white/20 transition-colors group">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-white font-semibold text-lg mb-2">Aula Experimental</h3>
+                  <h3 className="text-white font-semibold text-lg mb-2">{t('cta_card_1')}</h3>
                   <p className="text-stone-300 text-sm">
-                    Experimente uma aula introdutória e descubra o mundo da equitação.
+                    {t('cta_card_1_desc')}
                   </p>
                 </div>
                 <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
@@ -86,9 +86,9 @@ export default function CTASection() {
                            hover:bg-white/20 transition-colors group">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-white font-semibold text-lg mb-2">Visita às Instalações</h3>
+                  <h3 className="text-white font-semibold text-lg mb-2">{t('cta_card_2')}</h3>
                   <p className="text-stone-300 text-sm">
-                    Agende uma visita para conhecer o nosso espaço e os nossos cavalos.
+                    {t('cta_card_2_desc')}
                   </p>
                 </div>
                 <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
@@ -99,9 +99,9 @@ export default function CTASection() {
                            hover:bg-white/20 transition-colors group">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-white font-semibold text-lg mb-2">Pacotes Mensais</h3>
+                  <h3 className="text-white font-semibold text-lg mb-2">{t('cta_card_3')}</h3>
                   <p className="text-stone-300 text-sm">
-                    Descubra os nossos planos com condições especiais para alunos regulares.
+                    {t('cta_card_3_desc')}
                   </p>
                 </div>
                 <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />

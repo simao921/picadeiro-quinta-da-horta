@@ -4,8 +4,11 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function HeroSection() {
+  const { t } = useLanguage();
+  
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden">
       {/* Background Image */}
@@ -33,7 +36,7 @@ export default function HeroSection() {
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
               <span className="w-2 h-2 bg-[#B8956A] rounded-full animate-pulse" />
-              Centro Equestre de Excelência
+              {t('hero_badge')}
             </span>
           </motion.div>
 
@@ -43,8 +46,8 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6"
           >
-            Picadeiro
-            <span className="block text-[#B8956A]">Quinta da Horta</span>
+            {t('hero_title')}
+            <span className="block text-[#B8956A]">{t('hero_title_highlight')}</span>
           </motion.h1>
 
           <motion.p
@@ -53,8 +56,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base text-stone-300 leading-relaxed mb-8 max-w-lg"
           >
-            Descubra a arte da equitação com o <strong className="text-white">Bi-Campeão do Mundo Gilberto Filipe</strong>. 
-            Oferecemos aulas personalizadas, hipoterapia e experiências únicas com cavalos num ambiente natural e&nbsp;acolhedor.
+            {t('hero_description')}
           </motion.p>
 
           <motion.div
@@ -69,7 +71,7 @@ export default function HeroSection() {
                 className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold px-8 
                            shadow-lg shadow-[#B8956A]/30 transition-all duration-300 hover:scale-105"
               >
-                Reservar Aula
+                {t('hero_cta_primary')}
                 <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
@@ -80,7 +82,7 @@ export default function HeroSection() {
                 className="border-2 border-white text-white hover:bg-white hover:text-[#2C3E1F] backdrop-blur-sm px-8 transition-all"
               >
                 <Play className="w-5 h-5 mr-2" />
-                Conhecer Serviços
+                {t('hero_cta_secondary')}
               </Button>
             </Link>
           </motion.div>
@@ -94,15 +96,15 @@ export default function HeroSection() {
           >
             <div>
               <p className="text-3xl font-bold text-[#B8956A]">15+</p>
-              <p className="text-sm text-stone-400">Anos de Experiência</p>
+              <p className="text-sm text-stone-400">{t('hero_stat_1')}</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-[#B8956A]">500+</p>
-              <p className="text-sm text-stone-400">Alunos Formados</p>
+              <p className="text-sm text-stone-400">{t('hero_stat_2')}</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-[#B8956A]">2x</p>
-              <p className="text-sm text-stone-400">Campeão Mundial</p>
+              <p className="text-sm text-stone-400">{t('hero_stat_3')}</p>
             </div>
           </motion.div>
         </div>

@@ -4,31 +4,33 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Award, Shield, Heart, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const features = [
-  {
-    icon: Award,
-    title: 'Bi-Campeão Mundial',
-    description: 'Gilberto Filipe, instrutor principal'
-  },
-  {
-    icon: Shield,
-    title: 'Segurança Total',
-    description: 'Protocolos rigorosos de segurança'
-  },
-  {
-    icon: Heart,
-    title: 'Paixão pelos Cavalos',
-    description: 'Cuidado e respeito animal'
-  },
-  {
-    icon: Users,
-    title: 'Comunidade',
-    description: 'Ambiente familiar acolhedor'
-  }
-];
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function AboutSection() {
+  const { t } = useLanguage();
+  
+  const features = [
+    {
+      icon: Award,
+      titleKey: 'about_feature_1',
+      descKey: 'about_feature_1_desc'
+    },
+    {
+      icon: Shield,
+      titleKey: 'about_feature_2',
+      descKey: 'about_feature_2_desc'
+    },
+    {
+      icon: Heart,
+      titleKey: 'about_feature_3',
+      descKey: 'about_feature_3_desc'
+    },
+    {
+      icon: Users,
+      titleKey: 'about_feature_4',
+      descKey: 'about_feature_4_desc'
+    }
+  ];
   return (
     <section className="py-24 bg-[#1A1A1A] relative overflow-hidden">
       {/* Decorative Elements */}
@@ -50,19 +52,19 @@ export default function AboutSection() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
-              Sobre Nós
+              {t('about_badge')}
             </span>
             
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight">
-              Uma Tradição de Excelência&nbsp;Equestre
+              {t('about_title')}
             </h2>
             
             <p className="text-stone-300 text-base leading-relaxed mb-6">
-              O Picadeiro Quinta da Horta é mais do que um centro equestre — é um lugar onde a paixão pelos cavalos encontra a excelência no ensino. Localizado na bela região de Alcochete, oferecemos um ambiente natural e tranquilo para a prática da&nbsp;equitação.
+              {t('about_p1')}
             </p>
             
             <p className="text-stone-400 text-base leading-relaxed mb-8">
-              Sob a orientação do <strong className="text-stone-200">Bi-Campeão do Mundo Gilberto Filipe</strong>, desenvolvemos programas personalizados que respeitam o ritmo de cada aluno, desde iniciantes aos mais&nbsp;experientes.
+              {t('about_p2')}
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -79,8 +81,8 @@ export default function AboutSection() {
                     <feature.icon className="w-5 h-5 text-[#B8956A]" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">{feature.title}</h4>
-                    <p className="text-stone-400 text-xs">{feature.description}</p>
+                    <h4 className="font-semibold text-white text-sm">{t(feature.titleKey)}</h4>
+                    <p className="text-stone-400 text-xs">{t(feature.descKey)}</p>
                   </div>
                 </motion.div>
               ))}
@@ -91,7 +93,7 @@ export default function AboutSection() {
                 size="lg" 
                 className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold"
               >
-                Contacte-nos
+                {t('about_cta')}
               </Button>
             </Link>
           </motion.div>
@@ -145,8 +147,8 @@ export default function AboutSection() {
                   <Award className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <p className="font-serif text-2xl font-bold text-[#1A1A1A]">15+ Anos</p>
-                  <p className="text-stone-500 text-sm">de Experiência</p>
+                  <p className="font-serif text-2xl font-bold text-[#1A1A1A]">15+ {t('about_years')}</p>
+                  <p className="text-stone-500 text-sm">{t('about_experience')}</p>
                 </div>
               </div>
             </div>

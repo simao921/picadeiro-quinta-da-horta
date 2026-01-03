@@ -8,43 +8,41 @@ import {
   ArrowRight, Trophy 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const services = [
-  {
-    icon: GraduationCap,
-    title: 'Aulas Particulares',
-    description: 'Aulas individuais com monitores experientes ou com o Bi-Campeão Mundial Gilberto Filipe.',
-    highlight: 'Exclusivo',
-    color: 'from-[#4A5D23]/80 to-[#6B7F3A]/80',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'
-  },
-  {
-    icon: Users,
-    title: 'Aulas em Grupo',
-    description: 'Aulas com até 4 alunos, promovendo aprendizagem colaborativa e socialização.',
-    highlight: 'Máx. 4 alunos',
-    color: 'from-[#8B7355]/80 to-[#A68B6A]/80',
-    image: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80'
-  },
-  {
-    icon: Heart,
-    title: 'Hipoterapia',
-    description: 'Terapia assistida por cavalos para desenvolvimento físico, emocional e cognitivo.',
-    highlight: 'Terapia',
-    color: 'from-[#C9A961]/80 to-[#DFC17A]/80',
-    image: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=600&q=80'
-  },
-  {
-    icon: PartyPopper,
-    title: 'Aluguer de Espaço',
-    description: 'Espaço único para eventos, festas de aniversário e celebrações especiais.',
-    highlight: 'Eventos',
-    color: 'from-[#2C3E1F]/80 to-[#4A5D23]/80',
-    image: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=600&q=80'
-  }
-];
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function ServicesPreview() {
+  const { t } = useLanguage();
+  
+  const services = [
+    {
+      icon: GraduationCap,
+      titleKey: 'service_1_title',
+      descKey: 'service_1_desc',
+      color: 'from-[#4A5D23]/80 to-[#6B7F3A]/80',
+      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'
+    },
+    {
+      icon: Users,
+      titleKey: 'service_2_title',
+      descKey: 'service_2_desc',
+      color: 'from-[#8B7355]/80 to-[#A68B6A]/80',
+      image: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80'
+    },
+    {
+      icon: Heart,
+      titleKey: 'service_3_title',
+      descKey: 'service_3_desc',
+      color: 'from-[#C9A961]/80 to-[#DFC17A]/80',
+      image: 'https://images.unsplash.com/photo-1508881598441-324f3974994b?w=600&q=80'
+    },
+    {
+      icon: PartyPopper,
+      titleKey: 'service_4_title',
+      descKey: 'service_4_desc',
+      color: 'from-[#2C3E1F]/80 to-[#4A5D23]/80',
+      image: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=600&q=80'
+    }
+  ];
   return (
     <section className="py-24 bg-gradient-to-b from-stone-50 to-white relative overflow-hidden">
       {/* Background Pattern */}
@@ -65,7 +63,7 @@ export default function ServicesPreview() {
                        text-[#8B7355] text-sm font-medium mb-4"
           >
             <Trophy className="w-4 h-4" />
-            Os Nossos Serviços
+            {t('services_preview_badge')}
           </motion.span>
           
           <motion.h2
@@ -75,7 +73,7 @@ export default function ServicesPreview() {
             transition={{ delay: 0.1 }}
             className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#2C3E1F] mb-4 text-left max-w-4xl mx-auto"
           >
-            Experiências Equestres de&nbsp;Excelência
+            {t('services_preview_title')}
           </motion.h2>
           
           <motion.p
@@ -85,7 +83,7 @@ export default function ServicesPreview() {
             transition={{ delay: 0.2 }}
             className="text-base text-stone-600 max-w-2xl mx-auto text-left"
           >
-            Desde iniciantes a cavaleiros experientes, oferecemos programas personalizados para todas as idades e&nbsp;níveis.
+            {t('services_preview_subtitle')}
           </motion.p>
         </div>
 
@@ -118,17 +116,17 @@ export default function ServicesPreview() {
                 <CardContent className="p-6">
                   <h3 className="font-serif text-xl font-bold text-[#1A1A1A] mb-2 
                                  group-hover:text-[#8B7355] transition-colors">
-                    {service.title}
+                    {t(service.titleKey)}
                   </h3>
                   <p className="text-stone-600 text-sm leading-relaxed mb-4">
-                    {service.description}
+                    {t(service.descKey)}
                   </p>
                   <Link 
                     to={createPageUrl('Services')}
                     className="inline-flex items-center text-[#B8956A] font-medium text-sm 
                                hover:text-[#8B7355] transition-colors group/link"
                   >
-                    Saber Mais
+                    {t('learn_more')}
                     <ArrowRight className="w-4 h-4 ml-2 group-hover/link:translate-x-1 transition-transform" />
                   </Link>
                 </CardContent>
@@ -149,7 +147,7 @@ export default function ServicesPreview() {
               size="lg" 
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white px-8 shadow-lg shadow-[#B8956A]/30"
             >
-              Ver Todos os Serviços
+              {t('services_view_all')}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
