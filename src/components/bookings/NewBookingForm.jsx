@@ -229,7 +229,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                       <div className="flex flex-wrap gap-3 text-sm text-stone-600">
                         <span className="flex items-center gap-1">
                           <Euro className="w-4 h-4 text-[#B8956A]" />
-                          <strong>{service.price}€</strong>
+                          <strong>Desde {service.price}€</strong>
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4 text-[#B8956A]" />

@@ -19,7 +19,7 @@ import {
 import { ShoppingCart, Star, ArrowLeft, Check, Truck, Shield, Package, Plus, Minus, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ReviewSection from '@/components/product/ReviewSection';
 
 export default function ProductDetail() {
