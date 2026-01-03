@@ -351,7 +351,17 @@ export default function NewBookingForm({ user, isBlocked }) {
           `<li>${format(b.date, "EEEE, d 'de' MMMM", { locale: pt })} às ${b.time}</li>`
         ).join('');
         
-        await base44.integrations.Core.SendEmail({
+        await base44.functions.invoke('sendBookingConfirmation', {
+          bookingId: bookingsToCreate[0].booking.id,
+          lessonId: bookingsToCreate[0].booking.lesson_id,
+          clientEmail: user.email,
+          clientName: user.full_name,
+          lessonDate: format(bookingsToCreate[0].date, 'yyyy-MM-dd'),
+          lessonTime: bookingsToCreate[0].time,
+          serviceName: selectedService.title
+        });
+        
+        /* await base44.integrations.Core.SendEmail({
           to: user.email,
           subject: `Reservas Registadas - ${selectedService.title}`,
           body: `
@@ -370,7 +380,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             <p>Aguarde a confirmação da nossa equipa.</p>
             <p>Obrigado por escolher o Picadeiro Quinta da Horta!</p>
           `
-        });
+        }); */
         
         return bookingsToCreate;
       } else {
@@ -476,22 +486,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           booked_spots: (lesson.booked_spots || 0) + 1
         });
 
-        await base44.integrations.Core.SendEmail({
-          to: user.email,
-          subject: `Reserva ${selectedService.auto_approve ? 'Confirmada' : 'Pendente'} - ${selectedService.title}`,
-          body: `
-            <h2>Olá ${user.full_name}!</h2>
-            <p>A sua reserva foi ${selectedService.auto_approve ? '<strong>confirmada</strong>' : 'registada e está <strong>pendente de aprovação</strong>'}.</p>
-            <h3>Detalhes da Reserva</h3>
-            <ul>
-              <li><strong>Serviço:</strong> ${selectedService.title}</li>
-              <li><strong>Data:</strong> ${format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}</li>
-              <li><strong>Hora:</strong> ${selectedTime}</li>
-              <li><strong>Duração:</strong> ${duration} minutos</li>
-            </ul>
-            <p>Obrigado por escolher o Picadeiro Quinta da Horta!</p>
-          `
-        });
+
 
         return booking;
       }
