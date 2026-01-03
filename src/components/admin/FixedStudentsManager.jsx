@@ -36,7 +36,6 @@ export default function FixedStudentsManager() {
 
   const [formData, setFormData] = useState({
     user_id: '',
-    assigned_horse: '',
     student_level: 'iniciante',
     duration: 30,
     weekly_frequency: 1,
@@ -158,7 +157,6 @@ export default function FixedStudentsManager() {
       setEditingStudent(null);
       setFormData({
         user_id: '',
-        assigned_horse: '',
         student_level: 'iniciante',
         duration: 30,
         weekly_frequency: 1,
@@ -261,7 +259,7 @@ export default function FixedStudentsManager() {
   };
 
   const handleSave = () => {
-    if (!formData.user_id || !formData.assigned_horse || formData.schedules.length === 0) {
+    if (!formData.user_id || formData.schedules.length === 0) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
@@ -283,7 +281,6 @@ export default function FixedStudentsManager() {
       studentEmail,
       data: {
         student_type: 'fixo',
-        assigned_horse: formData.assigned_horse,
         student_level: formData.student_level,
         fixed_schedule: formData.schedules,
         monthly_fee: monthlyFee
@@ -319,7 +316,6 @@ export default function FixedStudentsManager() {
     const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
     setFormData({
       user_id: `${isPicadeiro ? 'picadeiro' : 'user'}-${student.id}`,
-      assigned_horse: student.assigned_horse || '',
       student_level: student.student_level || 'iniciante',
       duration: student.fixed_schedule?.[0]?.duration || 30,
       weekly_frequency: student.fixed_schedule?.length || 1,
@@ -369,40 +365,21 @@ export default function FixedStudentsManager() {
                   </Select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Cavalo Atribuído *</Label>
-                    <Select
-                      value={formData.assigned_horse}
-                      onValueChange={(v) => setFormData({ ...formData, assigned_horse: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar cavalo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {horses.map(h => (
-                          <SelectItem key={h} value={h}>{h}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Nível</Label>
-                    <Select
-                      value={formData.student_level}
-                      onValueChange={(v) => setFormData({ ...formData, student_level: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="iniciante">Iniciante</SelectItem>
-                        <SelectItem value="intermedio">Intermédio</SelectItem>
-                        <SelectItem value="avancado">Avançado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label>Nível</Label>
+                  <Select
+                    value={formData.student_level}
+                    onValueChange={(v) => setFormData({ ...formData, student_level: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="iniciante">Iniciante</SelectItem>
+                      <SelectItem value="intermedio">Intermédio</SelectItem>
+                      <SelectItem value="avancado">Avançado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -546,9 +523,6 @@ export default function FixedStudentsManager() {
                     {student.email && (
                       <p className="text-xs text-stone-500 mb-2">{student.email}</p>
                     )}
-                    <p className="text-sm text-stone-600">
-                      🐴 Cavalo: <strong>{student.assigned_horse}</strong>
-                    </p>
                     <p className="text-sm text-stone-600">
                       💰 Mensalidade: <strong>{student.monthly_fee}€</strong>
                     </p>
