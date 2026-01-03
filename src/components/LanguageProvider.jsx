@@ -159,6 +159,14 @@ export const translations = {
     message: 'Mensagem',
     send_message: 'Enviar Mensagem',
     subject: 'Assunto',
+    address: 'Morada',
+    opening_hours: 'Horário',
+    monday_friday: 'Segunda a Sexta',
+    your_name: 'O seu nome',
+    your_email: 'O seu email',
+    your_phone: 'O seu telefone',
+    your_message: 'A sua mensagem',
+    message_sent: 'Mensagem enviada!',
     
     // Reviews
     reviews: 'Avaliações',
@@ -460,6 +468,14 @@ export const translations = {
     message: 'Message',
     send_message: 'Send Message',
     subject: 'Subject',
+    address: 'Address',
+    opening_hours: 'Opening Hours',
+    monday_friday: 'Monday to Friday',
+    your_name: 'Your name',
+    your_email: 'Your email',
+    your_phone: 'Your phone',
+    your_message: 'Your message',
+    message_sent: 'Message sent!',
     
     // Reviews
     reviews: 'Reviews',
@@ -761,6 +777,14 @@ export const translations = {
     message: 'Mensaje',
     send_message: 'Enviar Mensaje',
     subject: 'Asunto',
+    address: 'Dirección',
+    opening_hours: 'Horario',
+    monday_friday: 'Lunes a Viernes',
+    your_name: 'Su nombre',
+    your_email: 'Su correo',
+    your_phone: 'Su teléfono',
+    your_message: 'Su mensaje',
+    message_sent: '¡Mensaje enviado!',
     
     // Reviews
     reviews: 'Reseñas',
@@ -1062,6 +1086,14 @@ export const translations = {
     message: 'Message',
     send_message: 'Envoyer Message',
     subject: 'Sujet',
+    address: 'Adresse',
+    opening_hours: 'Horaires',
+    monday_friday: 'Lundi à Vendredi',
+    your_name: 'Votre nom',
+    your_email: 'Votre email',
+    your_phone: 'Votre téléphone',
+    your_message: 'Votre message',
+    message_sent: 'Message envoyé!',
     
     // Reviews
     reviews: 'Avis',
