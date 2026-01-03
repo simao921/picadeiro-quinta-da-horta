@@ -21,9 +21,14 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useLanguage } from '@/components/LanguageProvider';
 
-const timeSlots = [
+const weekdayTimeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'
+  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'
+];
+
+const saturdayTimeSlots = [
+  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+  '14:30', '15:00', '15:30', '16:00'
 ];
 
 export default function NewBookingForm({ user, isBlocked }) {
@@ -141,7 +146,10 @@ export default function NewBookingForm({ user, isBlocked }) {
     }
   });
 
-  const getAvailableSlots = () => {
+  const getAvailableSlots = (date = selectedDate) => {
+    const dayOfWeek = date.getDay();
+    const timeSlots = dayOfWeek === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+    
     if (!selectedService) return timeSlots;
     if (!lessons || lessons.length === 0) return timeSlots;
     
@@ -653,14 +661,14 @@ export default function NewBookingForm({ user, isBlocked }) {
                               setSelectedDates(newDates);
                             }}
                             locale={pt}
-                            disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0}
+                            disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0 || date.getDay() === 6}
                             className="rounded-md border"
                           />
                         </div>
                         <div>
                           <Label className="mb-2 block">Horário</Label>
                           <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
-                            {getAvailableSlots().map((slot) => {
+                            {getAvailableSlots(currentDate).map((slot) => {
                               const isSelected = currentTime === slot;
                               const isAlreadyUsed = selectedTimes.includes(slot) && !isSelected;
                               return (
@@ -709,7 +717,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     locale={pt}
-                    disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0}
+                    disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0 || date.getDay() === 6}
                     className="rounded-md border-0"
                   />
                 </CardContent>
