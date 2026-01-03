@@ -206,8 +206,9 @@ export default function AdminLessons() {
       return lesson;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-lessons']);
-      queryClient.invalidateQueries(['admin-all-bookings']);
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
       setDialogOpen(false);
       setNewLesson({ service_id: '', instructor_id: '', start_time: '09:00', duration: 30, client_email: '', client_name: '' });
       toast.success('Aula criada com sucesso!');
