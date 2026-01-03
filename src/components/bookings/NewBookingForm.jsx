@@ -53,12 +53,15 @@ function WeeklyLessonSelector({
   const availableSlots = getAvailableSlots(currentDate, dateLessons);
 
   return (
-    <Card className="border-stone-200">
-      <CardHeader className="bg-stone-50">
+    <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+      <CardHeader className="bg-gradient-to-br from-[#B8956A]/5 to-white border-b border-stone-200">
         <CardTitle className="text-lg flex items-center justify-between">
-          Aula {index + 1}
+          <span className="flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 text-[#B8956A]" />
+            Aula {index + 1}
+          </span>
           {currentTime && currentDate && (
-            <span className="text-[#B8956A] text-sm font-normal">
+            <span className="text-[#B8956A] text-sm font-normal bg-[#B8956A]/10 px-3 py-1 rounded-full">
               {format(currentDate, "EEE dd/MM", { locale: pt })} às {currentTime}
             </span>
           )}
@@ -67,7 +70,7 @@ function WeeklyLessonSelector({
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <Label className="mb-2 block">Dia da Semana</Label>
+            <Label className="mb-3 block font-semibold text-[#2C3E1F]">Dia da Semana</Label>
             <Calendar
               mode="single"
               selected={currentDate}
@@ -87,17 +90,38 @@ function WeeklyLessonSelector({
                 const dateStr = format(date, 'yyyy-MM-dd');
                 return blockedSlots.some(b => b.date === dateStr && !b.time_slot);
               }}
-              className="rounded-md border"
+              className="rounded-md border-0 mx-auto"
+              classNames={{
+                months: "flex flex-col space-y-4",
+                month: "space-y-4",
+                caption: "flex justify-center pt-1 relative items-center",
+                caption_label: "text-sm font-semibold text-[#2C3E1F]",
+                nav: "space-x-1 flex items-center",
+                nav_button: "h-7 w-7 bg-transparent hover:bg-stone-100 rounded-md transition-colors",
+                nav_button_previous: "absolute left-1",
+                nav_button_next: "absolute right-1",
+                table: "w-full border-collapse space-y-1",
+                head_row: "flex justify-between",
+                head_cell: "text-stone-500 rounded-md w-9 font-medium text-[0.8rem]",
+                row: "flex w-full mt-2 justify-between",
+                cell: "text-center text-sm p-0 relative",
+                day: "h-9 w-9 p-0 font-normal hover:bg-[#B8956A]/10 rounded-md transition-colors",
+                day_selected: "bg-[#B8956A] text-white hover:bg-[#8B7355] hover:text-white focus:bg-[#B8956A] focus:text-white",
+                day_today: "bg-stone-100 text-[#2C3E1F] font-semibold",
+                day_outside: "text-stone-400 opacity-50",
+                day_disabled: "text-stone-300 opacity-50 hover:bg-transparent cursor-not-allowed",
+                day_hidden: "invisible",
+              }}
             />
           </div>
           <div>
-            <Label className="mb-2 block">Horário</Label>
+            <Label className="mb-3 block font-semibold text-[#2C3E1F]">Horário</Label>
             {isLoadingSlots ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="w-6 h-6 animate-spin text-[#B8956A]" />
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 bg-stone-50 rounded-lg">
                 {availableSlots.map((slot) => {
                   const isSelected = currentTime === slot;
                   return (
@@ -107,8 +131,8 @@ function WeeklyLessonSelector({
                       size="sm"
                       className={
                         isSelected
-                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]'
-                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md'
+                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all bg-white'
                       }
                       onClick={() => {
                         const newTimes = [...selectedTimes];
@@ -1013,9 +1037,12 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-stone-200">
-                <CardHeader className="bg-stone-50">
-                  <CardTitle className="text-lg">Data</CardTitle>
+              <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-[#B8956A]" />
+                    Data
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <Calendar
@@ -1024,14 +1051,38 @@ export default function NewBookingForm({ user, isBlocked }) {
                     onSelect={setSelectedDate}
                     locale={pt}
                     disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0 || date.getDay() === 6}
-                    className="rounded-md border-0"
+                    className="rounded-md border-0 mx-auto"
+                    classNames={{
+                      months: "flex flex-col space-y-4",
+                      month: "space-y-4",
+                      caption: "flex justify-center pt-1 relative items-center",
+                      caption_label: "text-sm font-semibold text-[#2C3E1F]",
+                      nav: "space-x-1 flex items-center",
+                      nav_button: "h-7 w-7 bg-transparent hover:bg-stone-100 rounded-md transition-colors",
+                      nav_button_previous: "absolute left-1",
+                      nav_button_next: "absolute right-1",
+                      table: "w-full border-collapse space-y-1",
+                      head_row: "flex justify-between",
+                      head_cell: "text-stone-500 rounded-md w-9 font-medium text-[0.8rem]",
+                      row: "flex w-full mt-2 justify-between",
+                      cell: "text-center text-sm p-0 relative",
+                      day: "h-9 w-9 p-0 font-normal hover:bg-[#B8956A]/10 rounded-md transition-colors",
+                      day_selected: "bg-[#B8956A] text-white hover:bg-[#8B7355] hover:text-white focus:bg-[#B8956A] focus:text-white",
+                      day_today: "bg-stone-100 text-[#2C3E1F] font-semibold",
+                      day_outside: "text-stone-400 opacity-50",
+                      day_disabled: "text-stone-300 opacity-50 hover:bg-transparent cursor-not-allowed",
+                      day_hidden: "invisible",
+                    }}
                   />
                 </CardContent>
               </Card>
 
-              <Card className="border-stone-200">
-                <CardHeader className="bg-stone-50">
-                  <CardTitle className="text-lg">Horários Disponíveis</CardTitle>
+              <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-[#B8956A]" />
+                    Horários Disponíveis
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-3 gap-2">
@@ -1039,9 +1090,10 @@ export default function NewBookingForm({ user, isBlocked }) {
                       <Button
                         key={slot}
                         variant={selectedTime === slot ? 'default' : 'outline'}
+                        size="sm"
                         className={selectedTime === slot 
-                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]' 
-                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md' 
+                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all'
                         }
                         onClick={() => setSelectedTime(slot)}
                       >
