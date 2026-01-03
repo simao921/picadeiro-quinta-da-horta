@@ -79,13 +79,15 @@ export default function ProductDetail() {
     }
   });
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', productId],
     queryFn: async () => {
+      if (!productId) return null;
       const products = await base44.entities.Product.filter({ id: productId });
-      return products[0];
+      return products?.[0] || null;
     },
-    enabled: !!productId
+    enabled: !!productId,
+    retry: 1
   });
 
   useEffect(() => {
@@ -140,6 +142,20 @@ export default function ProductDetail() {
     toast.success('Produto adicionado ao carrinho!');
   };
 
+  if (!productId) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center">
+          <Package className="w-16 h-16 text-stone-300 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-[#2C3E1F] mb-2">Produto não especificado</h2>
+          <Link to={createPageUrl('Shop')}>
+            <Button className="mt-4 bg-[#B8956A] hover:bg-[#8B7355]">Voltar à Loja</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
@@ -148,14 +164,15 @@ export default function ProductDetail() {
     );
   }
 
-  if (!product) {
+  if (!product || error) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
           <Package className="w-16 h-16 text-stone-300 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-[#2C3E1F] mb-2">Produto não encontrado</h2>
+          <p className="text-stone-600 mb-4">Este produto não existe ou foi removido</p>
           <Link to={createPageUrl('Shop')}>
-            <Button className="mt-4">Voltar à Loja</Button>
+            <Button className="mt-4 bg-[#B8956A] hover:bg-[#8B7355]">Voltar à Loja</Button>
           </Link>
         </div>
       </div>
