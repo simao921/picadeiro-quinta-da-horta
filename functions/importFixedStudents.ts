@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
           .replace(/\s+/g, '.')}@picadeiro.pt`;
 
         // Enviar convite
-        await base44.asServiceRole.users.inviteUser(email, 'user');
+        await base44.users.inviteUser(email, 'user');
         
         results.created++;
       } catch (e) {
