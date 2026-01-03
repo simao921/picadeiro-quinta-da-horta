@@ -452,7 +452,7 @@ export default function AdminLessons() {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                            className="bg-[#4B6382] hover:bg-[#3B5372] text-white"
                             onClick={() => updateBookingMutation.mutate({ id: item.id, status: 'approved' })}
                           >
                             <CheckCircle className="w-4 h-4 mr-1" />
@@ -533,7 +533,7 @@ export default function AdminLessons() {
 
           {/* Lessons List */}
           <Card className="lg:col-span-3 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-[#2C3E1F] to-[#4A5D23] text-white">
+            <CardHeader className="bg-gradient-to-r from-[#4B6382] to-[#5B7392] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl font-bold mb-1">
@@ -572,7 +572,7 @@ export default function AdminLessons() {
                       <Card key={lesson.id} className={`border-l-4 shadow-md hover:shadow-lg transition-all ${
                         hasPending ? 'border-l-amber-500 bg-amber-50/50' : 
                         isFull ? 'border-l-red-500 bg-red-50/30' : 
-                        'border-l-[#668752] bg-gradient-to-br from-[#668752]/5 to-[#668752]/15 hover:from-[#668752]/10 hover:to-[#668752]/20'
+                        'border-l-[#4B6382] bg-gradient-to-br from-[#4B6382]/5 to-[#4B6382]/15 hover:from-[#4B6382]/10 hover:to-[#4B6382]/20'
                       }`}>
                         <CardContent className="p-5">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -601,7 +601,7 @@ export default function AdminLessons() {
                               <Badge className={`text-base px-4 py-2 font-bold shadow-md ${
                                 isFull ? 'bg-red-500 text-white' : 
                                 (lesson.booked_spots || 0) > 3 ? 'bg-amber-500 text-white' :
-                                'bg-[#668752] text-white'
+                                'bg-[#4B6382] text-white'
                               }`}>
                                 <Users className="w-4 h-4 mr-2" />
                                 {lesson.booked_spots || 0}/6
@@ -621,13 +621,13 @@ export default function AdminLessons() {
                                 {lessonBookings.map((booking) => (
                                   <div key={booking.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                                     booking.status === 'pending' ? 'bg-amber-50 border-amber-200' :
-                                    booking.status === 'approved' ? 'bg-[#668752]/10 border-[#668752]/30' :
+                                    booking.status === 'approved' ? 'bg-[#4B6382]/10 border-[#4B6382]/30' :
                                     'bg-stone-50 border-stone-200'
                                   }`}>
                                     <div className="flex items-center gap-3">
                                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
                                         booking.status === 'pending' ? 'bg-amber-500' :
-                                        booking.status === 'approved' ? 'bg-[#668752]' :
+                                        booking.status === 'approved' ? 'bg-[#4B6382]' :
                                         booking.status === 'rejected' ? 'bg-red-500' :
                                         'bg-stone-400'
                                       }`}>
@@ -643,7 +643,7 @@ export default function AdminLessons() {
                                         <>
                                           <Button
                                             size="sm"
-                                            className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-md"
+                                            className="bg-[#4B6382] hover:bg-[#3B5372] text-white shadow-md"
                                             onClick={() => updateBookingMutation.mutate({ id: booking.id, status: 'approved' })}
                                           >
                                             <CheckCircle className="w-4 h-4" />
@@ -658,7 +658,7 @@ export default function AdminLessons() {
                                         </>
                                       ) : (
                                         <Badge className={`font-semibold px-3 py-1 ${
-                                          booking.status === 'approved' ? 'bg-[#668752] text-white' :
+                                          booking.status === 'approved' ? 'bg-[#4B6382] text-white' :
                                           booking.status === 'rejected' ? 'bg-red-500 text-white' :
                                           'bg-stone-400 text-white'
                                         }`}>
