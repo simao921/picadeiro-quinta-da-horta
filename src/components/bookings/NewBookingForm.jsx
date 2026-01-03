@@ -100,18 +100,14 @@ function WeeklyLessonSelector({
               <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
                 {availableSlots.map((slot) => {
                   const isSelected = currentTime === slot;
-                  const isAlreadyUsed = selectedTimes.includes(slot) && !isSelected;
                   return (
                     <Button
                       key={slot}
                       variant={isSelected ? 'default' : 'outline'}
                       size="sm"
-                      disabled={isAlreadyUsed}
                       className={
                         isSelected
                           ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]'
-                          : isAlreadyUsed
-                          ? 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed'
                           : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
                       }
                       onClick={() => {
