@@ -12,8 +12,10 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function Contact() {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -81,7 +83,7 @@ export default function Contact() {
       return data;
     },
     onSuccess: () => {
-      toast.success('Mensagem enviada com sucesso! Receberá uma resposta em breve.');
+      toast.success(t('message_sent'));
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     },
     onError: () => {
@@ -101,26 +103,26 @@ export default function Contact() {
   const contactInfo = [
     {
       icon: MapPin,
-      title: 'Morada',
+      titleKey: 'address',
       content: 'Rua das Hortas 83 – Fonte da Senhora',
       subcontent: 'Alcochete, Portugal'
     },
     {
       icon: Phone,
-      title: 'Telefone',
+      titleKey: 'phone',
       content: '+351 932 111 786',
       link: 'tel:+351932111786'
     },
     {
       icon: Mail,
-      title: 'Email',
+      titleKey: 'email',
       content: 'picadeiroquintadahortagf@gmail.com',
       link: 'mailto:picadeiroquintadahortagf@gmail.com'
     },
     {
       icon: Clock,
-      title: 'Horário',
-      content: 'Segunda a Sábado',
+      titleKey: 'opening_hours',
+      contentKey: 'monday_friday',
       subcontent: '9:00 - 19:00'
     }
   ];
@@ -149,15 +151,13 @@ export default function Contact() {
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
               <MessageSquare className="w-4 h-4" />
-              Contacte-nos
+              {t('contact_title')}
             </span>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Fale<br />
-              <span className="text-[#B8956A]">Connosco</span>
+              {t('get_in_touch')}
             </h1>
             <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
-              Estamos aqui para responder a todas as suas questões. 
-              Entre em contacto e teremos todo o gosto em ajudá-lo.
+              {t('contact_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -194,7 +194,7 @@ export default function Contact() {
                             <item.icon className="w-6 h-6 text-[#4A5D23]" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-[#2C3E1F] mb-1">{item.title}</h3>
+                            <h3 className="font-semibold text-[#2C3E1F] mb-1">{t(item.titleKey)}</h3>
                             {item.link ? (
                               <a 
                                 href={item.link} 
@@ -203,7 +203,7 @@ export default function Contact() {
                                 {item.content}
                               </a>
                             ) : (
-                              <p className="text-stone-600">{item.content}</p>
+                              <p className="text-stone-600">{item.contentKey ? t(item.contentKey) : item.content}</p>
                             )}
                             {item.subcontent && (
                               <p className="text-sm text-stone-500">{item.subcontent}</p>
@@ -241,7 +241,7 @@ export default function Contact() {
               <Card className="border-0 shadow-xl">
                 <CardContent className="p-8 sm:p-12">
                   <h2 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-2">
-                    Envie-nos uma Mensagem
+                    {t('send_message')}
                   </h2>
                   <p className="text-stone-600 mb-8">
                     Preencha o formulário abaixo e entraremos em contacto consigo o mais breve possível.
@@ -250,24 +250,24 @@ export default function Contact() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo *</Label>
+                        <Label htmlFor="name">{t('your_name')} *</Label>
                         <Input
                           id="name"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          placeholder="O seu nome"
+                          placeholder={t('your_name')}
                           className="h-12"
                           required
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email *</Label>
+                        <Label htmlFor="email">{t('your_email')} *</Label>
                         <Input
                           id="email"
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          placeholder="email@exemplo.com"
+                          placeholder={t('your_email')}
                           className="h-12"
                           required
                         />
@@ -276,7 +276,7 @@ export default function Contact() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Telefone</Label>
+                        <Label htmlFor="phone">{t('your_phone')}</Label>
                         <Input
                           id="phone"
                           value={formData.phone}
@@ -286,24 +286,24 @@ export default function Contact() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="subject">Assunto</Label>
+                        <Label htmlFor="subject">{t('subject')}</Label>
                         <Input
                           id="subject"
                           value={formData.subject}
                           onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                          placeholder="Como podemos ajudar?"
+                          placeholder={t('subject')}
                           className="h-12"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="message">Mensagem *</Label>
+                      <Label htmlFor="message">{t('your_message')} *</Label>
                       <Textarea
                         id="message"
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        placeholder="Escreva a sua mensagem aqui..."
+                        placeholder={t('your_message')}
                         className="min-h-[150px] resize-none"
                         required
                       />
@@ -318,17 +318,17 @@ export default function Contact() {
                       {sendEmailMutation.isPending ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          A enviar...
+                          {t('sending')}
                         </>
                       ) : sendEmailMutation.isSuccess ? (
                         <>
                           <CheckCircle className="w-5 h-5 mr-2" />
-                          Enviado!
+                          {t('message_sent')}
                         </>
                       ) : (
                         <>
                           <Send className="w-5 h-5 mr-2" />
-                          Enviar Mensagem
+                          {t('send_message')}
                         </>
                       )}
                     </Button>

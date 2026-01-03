@@ -9,15 +9,19 @@ import {
   Grid3X3, LayoutGrid 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/components/LanguageProvider';
 
-const categories = [
-  { id: 'all', label: 'Todas' },
-  { id: 'aulas', label: 'Aulas' },
-  { id: 'eventos', label: 'Eventos' },
-  { id: 'cavalos', label: 'Cavalos' },
-  { id: 'instalacoes', label: 'Instalações' },
-  { id: 'competicoes', label: 'Competições' }
-];
+export default function Gallery() {
+  const { t } = useLanguage();
+  
+  const categories = [
+    { id: 'all', labelKey: 'all_categories' },
+    { id: 'aulas', labelKey: 'classes' },
+    { id: 'eventos', labelKey: 'events' },
+    { id: 'cavalos', labelKey: 'horses' },
+    { id: 'instalacoes', labelKey: 'facilities' },
+    { id: 'competicoes', labelKey: 'competitions' }
+  ];
 
 const defaultImages = [
   { id: '1', image_url: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80', title: 'Cavalo no Campo', category: 'cavalos', is_featured: true },
@@ -38,7 +42,6 @@ const defaultImages = [
   { id: '16', image_url: 'https://images.unsplash.com/photo-1502920514313-52581002a659?w=800&q=80', title: 'Competição Nacional', category: 'competicoes' }
 ];
 
-export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
@@ -98,14 +101,13 @@ export default function Gallery() {
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
               <Camera className="w-4 h-4" />
-              Nossa Galeria
+              {t('our_gallery')}
             </span>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Momentos<br />
-              <span className="text-[#B8956A]">Inesquecíveis</span>
+              {t('gallery_title')}
             </h1>
             <p className="text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed">
-              Explore a nossa galeria e descubra os melhores momentos vividos no Picadeiro Quinta da Horta.
+              {t('gallery_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -125,7 +127,7 @@ export default function Gallery() {
                 : 'border-stone-300 hover:bg-stone-100 hover:border-[#B8956A]'
               }
             >
-              {cat.label}
+              {t(cat.labelKey)}
             </Button>
             ))}
           </div>
@@ -192,7 +194,7 @@ export default function Gallery() {
           {filteredImages.length === 0 && !isLoading && (
             <div className="text-center py-16">
               <Camera className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-              <p className="text-stone-500 text-lg">Nenhuma imagem encontrada nesta categoria.</p>
+              <p className="text-stone-500 text-lg">{t('no_images')}</p>
             </div>
           )}
         </div>

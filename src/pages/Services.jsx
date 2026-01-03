@@ -244,17 +244,17 @@ export default function Services() {
         </div>
         <div className="max-w-4xl mx-auto px-4 text-center relative">
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">
-            Não Encontrou o Que Procura?
+            {t('not_found_services')}
           </h2>
           <p className="text-stone-300 text-lg mb-8">
-            Contacte-nos e teremos todo o gosto em criar uma experiência personalizada para si.
+            {t('not_found_services_desc')}
           </p>
           <Link to={createPageUrl('Contact')}>
             <Button 
               size="lg" 
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-8"
             >
-              Fale Connosco
+              {t('talk_to_us')}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
