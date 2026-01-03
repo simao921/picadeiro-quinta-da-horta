@@ -180,7 +180,7 @@ export default function Layout({ children, currentPageName }) {
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                 alt="Picadeiro Quinta da Horta"
-                className="h-14 w-auto object-contain"
+                className="h-14 w-14 object-cover rounded-full"
               />
               <div className="hidden md:block">
                 <h1 className="text-lg font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
@@ -308,7 +308,7 @@ export default function Layout({ children, currentPageName }) {
                   <img 
                     src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                     alt="Picadeiro Quinta da Horta"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover rounded-full"
                   />
                 </div>
               </Link>

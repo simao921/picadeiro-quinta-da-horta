@@ -300,13 +300,71 @@ export default function FixedStudentsManager() {
     setFormData({ ...formData, schedules: newSchedules });
   };
 
+  const removeStudentMutation = useMutation({
+    mutationFn: async ({ userId, isPicadeiro, studentEmail }) => {
+      toast.loading('A remover aluno fixo e aulas associadas...');
+
+      // Apagar todas as aulas automáticas e reservas associadas
+      if (studentEmail) {
+        const bookings = await base44.entities.Booking.filter({
+          client_email: studentEmail,
+          is_fixed_student: true
+        });
+
+        for (const booking of bookings) {
+          try {
+            await base44.entities.Booking.delete(booking.id);
+
+            const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
+            if (lessons.length > 0 && lessons[0].is_auto_generated) {
+              const lesson = lessons[0];
+              const newBookedSpots = Math.max(0, (lesson.booked_spots || 0) - 1);
+              const newFixedCount = Math.max(0, (lesson.fixed_students_count || 0) - 1);
+
+              if (newBookedSpots === 0 && newFixedCount === 0) {
+                await base44.entities.Lesson.delete(lesson.id);
+              } else {
+                await base44.entities.Lesson.update(lesson.id, {
+                  booked_spots: newBookedSpots,
+                  fixed_students_count: newFixedCount
+                });
+              }
+            }
+          } catch (e) {
+            console.error('Erro ao apagar reserva/aula:', e);
+          }
+        }
+      }
+
+      if (isPicadeiro) {
+        await base44.entities.PicadeiroStudent.delete(userId);
+      } else {
+        await base44.entities.User.update(userId, { student_type: 'avulso', fixed_schedule: [], monthly_fee: 0 });
+      }
+      return { userId, isPicadeiro };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['all-users']);
+      queryClient.invalidateQueries(['picadeiro-students']);
+      queryClient.invalidateQueries(['lessons']);
+      toast.dismiss();
+      toast.success('Aluno fixo e aulas associadas removidos com sucesso!');
+    },
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(`Erro ao remover aluno: ${error.message}`);
+    }
+  });
+
   const removeFixedStudent = (student) => {
-    if (confirm('Remover aluno da lista de fixos?')) {
+    if (confirm('Remover aluno fixo do sistema? Todas as aulas automáticas associadas e reservas também serão removidas.')) {
       const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
-      updateUserMutation.mutate({
+      const studentEmail = student.email || student.full_name;
+
+      removeStudentMutation.mutate({
         userId: student.id,
         isPicadeiro,
-        data: { student_type: 'avulso', fixed_schedule: [], monthly_fee: 0 }
+        studentEmail
       });
     }
   };
