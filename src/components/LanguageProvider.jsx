@@ -171,6 +171,17 @@ export const translations = {
     visit_facilities_desc: 'Agende uma visita para conhecer o nosso espaço e os nossos cavalos.',
     monthly_packages: 'Pacotes Mensais',
     monthly_packages_desc: 'Descubra os nossos planos com condições especiais para alunos regulares.',
+    
+    // Bookings
+    bookings_area: 'Área de Reservas',
+    bookings_login_message: 'Faça login para gerir as suas reservas, confirmar presença e consultar pagamentos.',
+    login_or_register: 'Entrar ou Registar',
+    hello: 'Olá',
+    manage_bookings_subtitle: 'Gerir as suas aulas, confirmar presença e consultar pagamentos',
+    my_classes: 'Minhas Aulas',
+    new_booking: 'Nova Reserva',
+    payments: 'Pagamentos',
+    filters: 'Filtros',
   },
   
   en: {
@@ -333,6 +344,17 @@ export const translations = {
     visit_facilities_desc: 'Schedule a visit to see our space and our horses.',
     monthly_packages: 'Monthly Packages',
     monthly_packages_desc: 'Discover our plans with special conditions for regular students.',
+    
+    // Bookings
+    bookings_area: 'Bookings Area',
+    bookings_login_message: 'Login to manage your bookings, confirm attendance and check payments.',
+    login_or_register: 'Login or Register',
+    hello: 'Hello',
+    manage_bookings_subtitle: 'Manage your classes, confirm attendance and check payments',
+    my_classes: 'My Classes',
+    new_booking: 'New Booking',
+    payments: 'Payments',
+    filters: 'Filters',
   },
   
   es: {
@@ -495,6 +517,17 @@ export const translations = {
     visit_facilities_desc: 'Agenda una visita para conocer nuestro espacio y nuestros caballos.',
     monthly_packages: 'Paquetes Mensuales',
     monthly_packages_desc: 'Descubre nuestros planes con condiciones especiales para alumnos regulares.',
+    
+    // Bookings
+    bookings_area: 'Área de Reservas',
+    bookings_login_message: 'Inicia sesión para gestionar tus reservas, confirmar asistencia y consultar pagos.',
+    login_or_register: 'Iniciar Sesión o Registrarse',
+    hello: 'Hola',
+    manage_bookings_subtitle: 'Gestionar tus clases, confirmar asistencia y consultar pagos',
+    my_classes: 'Mis Clases',
+    new_booking: 'Nueva Reserva',
+    payments: 'Pagos',
+    filters: 'Filtros',
   },
   
   fr: {
@@ -657,6 +690,17 @@ export const translations = {
     visit_facilities_desc: 'Planifiez une visite pour découvrir notre espace et nos chevaux.',
     monthly_packages: 'Forfaits Mensuels',
     monthly_packages_desc: 'Découvrez nos plans avec conditions spéciales pour les élèves réguliers.',
+    
+    // Bookings
+    bookings_area: 'Espace Réservations',
+    bookings_login_message: 'Connectez-vous pour gérer vos réservations, confirmer votre présence et consulter les paiements.',
+    login_or_register: 'Se Connecter ou S\'inscrire',
+    hello: 'Bonjour',
+    manage_bookings_subtitle: 'Gérer vos cours, confirmer votre présence et consulter les paiements',
+    my_classes: 'Mes Cours',
+    new_booking: 'Nouvelle Réservation',
+    payments: 'Paiements',
+    filters: 'Filtres',
   }
 };
 

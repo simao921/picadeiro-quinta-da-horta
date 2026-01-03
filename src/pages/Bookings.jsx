@@ -8,8 +8,10 @@ import NewBookingForm from '@/components/bookings/NewBookingForm';
 import MyBookingsList from '@/components/bookings/MyBookingsList';
 import PaymentsSection from '@/components/bookings/PaymentsSection';
 import { useQuery } from '@tanstack/react-query';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function Bookings() {
+  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -70,17 +72,17 @@ export default function Bookings() {
               animate={{ opacity: 1, y: 0 }}
             >
               <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white mb-6">
-                Área de <span className="text-[#C9A961]">Reservas</span>
+                {t('bookings_area')}
               </h1>
               <p className="text-lg text-stone-300 mb-8">
-                Faça login para gerir as suas reservas, confirmar presença e consultar pagamentos.
+                {t('bookings_login_message')}
               </p>
               <Button
                 size="lg"
                 onClick={() => base44.auth.redirectToLogin(window.location.href)}
                 className="bg-[#C9A961] hover:bg-[#B89A51] text-[#2C3E1F] font-semibold"
               >
-                Entrar ou Registar
+                {t('login_or_register')}
               </Button>
             </motion.div>
           </div>
@@ -109,10 +111,10 @@ export default function Bookings() {
             animate={{ opacity: 1, y: 0 }}
           >
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
-              Olá, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
+              {t('hello')}, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
             </h1>
             <p className="text-stone-300">
-              Gerir as suas aulas, confirmar presença e consultar pagamentos
+              {t('manage_bookings_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -163,15 +165,15 @@ export default function Bookings() {
             <TabsList className="bg-white border shadow-sm">
               <TabsTrigger value="bookings" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
                 <CalendarDays className="w-4 h-4 mr-2" />
-                Minhas Aulas
+                {t('my_classes')}
               </TabsTrigger>
               <TabsTrigger value="new" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
                 <Plus className="w-4 h-4 mr-2" />
-                Nova Reserva
+                {t('new_booking')}
               </TabsTrigger>
               <TabsTrigger value="payments" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
                 <Euro className="w-4 h-4 mr-2" />
-                Pagamentos
+                {t('payments')}
               </TabsTrigger>
             </TabsList>
 

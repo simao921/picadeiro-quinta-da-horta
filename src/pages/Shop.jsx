@@ -20,15 +20,19 @@ import {
 import { ShoppingCart, Search, Star, Package, TrendingUp, Filter, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useLanguage } from '@/components/LanguageProvider';
 
-const categories = [
-  { id: 'all', label: 'Todos' },
-  { id: 'vestuario', label: 'Vestuário' },
-  { id: 'equipamento', label: 'Equipamento' },
-  { id: 'acessorios', label: 'Acessórios' },
-  { id: 'cuidados', label: 'Cuidados' },
-  { id: 'alimentacao', label: 'Alimentação' },
-];
+export default function Shop() {
+  const { t } = useLanguage();
+  
+  const categories = [
+    { id: 'all', labelKey: 'all_categories_shop' },
+    { id: 'vestuario', label: 'Vestuário' },
+    { id: 'equipamento', label: 'Equipamento' },
+    { id: 'acessorios', label: 'Acessórios' },
+    { id: 'cuidados', label: 'Cuidados' },
+    { id: 'alimentacao', label: 'Alimentação' },
+  ];
 
 const defaultProducts = [
   {
@@ -97,7 +101,6 @@ const defaultProducts = [
   }
 ];
 
-export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
@@ -165,7 +168,7 @@ export default function Shop() {
     }
     
     localStorage.setItem('cart', JSON.stringify(cart));
-    toast.success('Produto adicionado ao carrinho!');
+    toast.success(t('added_to_cart'));
   };
 
   const featuredProducts = displayProducts.filter(p => p.is_featured).slice(0, 3);
@@ -199,11 +202,10 @@ export default function Shop() {
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#B8956A]/20 backdrop-blur-sm 
                            rounded-full text-[#B8956A] text-sm font-medium mb-6">
               <Package className="w-4 h-4" />
-              Loja Online
+              {t('shop_title')}
             </span>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Equipamento<br />
-              <span className="text-[#B8956A]">Premium</span>
+              {t('shop_title')}
             </h1>
             <p className="text-lg text-stone-300 max-w-2xl mx-auto">
               Descubra a nossa seleção de equipamento e acessórios de alta qualidade para equitação
@@ -219,7 +221,7 @@ export default function Shop() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-2xl font-serif font-bold text-[#2C3E1F] mb-2">
-                  Produtos em Destaque
+                  {t('featured_products')}
                 </h2>
                 <p className="text-stone-600">Os nossos produtos mais populares</p>
               </div>
@@ -244,7 +246,7 @@ export default function Shop() {
                       <div className="absolute top-3 right-3">
                         <Badge className="bg-[#B8956A] text-white">
                           <Star className="w-3 h-3 mr-1" />
-                          Destaque
+                          {t('featured')}
                         </Badge>
                       </div>
                       {product.sale_price && (
@@ -307,7 +309,7 @@ export default function Shop() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                   <Input
-                    placeholder="Pesquisar produtos..."
+                    placeholder={t('search_products')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 h-12"
@@ -317,13 +319,13 @@ export default function Shop() {
                 {/* Sort */}
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-full lg:w-48 h-12">
-                    <SelectValue placeholder="Ordenar por" />
+                    <SelectValue placeholder={t('sort_by')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="featured">Destaques</SelectItem>
-                    <SelectItem value="price_asc">Preço: Menor ao Maior</SelectItem>
-                    <SelectItem value="price_desc">Preço: Maior ao Menor</SelectItem>
-                    <SelectItem value="name">Nome A-Z</SelectItem>
+                    <SelectItem value="featured">{t('featured')}</SelectItem>
+                    <SelectItem value="price_asc">{t('price_low_high')}</SelectItem>
+                    <SelectItem value="price_desc">{t('price_high_low')}</SelectItem>
+                    <SelectItem value="name">{t('name_az')}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -334,7 +336,7 @@ export default function Shop() {
                   onClick={() => setShowFilters(!showFilters)}
                 >
                   <Filter className="w-4 h-4 mr-2" />
-                  Filtros
+                  {t('filters')}
                 </Button>
               </div>
 
@@ -351,7 +353,7 @@ export default function Shop() {
                       : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
                     }
                   >
-                    {cat.label}
+                    {cat.labelKey ? t(cat.labelKey) : cat.label}
                   </Button>
                 ))}
                 {(selectedCategory !== 'all' || searchQuery) && (
@@ -365,14 +367,14 @@ export default function Shop() {
                     className="text-red-500 hover:text-red-600"
                   >
                     <X className="w-4 h-4 mr-1" />
-                    Limpar
+                    {t('clear')}
                   </Button>
                 )}
               </div>
 
               {/* Results count */}
               <div className="mt-4 text-sm text-stone-500">
-                {filteredAndSortedProducts.length} produto{filteredAndSortedProducts.length !== 1 ? 's' : ''} encontrado{filteredAndSortedProducts.length !== 1 ? 's' : ''}
+                {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? t('products_found') : t('products_found_plural')} {filteredAndSortedProducts.length === 1 ? t('found') : t('found_plural')}
               </div>
             </CardContent>
           </Card>
@@ -396,7 +398,7 @@ export default function Shop() {
               <CardContent>
                 <Package className="w-16 h-16 mx-auto mb-4 text-stone-300" />
                 <h3 className="text-xl font-semibold text-[#2C3E1F] mb-2">
-                  Nenhum produto encontrado
+                  {t('no_products_found')}
                 </h3>
                 <p className="text-stone-500 mb-4">
                   Tente ajustar os seus filtros de pesquisa
@@ -408,7 +410,7 @@ export default function Shop() {
                   }}
                   variant="outline"
                 >
-                  Limpar Filtros
+                  {t('clear_filters')}
                 </Button>
               </CardContent>
             </Card>
@@ -445,13 +447,13 @@ export default function Shop() {
                         {product.stock <= 5 && product.stock > 0 && (
                           <div className="absolute bottom-3 right-3">
                             <Badge className="bg-amber-500 text-white text-xs">
-                              Últimas {product.stock} unidades
+                              {t('last_units')} {product.stock} {t('units')}
                             </Badge>
                           </div>
                         )}
                         {product.stock === 0 && (
                           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <Badge className="bg-red-500 text-white">Esgotado</Badge>
+                            <Badge className="bg-red-500 text-white">{t('out_of_stock')}</Badge>
                           </div>
                         )}
                       </div>
