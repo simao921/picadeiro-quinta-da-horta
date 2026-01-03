@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Plus, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const horses = ["Vidre", "Borboleta", "Égua Louza", "U for me", "Faz de conta", "Domino", "Chá", "Árabe", "Floribela", "Joselito"];
 const weekDays = [
@@ -30,7 +31,7 @@ const monthlyFees = {
 export default function FixedStudentsManager() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   const [formData, setFormData] = useState({
     user_id: '',
@@ -49,11 +50,25 @@ export default function FixedStudentsManager() {
 
   const fixedStudents = allUsers.filter(u => u.student_type === 'fixo');
 
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => base44.entities.Service.list(),
+    initialData: []
+  });
+
   const updateUserMutation = useMutation({
     mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
+      // Criar aulas automáticas para o aluno fixo
+      const student = allUsers.find(u => u.id === variables.userId);
+      if (student?.fixed_schedule) {
+        await createRecurringLessons(student);
+      }
+      
       queryClient.invalidateQueries(['all-users']);
+      queryClient.invalidateQueries(['lessons']);
       setDialogOpen(false);
+      setEditingStudent(null);
       setFormData({
         user_id: '',
         assigned_horse: '',
@@ -65,6 +80,81 @@ export default function FixedStudentsManager() {
       toast.success('Aluno fixo atualizado!');
     }
   });
+
+  const createRecurringLessons = async (student) => {
+    if (!student.fixed_schedule || student.fixed_schedule.length === 0) return;
+    
+    const service = services.find(s => s.title === 'Aulas de Escola') || services[0];
+    if (!service) return;
+
+    const today = new Date();
+    const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
+    
+    // Criar aulas para as próximas 8 semanas
+    for (let week = 0; week < 8; week++) {
+      for (const schedule of student.fixed_schedule) {
+        const targetDay = daysMap[schedule.day];
+        const lessonDate = new Date(today);
+        lessonDate.setDate(today.getDate() + (targetDay - today.getDay() + 7) % 7 + week * 7);
+        
+        const dateStr = format(lessonDate, 'yyyy-MM-dd');
+        
+        try {
+          // Verificar se já existe aula
+          const existingLessons = await base44.entities.Lesson.filter({ 
+            date: dateStr,
+            start_time: schedule.time,
+            service_id: service.id
+          });
+
+          let lesson;
+          if (existingLessons.length === 0) {
+            // Criar nova aula
+            const endTime = new Date(`2000-01-01T${schedule.time}:00`);
+            endTime.setMinutes(endTime.getMinutes() + (schedule.duration || 30));
+            
+            lesson = await base44.entities.Lesson.create({
+              service_id: service.id,
+              date: dateStr,
+              start_time: schedule.time,
+              end_time: format(endTime, 'HH:mm'),
+              max_spots: 6,
+              booked_spots: 0,
+              fixed_students_count: 0,
+              is_auto_generated: true
+            });
+          } else {
+            lesson = existingLessons[0];
+          }
+
+          // Verificar se já existe reserva
+          const existingBookings = await base44.entities.Booking.filter({
+            lesson_id: lesson.id,
+            client_email: student.email
+          });
+
+          if (existingBookings.length === 0) {
+            // Criar reserva automática
+            await base44.entities.Booking.create({
+              lesson_id: lesson.id,
+              client_email: student.email,
+              client_name: student.full_name,
+              status: 'approved',
+              is_fixed_student: true
+            });
+
+            // Atualizar contadores
+            await base44.entities.Lesson.update(lesson.id, {
+              booked_spots: (lesson.booked_spots || 0) + 1,
+              fixed_students_count: (lesson.fixed_students_count || 0) + 1
+            });
+          }
+        } catch (e) {
+          console.error('Erro ao criar aula:', e);
+        }
+      }
+    }
+  };
 
   const handleSave = () => {
     if (!formData.user_id || !formData.assigned_horse || formData.schedules.length === 0) {
@@ -107,6 +197,19 @@ export default function FixedStudentsManager() {
     }
   };
 
+  const editFixedStudent = (student) => {
+    setEditingStudent(student);
+    setFormData({
+      user_id: student.id,
+      assigned_horse: student.assigned_horse || '',
+      student_level: student.student_level || 'iniciante',
+      duration: student.fixed_schedule?.[0]?.duration || 30,
+      weekly_frequency: student.fixed_schedule?.length || 1,
+      schedules: student.fixed_schedule || []
+    });
+    setDialogOpen(true);
+  };
+
   return (
     <Card className="border-0 shadow-md">
       <CardHeader>
@@ -124,7 +227,7 @@ export default function FixedStudentsManager() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Registar Aluno Fixo</DialogTitle>
+                <DialogTitle>{editingStudent ? 'Editar Aluno Fixo' : 'Registar Aluno Fixo'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -132,12 +235,13 @@ export default function FixedStudentsManager() {
                   <Select
                     value={formData.user_id}
                     onValueChange={(v) => setFormData({ ...formData, user_id: v })}
+                    disabled={!!editingStudent}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Escolha um aluno" />
                     </SelectTrigger>
                     <SelectContent>
-                      {allUsers.filter(u => u.student_type !== 'fixo').map(u => (
+                      {allUsers.filter(u => u.student_type !== 'fixo' || u.id === editingStudent?.id).map(u => (
                         <SelectItem key={u.id} value={u.id}>
                           {u.full_name || u.email}
                         </SelectItem>
@@ -285,8 +389,12 @@ export default function FixedStudentsManager() {
                   </div>
                 </div>
 
-                <Button onClick={handleSave} className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]">
-                  Guardar Aluno Fixo
+                <Button 
+                  onClick={handleSave} 
+                  className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                  disabled={updateUserMutation.isPending}
+                >
+                  {updateUserMutation.isPending ? 'A guardar...' : 'Guardar Aluno Fixo'}
                 </Button>
               </div>
             </DialogContent>
@@ -325,14 +433,24 @@ export default function FixedStudentsManager() {
                       </div>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeFixedStudent(student.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => editFixedStudent(student)}
+                      className="text-[#4A5D23] hover:text-[#3A4A1B] hover:bg-[#4A5D23]/10"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFixedStudent(student.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

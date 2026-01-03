@@ -19,14 +19,20 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Users, Search, Mail, Phone, Euro, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Users, Search, Mail, Phone, Euro, AlertCircle, CheckCircle, Loader2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 export default function AdminStudents() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserName, setNewUserName] = useState('');
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -53,6 +59,27 @@ export default function AdminStudents() {
     s.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const inviteUserMutation = useMutation({
+    mutationFn: async () => {
+      await base44.users.inviteUser(newUserEmail, 'user');
+      await base44.entities.User.create({
+        email: newUserEmail,
+        full_name: newUserName,
+        role: 'user'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin-users']);
+      setInviteDialogOpen(false);
+      setNewUserEmail('');
+      setNewUserName('');
+      toast.success('Aluno convidado com sucesso!');
+    },
+    onError: () => {
+      toast.error('Erro ao convidar aluno');
+    }
+  });
+
   const getStudentStats = (email) => {
     const studentBookings = bookings.filter(b => b.client_email === email);
     const studentPayments = payments.filter(p => p.client_email === email);
@@ -76,14 +103,55 @@ export default function AdminStudents() {
             <h1 className="text-2xl font-bold text-[#2C3E1F]">Gestão de Alunos</h1>
             <p className="text-stone-500">{students.length} alunos registados</p>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-            <Input
-              placeholder="Pesquisar alunos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+              <Input
+                placeholder="Pesquisar alunos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B] whitespace-nowrap">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Convidar Aluno
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Convidar Novo Aluno</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Nome Completo</Label>
+                    <Input
+                      placeholder="Ex: João Silva"
+                      value={newUserName}
+                      onChange={(e) => setNewUserName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      placeholder="exemplo@email.com"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => inviteUserMutation.mutate()}
+                    disabled={!newUserEmail || !newUserName || inviteUserMutation.isPending}
+                    className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                  >
+                    {inviteUserMutation.isPending ? 'A enviar...' : 'Enviar Convite'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
