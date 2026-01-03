@@ -57,7 +57,7 @@ function WeeklyLessonSelector({
       <CardHeader className="bg-gradient-to-br from-[#B8956A]/5 to-white border-b border-stone-200">
         <CardTitle className="text-lg flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-[#B8956A]" />
+            <CalendarDays className="w-5 h-5 text-[#B8956A]" />
             Aula {index + 1}
           </span>
           {currentTime && currentDate && (
