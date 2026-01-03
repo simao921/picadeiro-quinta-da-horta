@@ -95,17 +95,8 @@ Deno.serve(async (req) => {
 
     const results = { created: 0, updated: 0, errors: [] };
 
-    // Buscar todos os users existentes
-    const existingUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
-
     for (const student of studentsData) {
       try {
-        // Procurar user por nome
-        let existingUser = existingUsers.find(u => 
-          u.full_name?.toLowerCase().includes(student.name.toLowerCase()) ||
-          student.name.toLowerCase().includes(u.full_name?.toLowerCase())
-        );
-
         const schedules = student.schedules.map(s => ({
           day: s.day,
           time: s.time,
@@ -120,33 +111,22 @@ Deno.serve(async (req) => {
         const monthlyFee = monthlyFees[schedules.length] || 90;
         const classRegime = schedules.length === 1 ? "1x_semana" : schedules.length === 2 ? "2x_semana" : "3x_semana";
 
-        if (!existingUser) {
-          // Criar novo user
-          const email = `${student.name.toLowerCase().replace(/\s+/g, '.')}@picadeiro.temp`;
-          existingUser = await base44.asServiceRole.entities.User.create({
-            email,
-            full_name: student.name,
-            role: 'user',
-            student_type: 'fixo',
-            student_level: 'intermedio',
-            class_regime: classRegime,
-            fixed_schedule: schedules,
-            monthly_fee: monthlyFee
-          });
-          results.created++;
-        } else {
-          // Atualizar user existente
-          await base44.asServiceRole.entities.User.update(existingUser.id, {
-            student_type: 'fixo',
-            student_level: 'intermedio',
-            class_regime: classRegime,
-            fixed_schedule: schedules,
-            monthly_fee: monthlyFee
-          });
-          results.updated++;
-        }
+        // Criar email temporário
+        const email = `${student.name.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, '.')}@picadeiro.pt`;
+
+        // Enviar convite
+        await base44.asServiceRole.users.inviteUser(email, 'user');
+        
+        results.created++;
       } catch (e) {
-        results.errors.push(`${student.name}: ${e.message}`);
+        // Se já existir, ignorar erro de convite
+        if (e.message.includes('already exists')) {
+          results.updated++;
+        } else {
+          results.errors.push(`${student.name}: ${e.message}`);
+        }
       }
     }
 
