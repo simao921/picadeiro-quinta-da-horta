@@ -79,9 +79,8 @@ export default function HeroSection() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-white text-white hover:bg-white hover:text-[#2C3E1F] backdrop-blur-sm px-8 transition-all"
+                className="border-2 border-white/80 text-white hover:bg-white/10 hover:border-white backdrop-blur-sm px-8 transition-all"
               >
-                <Play className="w-5 h-5 mr-2" />
                 {t('hero_cta_secondary')}
               </Button>
             </Link>
