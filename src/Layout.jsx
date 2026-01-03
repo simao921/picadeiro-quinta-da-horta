@@ -16,7 +16,7 @@ import {
 import { LanguageProvider, useLanguage } from '@/components/LanguageProvider';
 import LanguageSelector from '@/components/LanguageSelector';
 
-function LayoutContent({ children, currentPageName }) {
+const LayoutContent = ({ children, currentPageName }) => {
   const { t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -407,12 +407,14 @@ function LayoutContent({ children, currentPageName }) {
       )}
     </div>
   );
-}
+};
 
-export default function Layout({ children, currentPageName }) {
+const Layout = ({ children, currentPageName }) => {
   return (
     <LanguageProvider>
       <LayoutContent children={children} currentPageName={currentPageName} />
     </LanguageProvider>
   );
-}
+};
+
+export default Layout;
