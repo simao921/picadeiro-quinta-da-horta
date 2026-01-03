@@ -127,6 +127,50 @@ export const translations = {
     date: 'Data',
     time: 'Hora',
     status: 'Estado',
+    
+    // Home Hero
+    excellence_center: 'Centro Equestre de Excelência',
+    world_champion_intro: 'Descubra a arte da equitação com o',
+    world_champion_name: 'Bi-Campeão do Mundo Gilberto Filipe',
+    hero_description: 'Oferecemos aulas personalizadas, hipoterapia e experiências únicas com cavalos num ambiente natural e acolhedor.',
+    book_lesson: 'Reservar Aula',
+    know_services: 'Conhecer Serviços',
+    years_experience: 'Anos de Experiência',
+    students_trained: 'Alunos Formados',
+    world_champion: 'Campeão Mundial',
+    
+    // Services Preview
+    our_services: 'Os Nossos Serviços',
+    equestrian_experiences: 'Experiências Equestres de Excelência',
+    services_description: 'Desde iniciantes a cavaleiros experientes, oferecemos programas personalizados para todas as idades e níveis.',
+    private_lessons: 'Aulas Particulares',
+    private_lessons_desc: 'Aulas individuais com monitores experientes ou com o Bi-Campeão Mundial Gilberto Filipe.',
+    group_lessons: 'Aulas em Grupo',
+    group_lessons_desc: 'Aulas com até 4 alunos, promovendo aprendizagem colaborativa e socialização.',
+    hippotherapy: 'Hipoterapia',
+    hippotherapy_desc: 'Terapia assistida por cavalos para desenvolvimento físico, emocional e cognitivo.',
+    space_rental: 'Aluguer de Espaço',
+    space_rental_desc: 'Espaço único para eventos, festas de aniversário e celebrações especiais.',
+    view_all_services: 'Ver Todos os Serviços',
+    
+    // About
+    about_us: 'Sobre Nós',
+    excellence_tradition: 'Uma Tradição de Excelência Equestre',
+    about_description_1: 'O Picadeiro Quinta da Horta é mais do que um centro equestre — é um lugar onde a paixão pelos cavalos encontra a excelência no ensino. Localizado na bela região de Alcochete, oferecemos um ambiente natural e tranquilo para a prática da equitação.',
+    about_description_2: 'desenvolvemos programas personalizados que respeitam o ritmo de cada aluno, desde iniciantes aos mais experientes.',
+    contact_us: 'Contacte-nos',
+    
+    // CTA
+    ready_to_start: 'Pronto para Começar a Sua',
+    equestrian_journey: 'Jornada Equestre?',
+    cta_description: 'Dê o primeiro passo para uma experiência única com cavalos. Reserve a sua primeira aula experimental ou entre em contacto para mais informações.',
+    call_now: 'Ligar Agora',
+    trial_lesson: 'Aula Experimental',
+    trial_lesson_desc: 'Experimente uma aula introdutória e descubra o mundo da equitação.',
+    visit_facilities: 'Visita às Instalações',
+    visit_facilities_desc: 'Agende uma visita para conhecer o nosso espaço e os nossos cavalos.',
+    monthly_packages: 'Pacotes Mensais',
+    monthly_packages_desc: 'Descubra os nossos planos com condições especiais para alunos regulares.',
   },
   
   en: {
@@ -245,6 +289,50 @@ export const translations = {
     date: 'Date',
     time: 'Time',
     status: 'Status',
+    
+    // Home Hero
+    excellence_center: 'Equestrian Centre of Excellence',
+    world_champion_intro: 'Discover the art of horse riding with',
+    world_champion_name: '2x World Champion Gilberto Filipe',
+    hero_description: 'We offer personalized lessons, hippotherapy and unique experiences with horses in a natural and welcoming environment.',
+    book_lesson: 'Book Lesson',
+    know_services: 'Discover Services',
+    years_experience: 'Years of Experience',
+    students_trained: 'Trained Students',
+    world_champion: 'World Champion',
+    
+    // Services Preview
+    our_services: 'Our Services',
+    equestrian_experiences: 'Excellence Equestrian Experiences',
+    services_description: 'From beginners to experienced riders, we offer personalized programs for all ages and levels.',
+    private_lessons: 'Private Lessons',
+    private_lessons_desc: 'Individual lessons with experienced instructors or with 2x World Champion Gilberto Filipe.',
+    group_lessons: 'Group Lessons',
+    group_lessons_desc: 'Classes with up to 4 students, promoting collaborative learning and socialization.',
+    hippotherapy: 'Hippotherapy',
+    hippotherapy_desc: 'Horse-assisted therapy for physical, emotional and cognitive development.',
+    space_rental: 'Space Rental',
+    space_rental_desc: 'Unique space for events, birthday parties and special celebrations.',
+    view_all_services: 'View All Services',
+    
+    // About
+    about_us: 'About Us',
+    excellence_tradition: 'A Tradition of Equestrian Excellence',
+    about_description_1: 'Picadeiro Quinta da Horta is more than an equestrian center — it is a place where passion for horses meets excellence in teaching. Located in the beautiful region of Alcochete, we offer a natural and peaceful environment for horse riding.',
+    about_description_2: 'we develop personalized programs that respect the pace of each student, from beginners to the most experienced.',
+    contact_us: 'Contact Us',
+    
+    // CTA
+    ready_to_start: 'Ready to Start Your',
+    equestrian_journey: 'Equestrian Journey?',
+    cta_description: 'Take the first step towards a unique experience with horses. Book your first trial lesson or get in touch for more information.',
+    call_now: 'Call Now',
+    trial_lesson: 'Trial Lesson',
+    trial_lesson_desc: 'Try an introductory lesson and discover the world of horse riding.',
+    visit_facilities: 'Visit Facilities',
+    visit_facilities_desc: 'Schedule a visit to see our space and our horses.',
+    monthly_packages: 'Monthly Packages',
+    monthly_packages_desc: 'Discover our plans with special conditions for regular students.',
   },
   
   es: {
@@ -363,6 +451,50 @@ export const translations = {
     date: 'Fecha',
     time: 'Hora',
     status: 'Estado',
+    
+    // Home Hero
+    excellence_center: 'Centro Ecuestre de Excelencia',
+    world_champion_intro: 'Descubre el arte de la equitación con',
+    world_champion_name: 'Bicampeón Mundial Gilberto Filipe',
+    hero_description: 'Ofrecemos clases personalizadas, hipoterapia y experiencias únicas con caballos en un ambiente natural y acogedor.',
+    book_lesson: 'Reservar Clase',
+    know_services: 'Conocer Servicios',
+    years_experience: 'Años de Experiencia',
+    students_trained: 'Alumnos Formados',
+    world_champion: 'Campeón Mundial',
+    
+    // Services Preview
+    our_services: 'Nuestros Servicios',
+    equestrian_experiences: 'Experiencias Ecuestres de Excelencia',
+    services_description: 'Desde principiantes hasta jinetes experimentados, ofrecemos programas personalizados para todas las edades y niveles.',
+    private_lessons: 'Clases Particulares',
+    private_lessons_desc: 'Clases individuales con monitores experimentados o con el Bicampeón Mundial Gilberto Filipe.',
+    group_lessons: 'Clases en Grupo',
+    group_lessons_desc: 'Clases con hasta 4 alumnos, promoviendo el aprendizaje colaborativo y la socialización.',
+    hippotherapy: 'Hipoterapia',
+    hippotherapy_desc: 'Terapia asistida por caballos para desarrollo físico, emocional y cognitivo.',
+    space_rental: 'Alquiler de Espacio',
+    space_rental_desc: 'Espacio único para eventos, fiestas de cumpleaños y celebraciones especiales.',
+    view_all_services: 'Ver Todos los Servicios',
+    
+    // About
+    about_us: 'Sobre Nosotros',
+    excellence_tradition: 'Una Tradición de Excelencia Ecuestre',
+    about_description_1: 'El Picadeiro Quinta da Horta es más que un centro ecuestre — es un lugar donde la pasión por los caballos encuentra la excelencia en la enseñanza. Ubicado en la hermosa región de Alcochete, ofrecemos un ambiente natural y tranquilo para la práctica de la equitación.',
+    about_description_2: 'desarrollamos programas personalizados que respetan el ritmo de cada alumno, desde principiantes hasta los más experimentados.',
+    contact_us: 'Contáctenos',
+    
+    // CTA
+    ready_to_start: 'Listo para Comenzar Tu',
+    equestrian_journey: 'Viaje Ecuestre?',
+    cta_description: 'Da el primer paso hacia una experiencia única con caballos. Reserva tu primera clase de prueba o ponte en contacto para más información.',
+    call_now: 'Llamar Ahora',
+    trial_lesson: 'Clase de Prueba',
+    trial_lesson_desc: 'Prueba una clase introductoria y descubre el mundo de la equitación.',
+    visit_facilities: 'Visita a las Instalaciones',
+    visit_facilities_desc: 'Agenda una visita para conocer nuestro espacio y nuestros caballos.',
+    monthly_packages: 'Paquetes Mensuales',
+    monthly_packages_desc: 'Descubre nuestros planes con condiciones especiales para alumnos regulares.',
   },
   
   fr: {
@@ -481,6 +613,50 @@ export const translations = {
     date: 'Date',
     time: 'Heure',
     status: 'Statut',
+    
+    // Home Hero
+    excellence_center: 'Centre Équestre d\'Excellence',
+    world_champion_intro: 'Découvrez l\'art de l\'équitation avec',
+    world_champion_name: 'Double Champion du Monde Gilberto Filipe',
+    hero_description: 'Nous proposons des cours personnalisés, de l\'hippothérapie et des expériences uniques avec les chevaux dans un environnement naturel et accueillant.',
+    book_lesson: 'Réserver un Cours',
+    know_services: 'Découvrir les Services',
+    years_experience: 'Années d\'Expérience',
+    students_trained: 'Élèves Formés',
+    world_champion: 'Champion du Monde',
+    
+    // Services Preview
+    our_services: 'Nos Services',
+    equestrian_experiences: 'Expériences Équestres d\'Excellence',
+    services_description: 'Des débutants aux cavaliers expérimentés, nous proposons des programmes personnalisés pour tous les âges et niveaux.',
+    private_lessons: 'Cours Particuliers',
+    private_lessons_desc: 'Cours individuels avec des moniteurs expérimentés ou avec le Double Champion du Monde Gilberto Filipe.',
+    group_lessons: 'Cours en Groupe',
+    group_lessons_desc: 'Cours avec jusqu\'à 4 élèves, favorisant l\'apprentissage collaboratif et la socialisation.',
+    hippotherapy: 'Hippothérapie',
+    hippotherapy_desc: 'Thérapie assistée par chevaux pour le développement physique, émotionnel et cognitif.',
+    space_rental: 'Location d\'Espace',
+    space_rental_desc: 'Espace unique pour événements, anniversaires et célébrations spéciales.',
+    view_all_services: 'Voir Tous les Services',
+    
+    // About
+    about_us: 'À Propos',
+    excellence_tradition: 'Une Tradition d\'Excellence Équestre',
+    about_description_1: 'Le Picadeiro Quinta da Horta est plus qu\'un centre équestre — c\'est un lieu où la passion des chevaux rencontre l\'excellence dans l\'enseignement. Situé dans la belle région d\'Alcochete, nous offrons un environnement naturel et paisible pour la pratique de l\'équitation.',
+    about_description_2: 'nous développons des programmes personnalisés qui respectent le rythme de chaque élève, des débutants aux plus expérimentés.',
+    contact_us: 'Contactez-nous',
+    
+    // CTA
+    ready_to_start: 'Prêt à Commencer Votre',
+    equestrian_journey: 'Aventure Équestre?',
+    cta_description: 'Faites le premier pas vers une expérience unique avec les chevaux. Réservez votre premier cours d\'essai ou contactez-nous pour plus d\'informations.',
+    call_now: 'Appeler Maintenant',
+    trial_lesson: 'Cours d\'Essai',
+    trial_lesson_desc: 'Essayez un cours d\'introduction et découvrez le monde de l\'équitation.',
+    visit_facilities: 'Visite des Installations',
+    visit_facilities_desc: 'Planifiez une visite pour découvrir notre espace et nos chevaux.',
+    monthly_packages: 'Forfaits Mensuels',
+    monthly_packages_desc: 'Découvrez nos plans avec conditions spéciales pour les élèves réguliers.',
   }
 };
 
