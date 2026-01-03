@@ -1,0 +1,183 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { MessageCircle, X, Send, Loader2, Bot } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { base44 } from '@/api/base44Client';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function ChatBot() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: 'Olá! 👋 Sou o assistente virtual do Picadeiro Quinta da Horta. Como posso ajudar?'
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+
+    const userMessage = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setLoading(true);
+
+    try {
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: `És o assistente virtual do Picadeiro Quinta da Horta, um centro equestre em Alcochete, Portugal.
+
+INFORMAÇÕES DO PICADEIRO:
+- Localização: Rua das Hortas - Fonte da Senhora, 2890-106 Alcochete
+- Telefone: +351 932 111 786
+- Email: picadeiroquintadahortagf@gmail.com
+
+SERVIÇOS DISPONÍVEIS:
+1. Aulas Particulares (€25-35/aula) - Atendimento personalizado
+2. Aulas de Grupo (€20-25/aula) - Máximo 6 alunos
+3. Aluguer de Picadeiro (€15-20/hora)
+4. Serviços para Proprietários (€80-120/mês)
+
+HORÁRIOS:
+- Segunda a Sexta: 09:00 - 19:00
+- Sábado: 09:00 - 17:00
+- Domingo: Fechado
+
+COMO RESERVAR:
+- Online através do website na página "Reservas"
+- Por telefone: +351 932 111 786
+- Por email: picadeiroquintadahortagf@gmail.com
+
+Responde de forma amigável, profissional e concisa. Se não souberes algo específico, sugere contactar diretamente.
+
+Pergunta do cliente: ${userMessage}`,
+      });
+
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Desculpe, ocorreu um erro. Por favor tente novamente ou contacte-nos diretamente.' 
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Floating Button */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-[#4A5D23] to-[#2C3E1F] 
+                       text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 
+                       flex items-center justify-center z-50 group"
+          >
+            <MessageCircle className="w-7 h-7 group-hover:scale-110 transition-transform" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Chat Window */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl 
+                       flex flex-col z-50 border border-stone-200"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#4A5D23] to-[#2C3E1F] text-white p-4 rounded-t-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Bot className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Assistente Virtual</h3>
+                  <p className="text-xs text-white/80">Online</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50">
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-lg ${
+                      msg.role === 'user'
+                        ? 'bg-[#4A5D23] text-white rounded-br-none'
+                        : 'bg-white text-stone-800 rounded-bl-none shadow-sm'
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-white p-3 rounded-lg rounded-bl-none shadow-sm">
+                    <Loader2 className="w-5 h-5 text-[#4A5D23] animate-spin" />
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t border-stone-200 bg-white rounded-b-2xl">
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Digite sua pergunta..."
+                  disabled={loading}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={loading || !input.trim()}
+                  className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                  size="icon"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-stone-500 mt-2 text-center">
+                💬 Resposta gerada por IA
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

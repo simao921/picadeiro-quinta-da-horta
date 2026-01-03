@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LanguageProvider, useLanguage } from '@/components/LanguageProvider';
 import LanguageSelector from '@/components/LanguageSelector';
+import ChatBot from '@/components/ChatBot';
 
 const LayoutContent = ({ children, currentPageName }) => {
   const { t } = useLanguage();
@@ -403,13 +404,16 @@ const LayoutContent = ({ children, currentPageName }) => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 w-12 h-12 bg-[#2D2D2D] text-white rounded-full shadow-lg 
+          className="fixed bottom-24 right-6 w-12 h-12 bg-[#2D2D2D] text-white rounded-full shadow-lg 
                      flex items-center justify-center hover:bg-[#1A1A1A] transition-all duration-300
-                     animate-in fade-in slide-in-from-bottom-4 z-50"
+                     animate-in fade-in slide-in-from-bottom-4 z-40"
         >
           <ChevronUp className="w-6 h-6" />
         </button>
       )}
+
+      {/* ChatBot */}
+      <ChatBot />
     </div>
   );
 };
