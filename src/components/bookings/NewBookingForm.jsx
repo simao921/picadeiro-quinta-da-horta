@@ -457,6 +457,18 @@ export default function NewBookingForm({ user, isBlocked }) {
           is_owner_booking: selectedService.title === 'Proprietários'
         });
 
+        // Enviar email de confirmação
+        try {
+          await base44.functions.invoke('sendBookingConfirmation', {
+            bookingId: booking.id,
+            lessonId: lesson.id,
+            clientEmail: user.email,
+            clientName: user.full_name
+          });
+        } catch (e) {
+          console.log('Erro ao enviar email:', e);
+        }
+
         await base44.entities.Lesson.update(lesson.id, {
           booked_spots: (lesson.booked_spots || 0) + 1
         });
