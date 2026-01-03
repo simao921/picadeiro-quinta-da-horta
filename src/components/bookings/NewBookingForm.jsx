@@ -743,10 +743,14 @@ export default function NewBookingForm({ user, isBlocked }) {
             <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
             <Button
               onClick={() => setStep(4)}
-              disabled={!selectedTime}
+              disabled={
+                selectedPlan?.frequency > 1
+                  ? selectedTimes.filter(Boolean).length !== selectedPlan.frequency
+                  : !selectedTime
+              }
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white disabled:bg-stone-300"
             >
-              Continuar
+              {t('continue')}
             </Button>
           </div>
         </div>
