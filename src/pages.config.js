@@ -3,11 +3,13 @@ import AdminBlockedSlots from './pages/AdminBlockedSlots';
 import AdminContent from './pages/AdminContent';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminEmails from './pages/AdminEmails';
 import AdminGallery from './pages/AdminGallery';
 import AdminInstructors from './pages/AdminInstructors';
 import AdminLessons from './pages/AdminLessons';
 import AdminLogin from './pages/AdminLogin';
 import AdminMessages from './pages/AdminMessages';
+import AdminNotifications from './pages/AdminNotifications';
 import AdminOrders from './pages/AdminOrders';
 import AdminPayments from './pages/AdminPayments';
 import AdminPicadeiroStudents from './pages/AdminPicadeiroStudents';
@@ -28,8 +30,8 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
-import AdminEmails from './pages/AdminEmails';
-import AdminNotifications from './pages/AdminNotifications';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 import __Layout from './Layout.jsx';
 
 
@@ -39,11 +41,13 @@ export const PAGES = {
     "AdminContent": AdminContent,
     "AdminCoupons": AdminCoupons,
     "AdminDashboard": AdminDashboard,
+    "AdminEmails": AdminEmails,
     "AdminGallery": AdminGallery,
     "AdminInstructors": AdminInstructors,
     "AdminLessons": AdminLessons,
     "AdminLogin": AdminLogin,
     "AdminMessages": AdminMessages,
+    "AdminNotifications": AdminNotifications,
     "AdminOrders": AdminOrders,
     "AdminPayments": AdminPayments,
     "AdminPicadeiroStudents": AdminPicadeiroStudents,
@@ -64,8 +68,8 @@ export const PAGES = {
     "Services": Services,
     "Shop": Shop,
     "Wishlist": Wishlist,
-    "AdminEmails": AdminEmails,
-    "AdminNotifications": AdminNotifications,
+    "Blog": Blog,
+    "BlogPost": BlogPost,
 }
 
 export const pagesConfig = {
