@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Users, Send, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Mail, Users, Send, Loader2, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminEmails() {
@@ -17,6 +17,8 @@ export default function AdminEmails() {
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [sending, setSending] = useState(false);
+  const [newSubscriber, setNewSubscriber] = useState({ email: '', name: '' });
+  const [showAddSubscriber, setShowAddSubscriber] = useState(false);
 
   const { data: users } = useQuery({
     queryKey: ['all-users'],
@@ -24,7 +26,15 @@ export default function AdminEmails() {
     initialData: []
   });
 
-  const allEmails = users.map(u => u.email).filter(Boolean);
+  const { data: subscribers } = useQuery({
+    queryKey: ['email-subscribers'],
+    queryFn: () => base44.entities.EmailSubscriber.filter({ is_active: true }),
+    initialData: []
+  });
+
+  const userEmails = users.map(u => u.email).filter(Boolean);
+  const subscriberEmails = subscribers.map(s => s.email).filter(Boolean);
+  const allEmails = [...new Set([...userEmails, ...subscriberEmails])];
 
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
@@ -41,6 +51,23 @@ export default function AdminEmails() {
     } else {
       setSelectedEmails([...selectedEmails, email]);
     }
+  };
+
+  const addSubscriberMutation = useMutation({
+    mutationFn: (data) => base44.entities.EmailSubscriber.create(data),
+    onSuccess: () => {
+      toast.success('Subscritor adicionado com sucesso');
+      setNewSubscriber({ email: '', name: '' });
+      setShowAddSubscriber(false);
+    }
+  });
+
+  const handleAddSubscriber = () => {
+    if (!newSubscriber.email) {
+      toast.error('Email é obrigatório');
+      return;
+    }
+    addSubscriberMutation.mutate(newSubscriber);
   };
 
   const handleSendEmails = async () => {
@@ -183,8 +210,44 @@ export default function AdminEmails() {
                     </label>
                   </div>
 
+                  <div className="mb-3 pb-3 border-b">
+                    <Button
+                      onClick={() => setShowAddSubscriber(!showAddSubscriber)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Adicionar Subscritor
+                    </Button>
+
+                    {showAddSubscriber && (
+                      <div className="mt-3 space-y-2">
+                        <Input
+                          placeholder="Email"
+                          type="email"
+                          value={newSubscriber.email}
+                          onChange={(e) => setNewSubscriber({...newSubscriber, email: e.target.value})}
+                        />
+                        <Input
+                          placeholder="Nome (opcional)"
+                          value={newSubscriber.name}
+                          onChange={(e) => setNewSubscriber({...newSubscriber, name: e.target.value})}
+                        />
+                        <Button
+                          onClick={handleAddSubscriber}
+                          size="sm"
+                          className="w-full bg-[#4A5D23]"
+                          disabled={addSubscriberMutation.isPending}
+                        >
+                          {addSubscriberMutation.isPending ? 'A adicionar...' : 'Adicionar'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="max-h-[500px] overflow-y-auto space-y-2">
-                    {allEmails.map((email) => (
+                    {userEmails.map((email) => (
                       <div key={email} className="flex items-center gap-2 p-2 hover:bg-stone-50 rounded">
                         <Checkbox
                           id={email}
@@ -193,6 +256,20 @@ export default function AdminEmails() {
                         />
                         <label htmlFor={email} className="text-sm cursor-pointer flex-1 truncate">
                           {email}
+                          <Badge variant="outline" className="ml-2 text-xs">Utilizador</Badge>
+                        </label>
+                      </div>
+                    ))}
+                    {subscriberEmails.map((email) => (
+                      <div key={email} className="flex items-center gap-2 p-2 hover:bg-stone-50 rounded">
+                        <Checkbox
+                          id={email}
+                          checked={selectedEmails.includes(email)}
+                          onCheckedChange={() => handleToggleEmail(email)}
+                        />
+                        <label htmlFor={email} className="text-sm cursor-pointer flex-1 truncate">
+                          {email}
+                          <Badge variant="outline" className="ml-2 text-xs bg-green-50">Subscritor</Badge>
                         </label>
                       </div>
                     ))}
@@ -210,9 +287,9 @@ export default function AdminEmails() {
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-green-900">Apenas Utilizadores Registados</h4>
+                  <h4 className="font-semibold text-green-900">Envio para Todos</h4>
                   <p className="text-sm text-green-700 mt-1">
-                    Os emails só podem ser enviados para utilizadores registados na app. Para adicionar novos destinatários, convide-os na página AdminUsers primeiro.
+                    Agora pode enviar emails para utilizadores registados E subscritores adicionados manualmente. Use o botão "Adicionar Subscritor" para adicionar contactos sem conta.
                   </p>
                 </div>
               </div>
