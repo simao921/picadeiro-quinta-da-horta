@@ -6,8 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { 
   CalendarDays, Clock, Users, Euro, 
-  CheckCircle, Loader2, AlertCircle 
+  CheckCircle, Loader2, AlertCircle, Camera
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { format, addDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { motion } from 'framer-motion';
