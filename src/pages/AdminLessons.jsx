@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import { 
   Plus, CalendarDays, Clock, Users, 
-  CheckCircle, XCircle, Loader2 
+  CheckCircle, XCircle, Loader2, AlertCircle
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
