@@ -282,6 +282,18 @@ export const translations = {
     payments: 'Pagamentos',
     filters: 'Filtros',
     
+    // Gallery
+    our_gallery: 'Nossa Galeria',
+    gallery_title: 'Momentos Inesquecíveis',
+    gallery_subtitle: 'Descubra os melhores momentos do nosso centro equestre através de imagens',
+    all_categories: 'Todas',
+    classes: 'Aulas',
+    events: 'Eventos',
+    horses: 'Cavalos',
+    facilities: 'Instalações',
+    competitions: 'Competições',
+    no_images: 'Nenhuma imagem encontrada',
+
     // Footer
     quick_links: 'Links Rápidos',
     footer_description: 'Centro equestre de excelência em Alcochete, oferecendo aulas de equitação e experiências únicas com cavalos.',
@@ -595,6 +607,18 @@ export const translations = {
     payments: 'Payments',
     filters: 'Filters',
     
+    // Gallery
+    our_gallery: 'Our Gallery',
+    gallery_title: 'Unforgettable Moments',
+    gallery_subtitle: 'Discover the best moments of our equestrian center through images',
+    all_categories: 'All',
+    classes: 'Classes',
+    events: 'Events',
+    horses: 'Horses',
+    facilities: 'Facilities',
+    competitions: 'Competitions',
+    no_images: 'No images found',
+
     // Footer
     quick_links: 'Quick Links',
     footer_description: 'Equestrian center of excellence in Alcochete, offering riding lessons and unique experiences with horses.',
@@ -908,6 +932,18 @@ export const translations = {
     payments: 'Pagos',
     filters: 'Filtros',
     
+    // Gallery
+    our_gallery: 'Nuestra Galería',
+    gallery_title: 'Momentos Inolvidables',
+    gallery_subtitle: 'Descubre los mejores momentos de nuestro centro ecuestre a través de imágenes',
+    all_categories: 'Todas',
+    classes: 'Clases',
+    events: 'Eventos',
+    horses: 'Caballos',
+    facilities: 'Instalaciones',
+    competitions: 'Competiciones',
+    no_images: 'No se encontraron imágenes',
+
     // Footer
     quick_links: 'Enlaces Rápidos',
     footer_description: 'Centro ecuestre de excelencia en Alcochete, ofreciendo clases de equitación y experiencias únicas con caballos.',
@@ -1221,6 +1257,18 @@ export const translations = {
     payments: 'Paiements',
     filters: 'Filtres',
     
+    // Gallery
+    our_gallery: 'Notre Galerie',
+    gallery_title: 'Moments Inoubliables',
+    gallery_subtitle: 'Découvrez les meilleurs moments de notre centre équestre à travers des images',
+    all_categories: 'Toutes',
+    classes: 'Cours',
+    events: 'Événements',
+    horses: 'Chevaux',
+    facilities: 'Installations',
+    competitions: 'Compétitions',
+    no_images: 'Aucune image trouvée',
+
     // Footer
     quick_links: 'Liens Rapides',
     footer_description: 'Centre équestre d\'excellence à Alcochete, proposant des cours d\'équitation et des expériences uniques avec les chevaux.',
