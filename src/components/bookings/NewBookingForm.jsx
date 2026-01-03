@@ -22,8 +22,8 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/components/LanguageProvider';
 
 const timeSlots = [
-  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
+  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'
 ];
 
 export default function NewBookingForm({ user, isBlocked }) {
@@ -34,6 +34,7 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedTimes, setSelectedTimes] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
   const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
   const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
@@ -190,6 +191,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             setSelectedPlan(null);
             setSelectedTime(null);
             setSelectedTimes([]);
+            setSelectedDates([]);
           }}
           className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
         >
@@ -625,14 +627,15 @@ export default function NewBookingForm({ user, isBlocked }) {
               </p>
               {[...Array(selectedPlan.frequency)].map((_, index) => {
                 const currentTime = selectedTimes[index];
+                const currentDate = selectedDates[index] || new Date();
                 return (
                   <Card key={index} className="border-stone-200">
                     <CardHeader className="bg-stone-50">
                       <CardTitle className="text-lg flex items-center justify-between">
                         Aula {index + 1}
-                        {currentTime && (
+                        {currentTime && currentDate && (
                           <span className="text-[#B8956A] text-sm font-normal">
-                            Selecionado: {currentTime}
+                            {format(currentDate, "EEE dd/MM", { locale: pt })} às {currentTime}
                           </span>
                         )}
                       </CardTitle>
@@ -640,11 +643,15 @@ export default function NewBookingForm({ user, isBlocked }) {
                     <CardContent className="pt-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div>
-                          <Label className="mb-2 block">Data da 1ª Aula</Label>
+                          <Label className="mb-2 block">Dia da Semana</Label>
                           <Calendar
                             mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
+                            selected={currentDate}
+                            onSelect={(date) => {
+                              const newDates = [...selectedDates];
+                              newDates[index] = date;
+                              setSelectedDates(newDates);
+                            }}
                             locale={pt}
                             disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0}
                             className="rounded-md border"

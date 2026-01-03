@@ -122,8 +122,8 @@ export default function Contact() {
     {
       icon: Clock,
       titleKey: 'opening_hours',
-      contentKey: 'monday_friday',
-      subcontent: '9:00 - 19:00'
+      content: 'Segunda a Sexta: 9:00 - 19:00',
+      subcontent: 'Sábado: 9:00 - 17:00'
     }
   ];
 
