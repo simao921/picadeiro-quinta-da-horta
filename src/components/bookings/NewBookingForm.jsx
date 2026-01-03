@@ -324,6 +324,63 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
+          {selectedService?.title === 'Aulas em Grupo' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { frequency: 1, price: 60, label: '1x/semana' },
+                  { frequency: 2, price: 100, label: '2x/semana' },
+                  { frequency: 3, price: 140, label: '3x/semana' }
+                ].map((plan) => (
+                  <Card
+                    key={plan.label}
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedPlan?.label === plan.label 
+                        ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedPlan(plan)}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">{plan.label}</h3>
+                      <p className="text-2xl font-bold text-[#B8956A]">{plan.price}€<span className="text-sm text-stone-500">/mês</span></p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedService?.title === 'Sessões Fotográficas' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { label: '10 Fotos', price: 15 },
+                  { label: '12 Fotos', price: 18 },
+                  { label: '15 Fotos', price: 22 },
+                  { label: '20 Fotos', price: 30 },
+                  { label: 'Vídeo 1min', price: 20 },
+                  { label: 'Foto Extra', price: 2 }
+                ].map((plan) => (
+                  <Card
+                    key={plan.label}
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedPlan?.label === plan.label 
+                        ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedPlan(plan)}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">{plan.label}</h3>
+                      <p className="text-2xl font-bold text-[#B8956A]">{plan.price}€</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {selectedService?.title === 'Serviços de Proprietários' && (
             <div className="space-y-4">
               <h3 className="font-semibold text-lg text-[#2C3E1F] mb-3">Em Grupo (com monitores)</h3>
@@ -367,11 +424,30 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
+          {selectedService?.title === 'Hipoterapia' && (
+            <div className="space-y-4">
+              <Card className="border-[#B8956A] bg-[#B8956A]/5">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Sessão de Hipoterapia</h3>
+                  <p className="text-sm text-stone-600 mb-4">Terapia assistida por cavalos com profissionais especializados</p>
+                  <p className="text-2xl font-bold text-[#B8956A]">50€<span className="text-sm text-stone-500">/sessão</span></p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">Voltar</Button>
             <Button
-              onClick={() => setStep(3)}
-              disabled={!selectedPlan}
+              onClick={() => {
+                if (selectedService?.title === 'Hipoterapia') {
+                  setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
+                  setStep(3);
+                } else {
+                  setStep(3);
+                }
+              }}
+              disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia'}
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
             >
               Continuar
