@@ -543,9 +543,13 @@ export default function NewBookingForm({ user, isBlocked }) {
       
       const lessonsAtTime = lessonsToCheck.filter(l => l.start_time === slot);
       const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+      const fixedStudentsCount = lessonsAtTime.reduce((sum, l) => sum + (l.fixed_students_count || 0), 0);
       
-      // Se já tem 6 pessoas neste horário, não está disponível
-      if (totalBooked >= 6) return false;
+      // Se já tem alunos fixos neste horário, calcular vagas disponíveis
+      const availableSpots = 6 - totalBooked;
+      
+      // Se não há vagas disponíveis, não está disponível
+      if (availableSpots <= 0) return false;
       
       // Se o serviço dura 60 minutos, verificar a meia hora seguinte
       if (serviceDuration === 60) {
