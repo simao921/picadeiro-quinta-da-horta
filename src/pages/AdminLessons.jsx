@@ -315,10 +315,10 @@ export default function AdminLessons() {
                     <Select 
                       value={newLesson.client_email || undefined}
                       onValueChange={(v) => {
-                        const student = allUsers.find(u => u.email === v || u.phone === v);
+                        const student = allUsers.find(u => (u.email && u.email === v) || (u.phone && u.phone === v));
                         setNewLesson({
                           ...newLesson, 
-                          client_email: student?.email || v,
+                          client_email: student?.email || student?.phone || v,
                           client_name: student?.name || ''
                         });
                         setClientSearch('');
@@ -334,10 +334,10 @@ export default function AdminLessons() {
                           </SelectItem>
                         ) : (
                           filteredUsers.map(u => (
-                            <SelectItem key={u.id} value={u.email || u.phone}>
+                            <SelectItem key={u.id} value={(u.email || u.phone || u.id)}>
                               <div className="flex flex-col">
                                 <span className="font-medium">{u.name}</span>
-                                <span className="text-xs text-stone-500">{u.email || u.phone}</span>
+                                <span className="text-xs text-stone-500">{u.email || u.phone || 'Sem contacto'}</span>
                               </div>
                             </SelectItem>
                           ))
