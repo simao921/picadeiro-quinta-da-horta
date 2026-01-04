@@ -156,11 +156,12 @@ export default function FixedStudentsManager() {
       
       // SEMPRE recriar aulas se tiver horários definidos
       if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && updatedStudent.email) {
-        toast.loading('A criar aulas até fim de 2027...');
+        const nextYear = new Date().getFullYear() + 1;
+        toast.loading(`A criar aulas até fim de ${nextYear}...`);
         console.log('Criando aulas para:', updatedStudent);
         await createRecurringLessons(updatedStudent);
         toast.dismiss();
-        toast.success(`Aluno fixo guardado e aulas criadas até fim de 2027!`);
+        toast.success(`Aluno fixo guardado e aulas criadas até ${nextYear}!`);
       } else {
         toast.success('Aluno fixo atualizado!');
       }
@@ -200,20 +201,22 @@ export default function FixedStudentsManager() {
       return;
     }
 
-    console.log(`Criando aulas até fim de 2027 para ${student.full_name} (${student.email})`);
+    console.log(`Criando aulas para ${student.full_name} (${student.email})`);
     console.log('Horários:', student.fixed_schedule);
 
     const today = new Date();
-    const endDate = new Date('2027-12-31');
+    const currentYear = today.getFullYear();
+    const endDate = new Date(currentYear + 1, 11, 31); // Fim do próximo ano
+    console.log(`Criando de ${format(today, 'yyyy-MM-dd')} até ${format(endDate, 'yyyy-MM-dd')}`);
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
     
     let created = 0;
     let updated = 0;
     
-    // Calcular número de semanas até fim de 2027
+    // Calcular número de semanas até a data final
     const weeksDiff = Math.ceil((endDate - today) / (7 * 24 * 60 * 60 * 1000));
     
-    // Criar aulas até fim de 2027
+    // Criar aulas até a data final
     for (let week = 0; week < weeksDiff; week++) {
       for (const schedule of student.fixed_schedule) {
         const targetDay = daysMap[schedule.day];
@@ -226,7 +229,7 @@ export default function FixedStudentsManager() {
         const lessonDate = new Date(today);
         lessonDate.setDate(today.getDate() + daysUntilTarget + (week * 7));
         
-        // Parar se ultrapassar fim de 2027
+        // Parar se ultrapassar a data final
         if (lessonDate > endDate) break;
         
         const dateStr = format(lessonDate, 'yyyy-MM-dd');
