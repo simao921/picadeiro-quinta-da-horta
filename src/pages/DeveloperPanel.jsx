@@ -227,29 +227,49 @@ export default function DeveloperPanel() {
             <p className="text-stone-400 text-sm">Acesso restrito a desenvolvedores</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="dev-password" className="text-stone-300">Senha de Desenvolvedor</Label>
-              <Input
-                id="dev-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                placeholder="Digite a senha"
-                className="bg-stone-900 border-stone-700 text-white font-mono"
-              />
-            </div>
-            <Button 
-              type="button"
-              onClick={handleLogin}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Lock className="w-4 h-4 mr-2" />
-              Entrar
-            </Button>
-            <div className="text-xs text-stone-500 text-center">
-              {user?.role === 'admin' ? 'Admin detectado' : 'Requer acesso de admin'}
-            </div>
+            {!user ? (
+              <>
+                <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <p className="text-sm text-blue-400 text-center">
+                    Por favor, faça login com uma conta de admin
+                  </p>
+                </div>
+                <Button 
+                  type="button"
+                  onClick={() => base44.auth.redirectToLogin(createPageUrl('DeveloperPanel'))}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Login com Google
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="dev-password" className="text-stone-300">Senha de Desenvolvedor</Label>
+                  <Input
+                    id="dev-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                    placeholder="Digite a senha"
+                    className="bg-stone-900 border-stone-700 text-white font-mono"
+                  />
+                </div>
+                <Button 
+                  type="button"
+                  onClick={handleLogin}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Entrar
+                </Button>
+                <div className="text-xs text-stone-500 text-center">
+                  Logado como: {user.email}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
