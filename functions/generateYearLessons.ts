@@ -36,13 +36,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Student has no fixed schedule' }, { status: 400 });
     }
 
-    // Buscar serviço
+    // Buscar serviço - tentar encontrar qualquer serviço relacionado
     const services = await base44.asServiceRole.entities.Service.list();
-    const service = services.find(s => s.title === 'Aulas de Escola') || services[0];
+    console.log('Serviços disponíveis:', services.map(s => ({ id: s.id, title: s.title })));
+    
+    const service = services.find(s => 
+      s.title?.toLowerCase().includes('aula') || 
+      s.title?.toLowerCase().includes('escola') ||
+      s.title?.toLowerCase().includes('equitação')
+    ) || services[0];
 
     if (!service) {
-      return Response.json({ error: 'No service available' }, { status: 404 });
+      return Response.json({ 
+        error: 'No service available', 
+        total_services: services.length 
+      }, { status: 404 });
     }
+    
+    console.log('Serviço selecionado:', service.title);
 
     const today = new Date();
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
