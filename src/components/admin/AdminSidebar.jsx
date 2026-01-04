@@ -11,10 +11,6 @@ import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', page: 'AdminDashboard' },
-  { icon: Brain, label: 'IA Assistente', page: 'AdminAI' },
-  { icon: Mail, label: 'Emails', page: 'AdminEmails' },
-  { icon: Smartphone, label: 'SMS', page: 'AdminSMS' },
-  { icon: Bell, label: 'Notificações IA', page: 'AdminNotifications' },
   { icon: FileText, label: 'Conteúdo', page: 'AdminContent' },
   { icon: Users, label: 'Utilizadores', page: 'AdminUsers' },
   { icon: BarChart3, label: 'Relatórios', page: 'AdminReports' },
