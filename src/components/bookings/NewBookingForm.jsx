@@ -46,7 +46,12 @@ function WeeklyLessonSelector({
       getLessonsForDate(currentDate).then(lessons => {
         setDateLessons(lessons);
         setIsLoadingSlots(false);
+      }).catch(() => {
+        setDateLessons([]);
+        setIsLoadingSlots(false);
       });
+    } else {
+      setDateLessons([]);
     }
   }, [currentDate]);
 
@@ -62,7 +67,7 @@ function WeeklyLessonSelector({
           </span>
           {currentTime && currentDate && (
             <span className="text-[#B8956A] text-sm font-normal bg-[#B8956A]/10 px-3 py-1 rounded-full">
-              {format(currentDate, "EEE dd/MM", { locale: pt })} às {currentTime}
+              {format(new Date(currentDate), "EEE dd/MM", { locale: pt })} às {currentTime}
             </span>
           )}
         </CardTitle>
@@ -92,7 +97,7 @@ function WeeklyLessonSelector({
                 // Verificar se o dia já foi selecionado em outro calendário
                 return selectedDates.some((selectedDate, i) => {
                   if (i === index || !selectedDate) return false;
-                  return format(selectedDate, 'yyyy-MM-dd') === dateStr;
+                  return format(new Date(selectedDate), 'yyyy-MM-dd') === dateStr;
                 });
               }}
               className="rounded-md border-0 mx-auto"
@@ -500,13 +505,15 @@ export default function NewBookingForm({ user, isBlocked }) {
   });
 
   const getAvailableSlots = (date = selectedDate, dateLessons = null) => {
+    if (!date) return [];
+    
     const dayOfWeek = date.getDay();
     const timeSlots = dayOfWeek === 6 ? saturdayTimeSlots : weekdayTimeSlots;
     
     if (!selectedService) return timeSlots;
     
     // Verificar se o dia está bloqueado
-    const dateStr = format(date, 'yyyy-MM-dd');
+    const dateStr = format(new Date(date), 'yyyy-MM-dd');
     const dayBlocked = blockedSlots.some(b => b.date === dateStr && !b.time_slot);
     if (dayBlocked) return [];
     
