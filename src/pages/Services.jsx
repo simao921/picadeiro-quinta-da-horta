@@ -205,12 +205,6 @@ export default function Services() {
                                 <span className="font-semibold text-sm sm:text-base text-[#2C3E1F]">{service.price}€</span>
                               </div>
                             )}
-                            {service.duration && (
-                              <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#C9A961]/10 rounded-lg">
-                                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C9A961]" />
-                                <span className="text-sm sm:text-base text-[#2C3E1F]">{service.duration} min</span>
-                              </div>
-                            )}
                             {service.max_participants && (
                               <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-stone-100 rounded-lg">
                                 <Users2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600" />
