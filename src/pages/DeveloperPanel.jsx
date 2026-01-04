@@ -77,7 +77,7 @@ export default function DeveloperPanel() {
 
   const handleLogin = () => {
     // Senha de desenvolvedor (pode ser alterada)
-    if (password === 'dev@2024') {
+    if (password === 'DevSimão26!') {
       localStorage.setItem('dev_panel_access', 'granted');
       setIsAuthenticated(true);
       toast.success('Acesso de desenvolvedor concedido!');
