@@ -13,39 +13,56 @@ import { toast } from 'sonner';
 
 export default function AdminContent() {
   const queryClient = useQueryClient();
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState({});
 
-  // Home Page
-  const [homeHeroTitle, setHomeHeroTitle] = useState('Bem-vindo ao Picadeiro Quinta da Horta');
-  const [homeHeroSubtitle, setHomeHeroSubtitle] = useState('Centro Equestre de Excelência em Alcochete');
-  const [homeHeroImage, setHomeHeroImage] = useState('https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1920&q=80');
-  const [homeCtaText, setHomeCtaText] = useState('Marcar Aula Experimental');
+  // Fetch content blocks
+  const { data: contentBlocks = [], isLoading } = useQuery({
+    queryKey: ['content-blocks'],
+    queryFn: () => base44.entities.ContentBlock.list(),
+  });
 
-  // Services Page
-  const [servicesTitle, setServicesTitle] = useState('Os Nossos Serviços');
-  const [servicesSubtitle, setServicesSubtitle] = useState('Experiências únicas de equitação para todos os níveis');
-
-  // Contact Page
-  const [contactTitle, setContactTitle] = useState('Contacte-nos');
-  const [contactSubtitle, setContactSubtitle] = useState('Estamos aqui para ajudar');
-  const [contactAddress, setContactAddress] = useState('Rua das Hortas 83 – Fonte da Senhora, Alcochete');
-  const [contactPhone, setContactPhone] = useState('+351 932 111 786');
-  const [contactEmail, setContactEmail] = useState('picadeiroquintadahortagf@gmail.com');
-
-  // Shop Page
-  const [shopTitle, setShopTitle] = useState('Equipamento Premium');
-  const [shopSubtitle, setShopSubtitle] = useState('Descubra a nossa seleção de equipamento e acessórios de alta qualidade');
-
-  const handleSave = async (section) => {
-    setSaving(true);
-    try {
-      // Simulate save - in a real app, this would save to database
-      await new Promise(resolve => setTimeout(resolve, 800));
+  // Create/update mutation
+  const saveMutation = useMutation({
+    mutationFn: async ({ page, blockId, content }) => {
+      const existing = contentBlocks.find(
+        b => b.page === page && b.block_id === blockId
+      );
+      
+      if (existing) {
+        return base44.entities.ContentBlock.update(existing.id, { content });
+      } else {
+        return base44.entities.ContentBlock.create({
+          page,
+          block_id: blockId,
+          content_type: 'text',
+          content,
+          is_active: true,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['content-blocks'] });
       toast.success('Conteúdo guardado com sucesso!');
-    } catch (error) {
+    },
+    onError: () => {
       toast.error('Erro ao guardar conteúdo');
+    },
+  });
+
+  // Get content helper
+  const getContent = (page, blockId, defaultValue = '') => {
+    const block = contentBlocks.find(
+      b => b.page === page && b.block_id === blockId
+    );
+    return block?.content || defaultValue;
+  };
+
+  const handleSave = async (page, blockId, content) => {
+    setSaving({ ...saving, [`${page}-${blockId}`]: true });
+    try {
+      await saveMutation.mutateAsync({ page, blockId, content });
     } finally {
-      setSaving(false);
+      setSaving({ ...saving, [`${page}-${blockId}`]: false });
     }
   };
 
@@ -62,20 +79,33 @@ export default function AdminContent() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <AdminLayout currentPage="AdminContent">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#B8956A]" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout currentPage="AdminContent">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-[#2C3E1F]">Gestão de Conteúdo</h1>
-          <p className="text-stone-500">Edite o conteúdo das páginas do site diretamente</p>
+          <p className="text-stone-500">Edite TODO o conteúdo do site - alterações são guardadas na base de dados</p>
         </div>
 
         <Tabs defaultValue="home">
           <TabsList className="bg-white border shadow-sm">
-            <TabsTrigger value="home">Página Inicial</TabsTrigger>
-            <TabsTrigger value="services">Serviços</TabsTrigger>
-            <TabsTrigger value="shop">Loja</TabsTrigger>
-            <TabsTrigger value="contact">Contactos</TabsTrigger>
+            <TabsTrigger value="home">🏠 Página Inicial</TabsTrigger>
+            <TabsTrigger value="about">ℹ️ Sobre Nós</TabsTrigger>
+            <TabsTrigger value="services">💼 Serviços</TabsTrigger>
+            <TabsTrigger value="shop">🛒 Loja</TabsTrigger>
+            <TabsTrigger value="gallery">📸 Galeria</TabsTrigger>
+            <TabsTrigger value="contact">📞 Contactos</TabsTrigger>
+            <TabsTrigger value="footer">📄 Footer</TabsTrigger>
           </TabsList>
 
           {/* HOME PAGE */}
@@ -89,73 +119,173 @@ export default function AdminContent() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Hero Section */}
-                <div className="space-y-4 p-4 bg-stone-50 rounded-lg">
-                  <h3 className="font-semibold text-lg">Secção Principal (Hero)</h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Título Principal</Label>
-                    <Input
-                      value={homeHeroTitle}
-                      onChange={(e) => setHomeHeroTitle(e.target.value)}
-                      placeholder="Título grande no topo"
-                    />
-                  </div>
+                <ContentSection
+                  title="🎯 Hero Section"
+                  fields={[
+                    {
+                      label: 'Badge (Centro Equestre de...)',
+                      page: 'Home',
+                      blockId: 'hero_badge',
+                      defaultValue: 'Centro Equestre de Excelência',
+                    },
+                    {
+                      label: 'Título Principal',
+                      page: 'Home',
+                      blockId: 'hero_title',
+                      defaultValue: 'Picadeiro Quinta da Horta',
+                    },
+                    {
+                      label: 'Subtítulo/Descrição',
+                      page: 'Home',
+                      blockId: 'hero_subtitle',
+                      defaultValue: 'Descubra a arte da equitação com o Bi-Campeão do Mundo Gilberto Filipe',
+                      isTextarea: true,
+                    },
+                    {
+                      label: 'Texto Botão Principal',
+                      page: 'Home',
+                      blockId: 'hero_cta_primary',
+                      defaultValue: 'Reservar Aula',
+                    },
+                    {
+                      label: 'Texto Botão Secundário',
+                      page: 'Home',
+                      blockId: 'hero_cta_secondary',
+                      defaultValue: 'Conhecer Serviços',
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
 
-                  <div className="space-y-2">
-                    <Label>Subtítulo</Label>
-                    <Input
-                      value={homeHeroSubtitle}
-                      onChange={(e) => setHomeHeroSubtitle(e.target.value)}
-                      placeholder="Texto secundário"
-                    />
-                  </div>
+                {/* Stats Section */}
+                <ContentSection
+                  title="📊 Estatísticas"
+                  fields={[
+                    {
+                      label: 'Estatística 1 (Anos de Experiência)',
+                      page: 'Home',
+                      blockId: 'stat_1',
+                      defaultValue: 'Anos de Experiência',
+                    },
+                    {
+                      label: 'Estatística 2 (Alunos Formados)',
+                      page: 'Home',
+                      blockId: 'stat_2',
+                      defaultValue: 'Alunos Formados',
+                    },
+                    {
+                      label: 'Estatística 3 (Campeão Mundial)',
+                      page: 'Home',
+                      blockId: 'stat_3',
+                      defaultValue: 'Bi-Campeão Mundial',
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
 
-                  <div className="space-y-2">
-                    <Label>Imagem de Fundo</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={homeHeroImage}
-                        onChange={(e) => setHomeHeroImage(e.target.value)}
-                        placeholder="URL da imagem"
-                      />
-                      <label className="cursor-pointer">
-                        <Button type="button" variant="outline" asChild>
-                          <div>
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload
-                          </div>
-                        </Button>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleImageUpload(e, setHomeHeroImage)}
-                        />
-                      </label>
-                    </div>
-                    {homeHeroImage && (
-                      <img src={homeHeroImage} alt="Preview" className="h-32 w-full object-cover rounded mt-2" />
-                    )}
-                  </div>
+                {/* Services Preview */}
+                <ContentSection
+                  title="🎪 Preview de Serviços"
+                  fields={[
+                    {
+                      label: 'Badge',
+                      page: 'Home',
+                      blockId: 'services_badge',
+                      defaultValue: 'Os Nossos Serviços',
+                    },
+                    {
+                      label: 'Título',
+                      page: 'Home',
+                      blockId: 'services_title',
+                      defaultValue: 'Experiências Equestres de Excelência',
+                    },
+                    {
+                      label: 'Subtítulo',
+                      page: 'Home',
+                      blockId: 'services_subtitle',
+                      defaultValue: 'Desde iniciantes a cavaleiros experientes...',
+                      isTextarea: true,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
 
-                  <div className="space-y-2">
-                    <Label>Texto do Botão Principal</Label>
-                    <Input
-                      value={homeCtaText}
-                      onChange={(e) => setHomeCtaText(e.target.value)}
-                      placeholder="Ex: Marcar Aula"
-                    />
-                  </div>
-                </div>
+                {/* CTA Section */}
+                <ContentSection
+                  title="🎯 Call-to-Action Final"
+                  fields={[
+                    {
+                      label: 'Título',
+                      page: 'Home',
+                      blockId: 'cta_title',
+                      defaultValue: 'Pronto para Começar a Sua Jornada Equestre?',
+                    },
+                    {
+                      label: 'Descrição',
+                      page: 'Home',
+                      blockId: 'cta_description',
+                      defaultValue: 'Dê o primeiro passo para uma experiência única com cavalos...',
+                      isTextarea: true,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <Button
-                  onClick={() => handleSave('home')}
-                  disabled={saving}
-                  className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                  Guardar Alterações
-                </Button>
+          {/* ABOUT PAGE */}
+          <TabsContent value="about">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Secção "Sobre Nós" (Home)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ContentSection
+                  title="ℹ️ Sobre o Picadeiro"
+                  fields={[
+                    {
+                      label: 'Badge',
+                      page: 'Home',
+                      blockId: 'about_badge',
+                      defaultValue: 'Sobre Nós',
+                    },
+                    {
+                      label: 'Título',
+                      page: 'Home',
+                      blockId: 'about_title',
+                      defaultValue: 'Uma Tradição de Excelência Equestre',
+                    },
+                    {
+                      label: 'Parágrafo 1',
+                      page: 'Home',
+                      blockId: 'about_p1',
+                      defaultValue: 'O Picadeiro Quinta da Horta é mais do que um centro equestre...',
+                      isTextarea: true,
+                    },
+                    {
+                      label: 'Parágrafo 2',
+                      page: 'Home',
+                      blockId: 'about_p2',
+                      defaultValue: 'Sob a orientação do Bi-Campeão do Mundo Gilberto Filipe...',
+                      isTextarea: true,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -166,45 +296,36 @@ export default function AdminContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Conteúdo da Página de Serviços
+                  Página de Serviços
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4 p-4 bg-stone-50 rounded-lg">
-                  <h3 className="font-semibold text-lg">Cabeçalho</h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Título da Página</Label>
-                    <Input
-                      value={servicesTitle}
-                      onChange={(e) => setServicesTitle(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Subtítulo</Label>
-                    <Textarea
-                      value={servicesSubtitle}
-                      onChange={(e) => setServicesSubtitle(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                </div>
-
+                <ContentSection
+                  title="💼 Cabeçalho Serviços"
+                  fields={[
+                    {
+                      label: 'Título Principal',
+                      page: 'Services',
+                      blockId: 'page_title',
+                      defaultValue: 'Nossos Serviços',
+                    },
+                    {
+                      label: 'Subtítulo',
+                      page: 'Services',
+                      blockId: 'page_subtitle',
+                      defaultValue: 'Programas personalizados para todas as idades',
+                      isTextarea: true,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    💡 <strong>Dica:</strong> Os serviços individuais são geridos na secção "Serviços" do painel admin
+                    💡 <strong>Nota:</strong> Os serviços individuais são geridos em "Serviços" no menu lateral
                   </p>
                 </div>
-
-                <Button
-                  onClick={() => handleSave('services')}
-                  disabled={saving}
-                  className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                  Guardar Alterações
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -215,45 +336,72 @@ export default function AdminContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Conteúdo da Página da Loja
+                  Página da Loja
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4 p-4 bg-stone-50 rounded-lg">
-                  <h3 className="font-semibold text-lg">Cabeçalho</h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Título da Loja</Label>
-                    <Input
-                      value={shopTitle}
-                      onChange={(e) => setShopTitle(e.target.value)}
-                    />
-                  </div>
+                <ContentSection
+                  title="🛒 Cabeçalho Loja"
+                  fields={[
+                    {
+                      label: 'Título',
+                      page: 'Shop',
+                      blockId: 'page_title',
+                      defaultValue: 'Loja',
+                    },
+                    {
+                      label: 'Subtítulo',
+                      page: 'Shop',
+                      blockId: 'page_subtitle',
+                      defaultValue: 'Equipamento e acessórios premium',
+                      isTextarea: true,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                  <div className="space-y-2">
-                    <Label>Descrição</Label>
-                    <Textarea
-                      value={shopSubtitle}
-                      onChange={(e) => setShopSubtitle(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                </div>
-
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    💡 <strong>Dica:</strong> Os produtos são geridos na secção "Loja" do painel admin
-                  </p>
-                </div>
-
-                <Button
-                  onClick={() => handleSave('shop')}
-                  disabled={saving}
-                  className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                  Guardar Alterações
-                </Button>
+          {/* GALLERY PAGE */}
+          <TabsContent value="gallery">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Página da Galeria
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ContentSection
+                  title="📸 Cabeçalho Galeria"
+                  fields={[
+                    {
+                      label: 'Badge',
+                      page: 'Gallery',
+                      blockId: 'page_badge',
+                      defaultValue: 'Nossa Galeria',
+                    },
+                    {
+                      label: 'Título',
+                      page: 'Gallery',
+                      blockId: 'page_title',
+                      defaultValue: 'Momentos Inesquecíveis',
+                    },
+                    {
+                      label: 'Subtítulo',
+                      page: 'Gallery',
+                      blockId: 'page_subtitle',
+                      defaultValue: 'Descubra os melhores momentos do nosso centro equestre',
+                      isTextarea: true,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -264,74 +412,169 @@ export default function AdminContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Conteúdo da Página de Contactos
+                  Página de Contactos
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4 p-4 bg-stone-50 rounded-lg">
-                  <h3 className="font-semibold text-lg">Cabeçalho</h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Título</Label>
-                    <Input
-                      value={contactTitle}
-                      onChange={(e) => setContactTitle(e.target.value)}
-                    />
-                  </div>
+                <ContentSection
+                  title="📞 Cabeçalho"
+                  fields={[
+                    {
+                      label: 'Título',
+                      page: 'Contact',
+                      blockId: 'page_title',
+                      defaultValue: 'Contactos',
+                    },
+                    {
+                      label: 'Subtítulo',
+                      page: 'Contact',
+                      blockId: 'page_subtitle',
+                      defaultValue: 'Entre em contacto connosco',
+                      isTextarea: true,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
+                <ContentSection
+                  title="📍 Informações"
+                  fields={[
+                    {
+                      label: 'Morada',
+                      page: 'Contact',
+                      blockId: 'address',
+                      defaultValue: 'Rua das Hortas - Picadeiro Quinta da Horta, 2890-106 Alcochete',
+                      isTextarea: true,
+                    },
+                    {
+                      label: 'Telefone',
+                      page: 'Contact',
+                      blockId: 'phone',
+                      defaultValue: '+351 932 111 786',
+                    },
+                    {
+                      label: 'Email',
+                      page: 'Contact',
+                      blockId: 'email',
+                      defaultValue: 'picadeiroquintadahortagf@gmail.com',
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                  <div className="space-y-2">
-                    <Label>Subtítulo</Label>
-                    <Input
-                      value={contactSubtitle}
-                      onChange={(e) => setContactSubtitle(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4 p-4 bg-stone-50 rounded-lg">
-                  <h3 className="font-semibold text-lg">Informações de Contacto</h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Morada</Label>
-                    <Textarea
-                      value={contactAddress}
-                      onChange={(e) => setContactAddress(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Telefone</Label>
-                      <Input
-                        value={contactPhone}
-                        onChange={(e) => setContactPhone(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Email</Label>
-                      <Input
-                        value={contactEmail}
-                        onChange={(e) => setContactEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={() => handleSave('contact')}
-                  disabled={saving}
-                  className="w-full bg-[#B8956A] hover:bg-[#8B7355] text-white"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                  Guardar Alterações
-                </Button>
+          {/* FOOTER */}
+          <TabsContent value="footer">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Footer do Site
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ContentSection
+                  title="📄 Conteúdo do Footer"
+                  fields={[
+                    {
+                      label: 'Descrição do Picadeiro',
+                      page: 'Footer',
+                      blockId: 'description',
+                      defaultValue: 'Centro equestre de excelência em Alcochete',
+                      isTextarea: true,
+                    },
+                    {
+                      label: 'Copyright',
+                      page: 'Footer',
+                      blockId: 'copyright',
+                      defaultValue: `© ${new Date().getFullYear()} Picadeiro Quinta da Horta`,
+                    },
+                  ]}
+                  getContent={getContent}
+                  handleSave={handleSave}
+                  saving={saving}
+                />
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
+  );
+}
+
+// Reusable content section component
+function ContentSection({ title, fields, getContent, handleSave, saving }) {
+  const [values, setValues] = React.useState({});
+
+  React.useEffect(() => {
+    const initialValues = {};
+    fields.forEach(field => {
+      initialValues[field.blockId] = getContent(field.page, field.blockId, field.defaultValue);
+    });
+    setValues(initialValues);
+  }, [fields, getContent]);
+
+  const handleFieldChange = (blockId, value) => {
+    setValues({ ...values, [blockId]: value });
+  };
+
+  const handleSaveSection = async () => {
+    for (const field of fields) {
+      await handleSave(field.page, field.blockId, values[field.blockId] || field.defaultValue);
+    }
+  };
+
+  const isSaving = fields.some(f => saving[`${f.page}-${f.blockId}`]);
+
+  return (
+    <div className="space-y-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
+      <h3 className="font-semibold text-lg text-[#2C3E1F]">{title}</h3>
+      
+      {fields.map((field) => (
+        <div key={field.blockId} className="space-y-2">
+          <Label className="text-sm font-medium">{field.label}</Label>
+          {field.isTextarea ? (
+            <Textarea
+              value={values[field.blockId] || ''}
+              onChange={(e) => handleFieldChange(field.blockId, e.target.value)}
+              placeholder={field.defaultValue}
+              rows={3}
+              className="w-full"
+            />
+          ) : (
+            <Input
+              value={values[field.blockId] || ''}
+              onChange={(e) => handleFieldChange(field.blockId, e.target.value)}
+              placeholder={field.defaultValue}
+              className="w-full"
+            />
+          )}
+        </div>
+      ))}
+
+      <Button
+        onClick={handleSaveSection}
+        disabled={isSaving}
+        className="w-full bg-gradient-to-r from-[#B8956A] to-[#8B7355] hover:from-[#8B7355] hover:to-[#6B5845] text-white font-semibold shadow-md hover:shadow-xl transition-all duration-300"
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            A guardar...
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            Guardar {title}
+          </>
+        )}
+      </Button>
+    </div>
   );
 }

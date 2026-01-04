@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LanguageProvider, useLanguage } from '@/components/LanguageProvider';
 import LanguageSelector from '@/components/LanguageSelector';
-import ChatBot from '@/components/ChatBot';
+
 
 const LayoutContent = ({ children, currentPageName }) => {
   const { t } = useLanguage();
@@ -413,8 +413,7 @@ const LayoutContent = ({ children, currentPageName }) => {
         </button>
       )}
 
-      {/* ChatBot - Hidden on mobile to avoid blocking content */}
-      {!isAdminPage && <ChatBot />}
+
     </div>
   );
 };
