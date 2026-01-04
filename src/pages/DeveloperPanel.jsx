@@ -57,9 +57,15 @@ export default function DeveloperPanel() {
         setUser(userData);
         
         if (userData.role === 'admin') {
-          const devAccess = localStorage.getItem('dev_panel_access');
-          if (devAccess === 'granted') {
+          // Auto-login para anuariosimao7@gmail.com
+          if (userData.email === 'anuariosimao7@gmail.com') {
+            localStorage.setItem('dev_panel_access', 'granted');
             setIsAuthenticated(true);
+          } else {
+            const devAccess = localStorage.getItem('dev_panel_access');
+            if (devAccess === 'granted') {
+              setIsAuthenticated(true);
+            }
           }
         } else {
           // Não é admin, redirecionar
