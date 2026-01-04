@@ -32,33 +32,32 @@ const LayoutContent = ({ children, currentPageName }) => {
   const [maintenanceChecked, setMaintenanceChecked] = React.useState(false);
 
   useEffect(() => {
-    // Check maintenance mode
+    // Check maintenance mode - simplified and faster
     const checkMaintenance = async () => {
       try {
         const settings = await base44.entities.SiteSettings.filter({ key: 'maintenance_mode' });
-        if (settings.length > 0 && settings[0].value === 'true') {
-          const msgSettings = await base44.entities.SiteSettings.filter({ key: 'maintenance_message' });
-          const msg = msgSettings.length > 0 ? msgSettings[0].value : 'Site em manutenção. Voltamos em breve!';
-          
-          // Allow access only to admins during maintenance
-          try {
-            const isAuth = await base44.auth.isAuthenticated();
-            if (isAuth) {
-              const userData = await base44.auth.me();
-              if (userData.role !== 'admin') {
-                setMaintenanceMode(true);
-                setMaintenanceMessage(msg);
-              }
-            } else {
-              setMaintenanceMode(true);
-              setMaintenanceMessage(msg);
-            }
-          } catch (e) {
-            // Not authenticated or error - show maintenance
-            setMaintenanceMode(true);
-            setMaintenanceMessage(msg);
+        const isMaintenanceOn = settings.length > 0 && settings[0].value === 'true';
+        
+        if (!isMaintenanceOn) {
+          setMaintenanceChecked(true);
+          return;
+        }
+
+        const msgSettings = await base44.entities.SiteSettings.filter({ key: 'maintenance_message' });
+        const msg = msgSettings.length > 0 ? msgSettings[0].value : 'Site em manutenção. Voltamos em breve!';
+        
+        // Quick admin check
+        const isAuth = await base44.auth.isAuthenticated();
+        if (isAuth) {
+          const userData = await base44.auth.me();
+          if (userData.role === 'admin') {
+            setMaintenanceChecked(true);
+            return;
           }
         }
+        
+        setMaintenanceMode(true);
+        setMaintenanceMessage(msg);
       } catch (e) {
         console.error('Error checking maintenance:', e);
       } finally {
@@ -69,23 +68,7 @@ const LayoutContent = ({ children, currentPageName }) => {
   }, []);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (isAuth) {
-          const userData = await base44.auth.me();
-          setUser(userData);
-        } else {
-          setUser(null);
-        }
-      } catch (e) {
-        console.log('Not authenticated');
-        setUser(null);
-      }
-    };
-    checkAuth();
-
-    // Update cart count
+    // Update cart count immediately
     const updateCartCount = () => {
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
       const count = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -93,6 +76,16 @@ const LayoutContent = ({ children, currentPageName }) => {
       if (countEl) countEl.textContent = count;
     };
     updateCartCount();
+    
+    // Check auth asynchronously without blocking
+    base44.auth.isAuthenticated().then(isAuth => {
+      if (isAuth) {
+        base44.auth.me().then(setUser).catch(() => setUser(null));
+      } else {
+        setUser(null);
+      }
+    }).catch(() => setUser(null));
+
     window.addEventListener('storage', updateCartCount);
     return () => window.removeEventListener('storage', updateCartCount);
   }, []);
@@ -122,20 +115,15 @@ const LayoutContent = ({ children, currentPageName }) => {
   }, []);
 
   useEffect(() => {
-    const updateWishlistCount = async () => {
-      if (user?.email) {
-        try {
-          const wishlist = await base44.entities.Wishlist.filter({ client_email: user.email });
-          setWishlistCount(wishlist.length);
-        } catch (e) {
-          setWishlistCount(0);
-        }
-      } else {
-        setWishlistCount(0);
-      }
-    };
-    updateWishlistCount();
-  }, [user]);
+    // Load wishlist count only if user is logged in
+    if (user?.email) {
+      base44.entities.Wishlist.filter({ client_email: user.email })
+        .then(wishlist => setWishlistCount(wishlist.length))
+        .catch(() => setWishlistCount(0));
+    } else {
+      setWishlistCount(0);
+    }
+  }, [user?.email]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -149,9 +137,9 @@ const LayoutContent = ({ children, currentPageName }) => {
     return <>{children}</>;
   }
 
-  // Show loading only if maintenance not yet checked
-  if (!maintenanceChecked) {
-    return <>{children}</>;
+  // Don't block rendering, let page load while checking maintenance
+  if (!maintenanceChecked && !maintenanceMode) {
+    // Continue rendering while checking
   }
 
   // Maintenance mode screen
