@@ -224,8 +224,9 @@ export default function NewBookingForm({ user, isBlocked }) {
 
   // Buscar aulas para cada data selecionada no plano semanal
   const getLessonsForDate = async (date) => {
+    if (!date) return [];
     try {
-      const dateStr = format(date, 'yyyy-MM-dd');
+      const dateStr = format(new Date(date), 'yyyy-MM-dd');
       return await base44.entities.Lesson.filter({ date: dateStr });
     } catch (e) {
       return [];
@@ -1200,11 +1201,11 @@ export default function NewBookingForm({ user, isBlocked }) {
                   <div className="py-3 border-b border-stone-200">
                     <p className="text-stone-600 mb-3">Horários Selecionados</p>
                     <div className="space-y-2">
-                      {selectedDates.map((date, index) => selectedTimes[index] && (
+                      {selectedDates.map((date, index) => selectedTimes[index] && date && (
                         <div key={index} className="flex items-center justify-between p-2 bg-stone-50 rounded">
                           <span className="text-sm font-medium text-[#2C3E1F]">Aula {index + 1}</span>
                           <span className="text-sm text-stone-700">
-                            {format(date, "EEEE, d 'de' MMMM", { locale: pt })} às {selectedTimes[index]}
+                            {format(new Date(date), "EEEE, d 'de' MMMM", { locale: pt })} às {selectedTimes[index]}
                           </span>
                         </div>
                       ))}
@@ -1215,7 +1216,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     <div className="flex justify-between py-3 border-b border-stone-200">
                       <span className="text-stone-600">Data</span>
                       <span className="font-semibold text-[#2C3E1F]">
-                        {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
+                        {selectedDate ? format(new Date(selectedDate), "d 'de' MMMM 'de' yyyy", { locale: pt }) : '-'}
                       </span>
                     </div>
                     <div className="flex justify-between py-3 border-b border-stone-200">
