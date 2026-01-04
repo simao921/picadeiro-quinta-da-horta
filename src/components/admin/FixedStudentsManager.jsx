@@ -156,11 +156,11 @@ export default function FixedStudentsManager() {
       
       // SEMPRE recriar aulas se tiver horários definidos
       if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && updatedStudent.email) {
-        toast.loading('A criar 52 semanas de aulas automáticas...');
+        toast.loading('A criar aulas até fim de 2027...');
         console.log('Criando aulas para:', updatedStudent);
         await createRecurringLessons(updatedStudent);
         toast.dismiss();
-        toast.success(`Aluno fixo guardado e ${updatedStudent.fixed_schedule.length * 52} aulas criadas!`);
+        toast.success(`Aluno fixo guardado e aulas criadas até fim de 2027!`);
       } else {
         toast.success('Aluno fixo atualizado!');
       }
@@ -200,17 +200,21 @@ export default function FixedStudentsManager() {
       return;
     }
 
-    console.log(`Criando 52 semanas de aulas para ${student.full_name} (${student.email})`);
+    console.log(`Criando aulas até fim de 2027 para ${student.full_name} (${student.email})`);
     console.log('Horários:', student.fixed_schedule);
 
     const today = new Date();
+    const endDate = new Date('2027-12-31');
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
     
     let created = 0;
     let updated = 0;
     
-    // Criar aulas para as próximas 52 semanas (1 ano)
-    for (let week = 0; week < 52; week++) {
+    // Calcular número de semanas até fim de 2027
+    const weeksDiff = Math.ceil((endDate - today) / (7 * 24 * 60 * 60 * 1000));
+    
+    // Criar aulas até fim de 2027
+    for (let week = 0; week < weeksDiff; week++) {
       for (const schedule of student.fixed_schedule) {
         const targetDay = daysMap[schedule.day];
         const currentDay = today.getDay();
@@ -221,6 +225,9 @@ export default function FixedStudentsManager() {
         
         const lessonDate = new Date(today);
         lessonDate.setDate(today.getDate() + daysUntilTarget + (week * 7));
+        
+        // Parar se ultrapassar fim de 2027
+        if (lessonDate > endDate) break;
         
         const dateStr = format(lessonDate, 'yyyy-MM-dd');
         
