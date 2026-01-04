@@ -410,6 +410,12 @@ export default function AdminLessons() {
     u.phone?.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
+  const isLessonCompleted = (lesson) => {
+    if (!lesson?.date || !lesson?.end_time) return false;
+    const lessonDateTime = new Date(`${lesson.date}T${lesson.end_time}:00`);
+    return lessonDateTime < new Date();
+  };
+
   return (
     <AdminLayout currentPage="AdminLessons">
       <div className="space-y-6">
@@ -761,8 +767,10 @@ export default function AdminLessons() {
                     const lessonBookings = getLessonBookings(lesson.id);
                     const hasPending = lessonBookings.some(b => b.status === 'pending');
                     const isFull = (lesson.booked_spots || 0) >= 6;
+                    const isCompleted = isLessonCompleted(lesson);
                     return (
                       <Card key={lesson.id} className={`border-l-4 shadow-md hover:shadow-lg transition-all ${
+                        isCompleted ? 'border-l-green-500 bg-green-50/30' :
                         hasPending ? 'border-l-amber-500 bg-amber-50/50' : 
                         isFull ? 'border-l-red-500 bg-red-50/30' : 
                         'border-l-[#4B6382] bg-gradient-to-br from-[#4B6382]/5 to-[#4B6382]/15 hover:from-[#4B6382]/10 hover:to-[#4B6382]/20'
@@ -785,7 +793,13 @@ export default function AdminLessons() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              {hasPending && (
+                              {isCompleted && (
+                                <Badge className="bg-green-600 text-white shadow-lg">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Efetuada
+                                </Badge>
+                              )}
+                              {hasPending && !isCompleted && (
                                 <Badge className="bg-amber-500 text-white animate-pulse shadow-lg">
                                   <AlertCircle className="w-3 h-3 mr-1" />
                                   Pendente
