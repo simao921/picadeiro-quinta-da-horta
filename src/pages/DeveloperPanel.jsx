@@ -59,13 +59,16 @@ export default function DeveloperPanel() {
         if (userData.role === 'admin') {
           // Auto-login para anuariosimao7@gmail.com
           if (userData.email === 'anuariosimao7@gmail.com') {
+            console.log('Auto-login para anuariosimao7@gmail.com');
             localStorage.setItem('dev_panel_access', 'granted');
             setIsAuthenticated(true);
-          } else {
-            const devAccess = localStorage.getItem('dev_panel_access');
-            if (devAccess === 'granted') {
-              setIsAuthenticated(true);
-            }
+            return; // Importante: retornar aqui
+          }
+          
+          // Para outros admins, verificar se já tem acesso concedido
+          const devAccess = localStorage.getItem('dev_panel_access');
+          if (devAccess === 'granted') {
+            setIsAuthenticated(true);
           }
         } else {
           // Não é admin, redirecionar
