@@ -1100,28 +1100,37 @@ export default function NewBookingForm({ user, isBlocked }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-3 gap-2">
-                    {getAvailableSlots().map((slot) => (
-                      <Button
-                        key={slot}
-                        variant={selectedTime === slot ? 'default' : 'outline'}
-                        size="sm"
-                        className={selectedTime === slot 
-                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md' 
-                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all'
-                        }
-                        onClick={() => setSelectedTime(slot)}
-                      >
-                        {slot}
-                      </Button>
-                    ))}
-                  </div>
-                  {getAvailableSlots().length === 0 && (
+                  {!selectedDate ? (
                     <div className="text-center py-8 text-stone-500">
-                      <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
-                      <p>Não há horários disponíveis para esta data.</p>
-                      <p className="text-sm mt-2">Por favor selecione outra data.</p>
+                      <CalendarDays className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+                      <p>Por favor selecione uma data primeiro.</p>
                     </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-3 gap-2">
+                        {getAvailableSlots().map((slot) => (
+                          <Button
+                            key={slot}
+                            variant={selectedTime === slot ? 'default' : 'outline'}
+                            size="sm"
+                            className={selectedTime === slot 
+                              ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md' 
+                              : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all'
+                            }
+                            onClick={() => setSelectedTime(slot)}
+                          >
+                            {slot}
+                          </Button>
+                        ))}
+                      </div>
+                      {getAvailableSlots().length === 0 && (
+                        <div className="text-center py-8 text-stone-500">
+                          <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+                          <p>Não há horários disponíveis para esta data.</p>
+                          <p className="text-sm mt-2">Por favor selecione outra data.</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
