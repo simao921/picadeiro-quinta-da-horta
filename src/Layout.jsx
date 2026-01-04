@@ -67,13 +67,13 @@ const LayoutContent = ({ children, currentPageName }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Control + Shift + 6 - Monitor/Owner Login
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '6') {
+      // Control + Shift + 6 - Monitor/Owner Login (funciona em PT-PT)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === '6' || e.code === 'Digit6')) {
         e.preventDefault();
         window.location.href = createPageUrl('StaffLogin');
       }
-      // Control + Shift + 9 - Developer Login
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
+      // Control + Shift + 9 - Developer Login (funciona em PT-PT)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === '9' || e.code === 'Digit9')) {
         e.preventDefault();
         window.location.href = createPageUrl('DeveloperLogin');
       }
