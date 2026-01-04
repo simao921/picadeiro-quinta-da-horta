@@ -51,16 +51,45 @@ export default function AdminAI() {
   const analyzeScheduleOptimization = async () => {
     setAnalyzing(true);
     try {
-      const response = await base44.functions.invoke('analyzeSchedules', {});
+      const analysis = await base44.integrations.Core.InvokeLLM({
+        prompt: `
+          Analisa os horários e reservas de um centro equestre para otimização:
+          
+          **Aulas Agendadas:**
+          ${JSON.stringify(lessons, null, 2)}
+          
+          **Reservas:**
+          ${JSON.stringify(bookings, null, 2)}
+          
+          Fornece uma análise completa com:
+          1. Melhores horários (dias e horas) com maior procura
+          2. Padrões de ocupação (quais dias/horários têm mais/menos reservas)
+          3. Recomendações para aumentar a ocupação em horários vazios
+          4. Dicas de otimização para maximizar receitas
+        `,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            best_time_slots: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  day: { type: "string" },
+                  time: { type: "string" },
+                  reason: { type: "string" }
+                }
+              }
+            },
+            patterns: { type: "string" },
+            recommendations: { type: "array", items: { type: "string" } },
+            optimization_tips: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
 
-      console.log('Response:', response.data);
-
-      if (response.data.success) {
-        setSuggestions(prev => ({ ...prev, schedule: response.data.analysis }));
-        toast.success('Análise de horários concluída! ✅');
-      } else {
-        throw new Error(response.data.error);
-      }
+      setSuggestions(prev => ({ ...prev, schedule: analysis }));
+      toast.success('Análise de horários concluída! ✅');
     } catch (e) {
       console.error('Error:', e);
       toast.error('Erro ao analisar horários: ' + (e.message || 'Erro desconhecido'));
