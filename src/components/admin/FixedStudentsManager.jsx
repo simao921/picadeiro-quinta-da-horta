@@ -127,19 +127,24 @@ export default function FixedStudentsManager() {
       return { userId, data, isPicadeiro };
     },
     onSuccess: async (result) => {
-      // Construir aluno com dados atualizados (priorizar result.data)
+      // Construir aluno com dados atualizados
       let updatedStudent;
       if (result.isPicadeiro) {
-        const student = picadeiroStudents.find(s => s.id === result.userId);
+        // Re-fetch para obter dados mais recentes
+        await queryClient.invalidateQueries(['picadeiro-students']);
+        const students = await base44.entities.PicadeiroStudent.list();
+        const student = students.find(s => s.id === result.userId);
         updatedStudent = {
           id: result.userId,
-          email: student?.email || student?.phone || '',
+          email: student?.email || student?.phone || `picadeiro-${student?.name}`,
           full_name: student?.name || '',
           fixed_schedule: result.data.fixed_schedule || [],
           ...result.data
         };
       } else {
-        const user = allUsers.find(u => u.id === result.userId);
+        await queryClient.invalidateQueries(['all-users']);
+        const users = await base44.entities.User.list('-created_date', 500);
+        const user = users.find(u => u.id === result.userId);
         updatedStudent = {
           id: result.userId,
           email: user?.email || '',
@@ -150,10 +155,14 @@ export default function FixedStudentsManager() {
       }
       
       // SEMPRE recriar aulas se tiver horários definidos
-      if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0) {
-        toast.loading('A criar novas aulas automáticas para 52 semanas...');
+      if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && updatedStudent.email) {
+        toast.loading('A criar 52 semanas de aulas automáticas...');
+        console.log('Criando aulas para:', updatedStudent);
         await createRecurringLessons(updatedStudent);
         toast.dismiss();
+        toast.success(`Aluno fixo guardado e ${updatedStudent.fixed_schedule.length * 52} aulas criadas!`);
+      } else {
+        toast.success('Aluno fixo atualizado!');
       }
       
       await queryClient.invalidateQueries(['all-users']);
@@ -169,23 +178,36 @@ export default function FixedStudentsManager() {
         weekly_frequency: 1,
         schedules: []
       });
-      toast.success('Aluno fixo atualizado e 52 semanas de aulas criadas!');
     }
   });
 
   const createRecurringLessons = async (student) => {
-    if (!student.fixed_schedule || student.fixed_schedule.length === 0) return;
+    if (!student.fixed_schedule || student.fixed_schedule.length === 0) {
+      console.log('Sem horários fixos definidos');
+      return;
+    }
+    
+    if (!student.email) {
+      console.error('Aluno sem email:', student);
+      toast.error('Erro: aluno sem email');
+      return;
+    }
     
     const service = services.find(s => s.title === 'Aulas em Grupo');
     if (!service) {
+      console.error('Serviço "Aulas em Grupo" não encontrado');
       toast.error('Serviço "Aulas em Grupo" não encontrado');
       return;
     }
+
+    console.log(`Criando 52 semanas de aulas para ${student.full_name} (${student.email})`);
+    console.log('Horários:', student.fixed_schedule);
 
     const today = new Date();
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
     
     let created = 0;
+    let updated = 0;
     
     // Criar aulas para as próximas 52 semanas (1 ano)
     for (let week = 0; week < 52; week++) {
@@ -195,7 +217,7 @@ export default function FixedStudentsManager() {
         
         // Calcular próxima ocorrência do dia da semana
         let daysUntilTarget = (targetDay - currentDay + 7) % 7;
-        if (daysUntilTarget === 0 && week === 0) daysUntilTarget = 7; // Se for hoje, começar na próxima semana
+        if (daysUntilTarget === 0 && week === 0) daysUntilTarget = 7;
         
         const lessonDate = new Date(today);
         lessonDate.setDate(today.getDate() + daysUntilTarget + (week * 7));
@@ -231,6 +253,7 @@ export default function FixedStudentsManager() {
             created++;
           } else {
             lesson = existingLessons[0];
+            updated++;
           }
 
           // Verificar se já existe reserva do aluno
@@ -259,12 +282,12 @@ export default function FixedStudentsManager() {
             }
           }
         } catch (e) {
-          console.error('Erro ao criar aula:', e);
+          console.error(`Erro ao criar aula ${dateStr} ${schedule.time}:`, e);
         }
       }
     }
     
-    console.log(`Criadas ${created} aulas automáticas`);
+    console.log(`✅ Criadas ${created} novas aulas e atualizadas ${updated} aulas existentes`);
   };
 
   const handleSave = async () => {
