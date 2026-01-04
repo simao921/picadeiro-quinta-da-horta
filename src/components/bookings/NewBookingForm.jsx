@@ -90,7 +90,9 @@ function WeeklyLessonSelector({
               }}
               locale={pt}
               disabled={(date) => {
-                if (date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0) return true;
+                if (date < new Date() || date.getDay() === 0) return true;
+                // Bloquear agosto
+                if (date.getMonth() === 7) return true;
                 // Verificar se o dia está bloqueado
                 const dateStr = format(date, 'yyyy-MM-dd');
                 if (blockedSlots.some(b => b.date === dateStr && !b.time_slot)) return true;
@@ -1080,7 +1082,12 @@ export default function NewBookingForm({ user, isBlocked }) {
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     locale={pt}
-                    disabled={(date) => date < new Date() || date > addDays(new Date(), 60) || date.getDay() === 0 || date.getDay() === 6}
+                    disabled={(date) => {
+                      if (date < new Date() || date.getDay() === 0) return true;
+                      // Bloquear agosto
+                      if (date.getMonth() === 7) return true;
+                      return false;
+                    }}
                     className="rounded-md border-0 mx-auto"
                     classNames={{
                       months: "flex flex-col space-y-4",
