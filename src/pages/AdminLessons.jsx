@@ -222,19 +222,157 @@ export default function AdminLessons() {
   });
 
   const updateBookingMutation = useMutation({
-    mutationFn: async ({ id, status }) => {
+    mutationFn: async ({ id, status, booking }) => {
       await base44.entities.Booking.update(id, { 
         status,
         approved_at: status === 'approved' ? new Date().toISOString() : null,
         approved_by: status === 'approved' ? 'admin' : null
       });
+
+      // Enviar email de confirmação
+      const lesson = allLessons.find(l => l.id === booking.lesson_id);
+      const service = services.find(s => s.id === lesson?.service_id);
+      
+      if (status === 'approved') {
+        await base44.integrations.Core.SendEmail({
+          to: booking.client_email,
+          subject: '✅ Reserva Aprovada - Picadeiro Quinta da Horta',
+          body: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+                <tr>
+                  <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); padding: 40px 30px; text-align: center;">
+                          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                               alt="Picadeiro Quinta da Horta" 
+                               style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid white; margin-bottom: 15px;">
+                          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Reserva Aprovada! ✅</h1>
+                          <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Picadeiro Quinta da Horta</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 40px 30px; background-color: #f9f9f9;">
+                          <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                            Olá <strong>${booking.client_name}</strong>,
+                          </p>
+                          <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                            A sua reserva foi <strong style="color: #4CAF50;">aprovada com sucesso</strong>! 🎉
+                          </p>
+                          <div style="background: white; border-left: 4px solid #4CAF50; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin: 0 0 15px 0; color: #2C3E1F; font-size: 18px;">📅 Detalhes da Aula:</h3>
+                            <p style="margin: 8px 0; color: #555;"><strong>Serviço:</strong> ${service?.title || 'Aula de Equitação'}</p>
+                            <p style="margin: 8px 0; color: #555;"><strong>Data:</strong> ${format(new Date(lesson?.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}</p>
+                            <p style="margin: 8px 0; color: #555;"><strong>Horário:</strong> ${lesson?.start_time}</p>
+                            <p style="margin: 8px 0; color: #555;"><strong>Monitor:</strong> ${getInstructorName(lesson?.instructor_id)}</p>
+                          </div>
+                          <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 30px;">
+                            Aguardamos por si! Se tiver alguma dúvida, não hesite em contactar-nos.
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #2D2D2D; padding: 30px; text-align: center;">
+                          <p style="color: #B8956A; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📞 Entre em Contacto</p>
+                          <p style="color: #fff; margin: 5px 0; font-size: 14px;">
+                            <a href="tel:+351932111786" style="color: #B8956A; text-decoration: none;">+351 932 111 786</a>
+                          </p>
+                          <p style="color: #fff; margin: 5px 0; font-size: 14px;">
+                            <a href="mailto:picadeiroquintadahortagf@gmail.com" style="color: #B8956A; text-decoration: none;">picadeiroquintadahortagf@gmail.com</a>
+                          </p>
+                          <p style="color: rgba(255,255,255,0.6); margin: 15px 0 0 0; font-size: 12px;">
+                            Rua das Hortas - Fonte da Senhora<br>
+                            2890-106 Alcochete, Portugal
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `
+        });
+      } else if (status === 'rejected') {
+        await base44.integrations.Core.SendEmail({
+          to: booking.client_email,
+          subject: 'Informação sobre a sua Reserva - Picadeiro Quinta da Horta',
+          body: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+                <tr>
+                  <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #B8956A 0%, #8B7355 100%); padding: 40px 30px; text-align: center;">
+                          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                               alt="Picadeiro Quinta da Horta" 
+                               style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid white; margin-bottom: 15px;">
+                          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Informação sobre Reserva</h1>
+                          <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Picadeiro Quinta da Horta</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 40px 30px; background-color: #f9f9f9;">
+                          <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                            Olá <strong>${booking.client_name}</strong>,
+                          </p>
+                          <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                            Infelizmente não foi possível aprovar a sua reserva para o dia <strong>${format(new Date(lesson?.date), "d 'de' MMMM", { locale: pt })}</strong> às <strong>${lesson?.start_time}</strong>.
+                          </p>
+                          <p style="color: #666; font-size: 15px; line-height: 1.6;">
+                            Isto pode dever-se a limitações de disponibilidade ou capacidade. 
+                          </p>
+                          <p style="color: #666; font-size: 15px; line-height: 1.6; margin-top: 20px;">
+                            Por favor, entre em contacto connosco para encontrarmos um horário alternativo que funcione para si.
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #2D2D2D; padding: 30px; text-align: center;">
+                          <p style="color: #B8956A; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📞 Entre em Contacto</p>
+                          <p style="color: #fff; margin: 5px 0; font-size: 14px;">
+                            <a href="tel:+351932111786" style="color: #B8956A; text-decoration: none;">+351 932 111 786</a>
+                          </p>
+                          <p style="color: #fff; margin: 5px 0; font-size: 14px;">
+                            <a href="mailto:picadeiroquintadahortagf@gmail.com" style="color: #B8956A; text-decoration: none;">picadeiroquintadahortagf@gmail.com</a>
+                          </p>
+                          <p style="color: rgba(255,255,255,0.6); margin: 15px 0 0 0; font-size: 12px;">
+                            Rua das Hortas - Fonte da Senhora<br>
+                            2890-106 Alcochete, Portugal
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
       queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
       queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
-      toast.success('Reserva atualizada!');
+      toast.success('Reserva atualizada e email enviado!');
     },
     onError: (error) => {
       console.error('Erro ao atualizar reserva:', error);
@@ -508,7 +646,7 @@ export default function AdminLessons() {
                           <Button
                             size="sm"
                             className="bg-[#4B6382] hover:bg-[#3B5372] text-white"
-                            onClick={() => updateBookingMutation.mutate({ id: item.id, status: 'approved' })}
+                            onClick={() => updateBookingMutation.mutate({ id: item.id, status: 'approved', booking: item })}
                           >
                             <CheckCircle className="w-4 h-4 mr-1" />
                             Aprovar
@@ -517,7 +655,7 @@ export default function AdminLessons() {
                             size="sm"
                             variant="outline"
                             className="text-red-600 border-red-600 hover:bg-red-50"
-                            onClick={() => updateBookingMutation.mutate({ id: item.id, status: 'rejected' })}
+                            onClick={() => updateBookingMutation.mutate({ id: item.id, status: 'rejected', booking: item })}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             Rejeitar
@@ -699,14 +837,14 @@ export default function AdminLessons() {
                                           <Button
                                             size="sm"
                                             className="bg-[#4B6382] hover:bg-[#3B5372] text-white shadow-md"
-                                            onClick={() => updateBookingMutation.mutate({ id: booking.id, status: 'approved' })}
+                                            onClick={() => updateBookingMutation.mutate({ id: booking.id, status: 'approved', booking })}
                                           >
                                             <CheckCircle className="w-4 h-4" />
                                           </Button>
                                           <Button
                                             size="sm"
                                             className="bg-red-600 hover:bg-red-700 text-white shadow-md"
-                                            onClick={() => updateBookingMutation.mutate({ id: booking.id, status: 'rejected' })}
+                                            onClick={() => updateBookingMutation.mutate({ id: booking.id, status: 'rejected', booking })}
                                           >
                                             <XCircle className="w-4 h-4" />
                                           </Button>
