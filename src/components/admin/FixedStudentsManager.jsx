@@ -644,17 +644,17 @@ export default function FixedStudentsManager() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex flex-col gap-1">
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => generateYearLessons(student)}
-                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      title="Gerar aulas para o próximo ano"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                       disabled={generateYearLessonsMutation.isPending}
                     >
-                      <CalendarPlus className="w-4 h-4" />
+                      <CalendarPlus className="w-4 h-4 mr-1" />
+                      Gerar Ano
                     </Button>
+                    <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -668,9 +668,10 @@ export default function FixedStudentsManager() {
                       size="icon"
                       onClick={() => removeFixedStudent(student)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
+                    >
                       <Trash2 className="w-4 h-4" />
-                      </Button>
+                    </Button>
+                    </div>
                   </div>
                 </div>
               </div>
