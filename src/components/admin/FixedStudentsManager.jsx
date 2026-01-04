@@ -309,7 +309,7 @@ export default function FixedStudentsManager() {
     mutationFn: async ({ userId, isPicadeiro, studentEmail }) => {
       toast.loading('A remover aluno fixo e aulas associadas...');
 
-      // Apagar todas as aulas automáticas e reservas associadas
+      // Apagar todas as reservas e aulas automáticas do aluno
       if (studentEmail) {
         const bookings = await base44.entities.Booking.filter({
           client_email: studentEmail,
@@ -318,17 +318,29 @@ export default function FixedStudentsManager() {
 
         for (const booking of bookings) {
           try {
+            // Buscar a aula antes de apagar a reserva
+            const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
+            
+            // Apagar a reserva
             await base44.entities.Booking.delete(booking.id);
 
-            const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
-            if (lessons.length > 0 && lessons[0].is_auto_generated) {
+            // Se a aula existe e é auto-gerada
+            if (lessons.length > 0) {
               const lesson = lessons[0];
-              const newBookedSpots = Math.max(0, (lesson.booked_spots || 0) - 1);
-              const newFixedCount = Math.max(0, (lesson.fixed_students_count || 0) - 1);
+              
+              // Verificar quantas reservas restam nesta aula
+              const remainingBookings = await base44.entities.Booking.filter({
+                lesson_id: lesson.id
+              });
 
-              if (newBookedSpots === 0 && newFixedCount === 0) {
+              if (remainingBookings.length === 0 && lesson.is_auto_generated) {
+                // Se não há mais reservas e é auto-gerada, apagar a aula
                 await base44.entities.Lesson.delete(lesson.id);
               } else {
+                // Se há outras reservas, atualizar contadores
+                const newBookedSpots = Math.max(0, (lesson.booked_spots || 0) - 1);
+                const newFixedCount = Math.max(0, (lesson.fixed_students_count || 0) - 1);
+                
                 await base44.entities.Lesson.update(lesson.id, {
                   booked_spots: newBookedSpots,
                   fixed_students_count: newFixedCount
