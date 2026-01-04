@@ -42,16 +42,18 @@ export default function FixedStudentsManager() {
     schedules: []
   });
 
-  const { data: allUsers = [] } = useQuery({
+  const { data: allUsers = [], refetch: refetchUsers } = useQuery({
     queryKey: ['all-users'],
     queryFn: () => base44.entities.User.list('-created_date', 500),
-    initialData: []
+    initialData: [],
+    staleTime: 0
   });
 
-  const { data: picadeiroStudents = [] } = useQuery({
+  const { data: picadeiroStudents = [], refetch: refetchStudents } = useQuery({
     queryKey: ['picadeiro-students'],
     queryFn: () => base44.entities.PicadeiroStudent.list('-created_date'),
-    initialData: []
+    initialData: [],
+    staleTime: 0
   });
 
   const fixedStudentsFromUsers = allUsers.filter(u => u.student_type === 'fixo');
@@ -154,10 +156,10 @@ export default function FixedStudentsManager() {
         toast.dismiss();
       }
       
-      queryClient.invalidateQueries(['all-users']);
-      queryClient.invalidateQueries(['picadeiro-students']);
-      queryClient.invalidateQueries(['lessons']);
-      queryClient.invalidateQueries(['admin-all-bookings']);
+      await queryClient.invalidateQueries(['all-users']);
+      await queryClient.invalidateQueries(['picadeiro-students']);
+      await queryClient.invalidateQueries(['lessons']);
+      await queryClient.invalidateQueries(['admin-all-bookings']);
       setDialogOpen(false);
       setEditingStudent(null);
       setFormData({
@@ -373,10 +375,11 @@ export default function FixedStudentsManager() {
       }
       return { userId, isPicadeiro };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['all-users']);
-      queryClient.invalidateQueries(['picadeiro-students']);
-      queryClient.invalidateQueries(['lessons']);
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(['all-users']);
+      await queryClient.invalidateQueries(['picadeiro-students']);
+      await queryClient.invalidateQueries(['lessons']);
+      await queryClient.invalidateQueries(['admin-all-bookings']);
       toast.dismiss();
       toast.success('Aluno fixo e aulas associadas removidos com sucesso!');
     },
