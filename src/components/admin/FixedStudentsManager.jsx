@@ -425,17 +425,17 @@ export default function FixedStudentsManager() {
             // Verificar se ainda há outras reservas nesta aula
             const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lessonId });
 
-            if (remainingBookings.length === 0 && lesson.is_auto_generated) {
-              // Aula vazia e auto-gerada = apagar
+            if (remainingBookings.length === 0) {
+              // Aula vazia = apagar (auto-gerada ou não)
               await base44.entities.Lesson.delete(lesson.id);
-              console.log(`Aula ${lessonId} apagada`);
-            } else if (remainingBookings.length > 0) {
+              console.log(`Aula ${lessonId} apagada (estava vazia)`);
+            } else {
               // Atualizar contadores
               await base44.entities.Lesson.update(lesson.id, {
                 booked_spots: remainingBookings.length,
                 fixed_students_count: remainingBookings.filter(b => b.is_fixed_student).length
               });
-              console.log(`Aula ${lessonId} atualizada`);
+              console.log(`Aula ${lessonId} atualizada (${remainingBookings.length} alunos restantes)`);
             }
           } catch (e) {
             console.error('Erro ao processar aula:', e);
