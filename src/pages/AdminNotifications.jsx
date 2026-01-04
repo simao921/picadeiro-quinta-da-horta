@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, Send, Loader2, CheckCircle2 } from 'lucide-react';
+import { Bell, Send, Loader2, CheckCircle2, Calendar, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminNotifications() {
