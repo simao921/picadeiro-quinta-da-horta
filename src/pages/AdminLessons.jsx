@@ -98,13 +98,13 @@ export default function AdminLessons() {
   });
 
   const { data: allUsers = [] } = useQuery({
-    queryKey: ['all-users-for-booking'],
+    queryKey: ['all-picadeiro-students-for-booking'],
     queryFn: async () => {
       try {
-        const result = await base44.entities.User.list('-created_date', 500);
+        const result = await base44.entities.PicadeiroStudent.list('-created_date', 500);
         return result || [];
       } catch (error) {
-        console.error('Error loading users:', error);
+        console.error('Error loading students:', error);
         return [];
       }
     }
@@ -267,8 +267,9 @@ export default function AdminLessons() {
   };
 
   const filteredUsers = allUsers.filter(u => 
-    u.full_name?.toLowerCase().includes(clientSearch.toLowerCase()) ||
-    u.email?.toLowerCase().includes(clientSearch.toLowerCase())
+    u.name?.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    u.email?.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    u.phone?.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
   return (
@@ -314,29 +315,29 @@ export default function AdminLessons() {
                     <Select 
                       value={newLesson.client_email || undefined}
                       onValueChange={(v) => {
-                        const user = allUsers.find(u => u.email === v);
+                        const student = allUsers.find(u => u.email === v || u.phone === v);
                         setNewLesson({
                           ...newLesson, 
-                          client_email: v,
-                          client_name: user?.full_name || user?.email || ''
+                          client_email: student?.email || v,
+                          client_name: student?.name || ''
                         });
                         setClientSearch('');
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecionar cliente..." />
+                        <SelectValue placeholder="Selecionar aluno..." />
                       </SelectTrigger>
                       <SelectContent>
                         {filteredUsers.length === 0 ? (
                           <SelectItem value="none" disabled>
-                            {clientSearch ? 'Nenhum cliente encontrado' : 'Sem clientes disponíveis'}
+                            {clientSearch ? 'Nenhum aluno encontrado' : 'Sem alunos disponíveis'}
                           </SelectItem>
                         ) : (
                           filteredUsers.map(u => (
-                            <SelectItem key={u.id} value={u.email}>
+                            <SelectItem key={u.id} value={u.email || u.phone}>
                               <div className="flex flex-col">
-                                <span className="font-medium">{u.full_name || u.email}</span>
-                                <span className="text-xs text-stone-500">{u.email}</span>
+                                <span className="font-medium">{u.name}</span>
+                                <span className="text-xs text-stone-500">{u.email || u.phone}</span>
                               </div>
                             </SelectItem>
                           ))
