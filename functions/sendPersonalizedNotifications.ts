@@ -135,16 +135,12 @@ Responde apenas com o corpo do email em HTML simples.`
           if (target_emails && !target_emails.includes(booking.client_email)) continue;
 
           // Verificar se já deixou feedback
-          const existingReviews = await base44.asServiceRole.entities.Review.filter({
-            client_email: booking.client_email
+          const existingFeedback = await base44.asServiceRole.entities.Feedback.filter({
+            client_email: booking.client_email,
+            booking_id: booking.id
           });
 
-          const alreadyReviewed = existingReviews.some(r => 
-            r.entity_id === lesson.service_id && 
-            new Date(r.created_date).toDateString() === new Date().toDateString()
-          );
-
-          if (!alreadyReviewed) {
+          if (existingFeedback.length === 0) {
             await base44.asServiceRole.integrations.Core.SendEmail({
               to: booking.client_email,
               subject: '💭 Como foi a sua aula?',
@@ -156,15 +152,12 @@ Responde apenas com o corpo do email em HTML simples.`
                   
                   <p>Esperamos que tenha gostado da sua aula de ontem.</p>
                   
-                  <p>Gostaríamos muito de saber a sua opinião para continuarmos a melhorar:</p>
+                  <p>Gostaríamos muito de saber a sua opinião para continuarmos a melhorar.</p>
                   
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="https://picadeiroquintadahorta.com" 
-                       style="background-color: #4A5D23; color: white; padding: 15px 30px; 
-                              text-decoration: none; border-radius: 8px; display: inline-block;">
-                      Deixar Feedback
-                    </a>
-                  </div>
+                  <p style="margin: 30px 0; font-size: 14px; color: #666;">
+                    Para deixar o seu feedback, faça login no site e vá à área de "Minhas Aulas" 
+                    onde pode avaliar e comentar sobre a sua experiência.
+                  </p>
                   
                   <p>Leva apenas 1 minuto! 🙏</p>
                   
