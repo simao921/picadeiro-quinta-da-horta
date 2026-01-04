@@ -255,15 +255,19 @@ export default function NewBookingForm({ user, isBlocked }) {
           const date = selectedDates[i];
           const time = selectedTimes[i];
           
+          if (!date || !time) {
+            throw new Error('Por favor selecione todos os horários');
+          }
+          
           // Buscar aulas para esta data
-          const dateLessons = await base44.entities.Lesson.filter({ date: format(date, 'yyyy-MM-dd') });
+          const dateLessons = await base44.entities.Lesson.filter({ date: format(new Date(date), 'yyyy-MM-dd') });
           
           // Verificar disponibilidade
           const lessonsAtTime = dateLessons.filter(l => l.start_time === time);
           const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
           
           if (totalBooked >= 6) {
-            throw new Error(`Horário ${time} de ${format(date, "dd/MM")} indisponível - máximo 6 alunos`);
+            throw new Error(`Horário ${time} de ${format(new Date(date), "dd/MM")} indisponível - máximo 6 alunos`);
           }
           
           // Se for 60 minutos, verificar próxima meia hora
@@ -277,7 +281,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
               
               if (totalBookedNext >= 6) {
-                throw new Error(`Horário ${time} de ${format(date, "dd/MM")} indisponível - próxima meia hora cheia`);
+                throw new Error(`Horário ${time} de ${format(new Date(date), "dd/MM")} indisponível - próxima meia hora cheia`);
               }
             }
           }
@@ -294,7 +298,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             
             lesson = await base44.entities.Lesson.create({
               service_id: selectedService.id,
-              date: format(date, 'yyyy-MM-dd'),
+              date: format(new Date(date), 'yyyy-MM-dd'),
               start_time: time,
               end_time: format(endTime, 'HH:mm'),
               max_spots: 6,
@@ -321,7 +325,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 
                 nextLesson = await base44.entities.Lesson.create({
                   service_id: selectedService.id,
-                  date: format(date, 'yyyy-MM-dd'),
+                  date: format(new Date(date), 'yyyy-MM-dd'),
                   start_time: nextSlot,
                   end_time: format(endTime, 'HH:mm'),
                   max_spots: 6,
@@ -354,7 +358,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         
         // Enviar email com todas as reservas
         const bookingsList = bookingsToCreate.map(b => 
-          `<li>${format(b.date, "EEEE, d 'de' MMMM", { locale: pt })} às ${b.time}</li>`
+          `<li>${format(new Date(b.date), "EEEE, d 'de' MMMM", { locale: pt })} às ${b.time}</li>`
         ).join('');
         
         await base44.functions.invoke('sendBookingConfirmation', {
@@ -362,7 +366,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           lessonId: bookingsToCreate[0].booking.lesson_id,
           clientEmail: user.email,
           clientName: user.full_name,
-          lessonDate: format(bookingsToCreate[0].date, 'yyyy-MM-dd'),
+          lessonDate: format(new Date(bookingsToCreate[0].date), 'yyyy-MM-dd'),
           lessonTime: bookingsToCreate[0].time,
           serviceName: selectedService.title
         });
