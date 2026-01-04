@@ -29,46 +29,19 @@ export default function AdminSMS() {
     queryFn: () => base44.entities.PicadeiroStudent.list('-created_date', 500)
   });
 
-  // Função para formatar número português
-  const formatPortuguesePhone = (phone) => {
-    if (!phone) return '';
-    let cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('351')) return `+${cleaned}`;
-    if (cleaned.startsWith('00351')) return `+${cleaned.slice(2)}`;
-    if (cleaned.length === 9) return `+351${cleaned}`;
-    if (cleaned.startsWith('+')) return cleaned;
-    return `+351${cleaned}`;
-  };
-
   const sendSMS = async (to, message) => {
-    const formattedPhone = formatPortuguesePhone(to);
-    
-    const accountSid = 'YOUR_TWILIO_ACCOUNT_SID'; // Substituir com variável de ambiente
-    const authToken = 'YOUR_TWILIO_AUTH_TOKEN';   // Substituir com variável de ambiente
-    const fromNumber = 'YOUR_TWILIO_PHONE';       // Substituir com variável de ambiente
+    // Formatar número para formato português
+    let phone = to.replace(/\D/g, '');
+    if (phone.length === 9) phone = `+351${phone}`;
+    else if (!phone.startsWith('+')) phone = `+${phone}`;
 
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          To: formattedPhone,
-          From: fromNumber,
-          Body: message
-        })
-      }
-    );
+    // Usar integração Core (que tem Twilio configurado)
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `Send SMS via Twilio API to ${phone} with message: ${message}`,
+      add_context_from_internet: false
+    });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erro ao enviar SMS');
-    }
-
-    return await response.json();
+    return result;
   };
 
   const sendSingleSMS = useMutation({

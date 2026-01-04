@@ -33,20 +33,54 @@ export default function AdminNotifications() {
         to: email,
         subject: subject,
         body: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #B8956A 0%, #8B7355 100%); padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">Picadeiro Quinta da Horta</h1>
-            </div>
-            <div style="padding: 30px; background-color: #f9f9f9;">
-              <p style="color: #333; line-height: 1.6;">${message.replace(/\n/g, '<br>')}</p>
-            </div>
-            <div style="background-color: #2D2D2D; padding: 20px; text-align: center;">
-              <p style="color: #fff; margin: 0; font-size: 12px;">
-                Picadeiro Quinta da Horta - Alcochete<br>
-                +351 932 111 786 | picadeiroquintadahortagf@gmail.com
-              </p>
-            </div>
-          </div>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+              <tr>
+                <td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #B8956A 0%, #8B7355 100%); padding: 40px 30px; text-align: center;">
+                        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                             alt="Picadeiro Quinta da Horta" 
+                             style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid white; margin-bottom: 15px;">
+                        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Picadeiro Quinta da Horta</h1>
+                        <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px; letter-spacing: 2px;">CENTRO EQUESTRE</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 40px 30px; background-color: #f9f9f9;">
+                        <div style="color: #333; line-height: 1.8; font-size: 16px;">
+                          ${message.replace(/\n/g, '<br>')}
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #2D2D2D; padding: 30px; text-align: center;">
+                        <p style="color: #B8956A; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📞 Entre em Contacto</p>
+                        <p style="color: #fff; margin: 5px 0; font-size: 14px;">
+                          <a href="tel:+351932111786" style="color: #B8956A; text-decoration: none;">+351 932 111 786</a>
+                        </p>
+                        <p style="color: #fff; margin: 5px 0; font-size: 14px;">
+                          <a href="mailto:picadeiroquintadahortagf@gmail.com" style="color: #B8956A; text-decoration: none;">picadeiroquintadahortagf@gmail.com</a>
+                        </p>
+                        <p style="color: rgba(255,255,255,0.6); margin: 15px 0 0 0; font-size: 12px;">
+                          Rua das Hortas - Fonte da Senhora<br>
+                          2890-106 Alcochete, Portugal
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
         `
       });
     },
