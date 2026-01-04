@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import { 
   Plus, CalendarDays, Clock, Users, 
-  CheckCircle, XCircle, Loader2, AlertCircle
+  CheckCircle, XCircle, Loader2, AlertCircle, Search
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -41,6 +41,7 @@ import { toast } from 'sonner';
 export default function AdminLessons() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
   const [newLesson, setNewLesson] = useState({
     service_id: '',
     instructor_id: '',
@@ -265,6 +266,11 @@ export default function AdminLessons() {
     return bookings.filter(b => b.lesson_id === lessonId);
   };
 
+  const filteredUsers = allUsers.filter(u => 
+    u.full_name?.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    u.email?.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+
   return (
     <AdminLayout currentPage="AdminLessons">
       <div className="space-y-6">
@@ -281,11 +287,88 @@ export default function AdminLessons() {
                 Nova Aula
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Criar Nova Aula</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                {/* Cliente em PRIMEIRO com pesquisa */}
+                <div className="p-4 bg-[#4B6382]/10 rounded-lg border-2 border-[#4B6382]/30">
+                  <p className="text-sm font-bold text-[#2C3E1F] mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Selecionar Cliente (opcional)
+                  </p>
+                  <div className="space-y-3">
+                    {/* Barra de pesquisa */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                      <Input
+                        placeholder="Pesquisar por nome ou email..."
+                        value={clientSearch}
+                        onChange={(e) => setClientSearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+
+                    {/* Select do cliente */}
+                    <Select 
+                      value={newLesson.client_email || undefined}
+                      onValueChange={(v) => {
+                        const user = allUsers.find(u => u.email === v);
+                        setNewLesson({
+                          ...newLesson, 
+                          client_email: v,
+                          client_name: user?.full_name || user?.email || ''
+                        });
+                        setClientSearch('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar cliente..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredUsers.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            {clientSearch ? 'Nenhum cliente encontrado' : 'Sem clientes disponíveis'}
+                          </SelectItem>
+                        ) : (
+                          filteredUsers.map(u => (
+                            <SelectItem key={u.id} value={u.email}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{u.full_name || u.email}</span>
+                                <span className="text-xs text-stone-500">{u.email}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Mostrar email selecionado */}
+                    {newLesson.client_email && (
+                      <div className="flex items-center gap-2 p-3 bg-white rounded-lg border-2 border-[#4B6382]">
+                        <div className="w-8 h-8 rounded-full bg-[#4B6382] text-white flex items-center justify-center font-bold">
+                          {newLesson.client_name?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm text-[#2C3E1F]">{newLesson.client_name}</p>
+                          <p className="text-xs text-stone-500">{newLesson.client_email}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setNewLesson({...newLesson, client_email: '', client_name: ''})}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Depois Serviço */}
                 <div className="space-y-2">
                   <Label>Serviço *</Label>
                   <Select 
@@ -306,6 +389,8 @@ export default function AdminLessons() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Monitor */}
                 <div className="space-y-2">
                   <Label>Monitor</Label>
                   <Select 
@@ -326,6 +411,8 @@ export default function AdminLessons() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Horário e Duração */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Hora de Início</Label>
@@ -355,39 +442,6 @@ export default function AdminLessons() {
                       <SelectContent>
                         <SelectItem value="30">30 minutos</SelectItem>
                         <SelectItem value="60">60 minutos</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800 font-medium mb-3">Reservar para cliente (opcional)</p>
-                  <div className="space-y-2">
-                    <Label>Cliente</Label>
-                    <Select 
-                      value={newLesson.client_email || undefined}
-                      onValueChange={(v) => {
-                        const user = allUsers.find(u => u.email === v);
-                        setNewLesson({
-                          ...newLesson, 
-                          client_email: v,
-                          client_name: user?.full_name || user?.email || ''
-                        });
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar cliente (opcional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allUsers.length === 0 ? (
-                          <SelectItem value="none" disabled>Sem clientes disponíveis</SelectItem>
-                        ) : (
-                          allUsers.map(u => (
-                            <SelectItem key={u.id} value={u.email}>
-                              {u.full_name || u.email}
-                            </SelectItem>
-                          ))
-                        )}
                       </SelectContent>
                     </Select>
                   </div>
