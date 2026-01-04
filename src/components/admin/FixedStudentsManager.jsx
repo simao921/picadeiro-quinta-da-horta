@@ -180,8 +180,8 @@ export default function FixedStudentsManager() {
     
     let created = 0;
     
-    // Criar aulas para as próximas 12 semanas
-    for (let week = 0; week < 12; week++) {
+    // Criar aulas para as próximas 52 semanas (1 ano)
+    for (let week = 0; week < 52; week++) {
       for (const schedule of student.fixed_schedule) {
         const targetDay = daysMap[schedule.day];
         const currentDay = today.getDay();
