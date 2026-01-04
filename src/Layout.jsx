@@ -67,6 +67,11 @@ const LayoutContent = ({ children, currentPageName }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Control + Shift + 4 - Monitor Login (funciona em PT-PT)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === '4' || e.code === 'Digit4')) {
+        e.preventDefault();
+        window.location.href = createPageUrl('StaffLogin');
+      }
       // Control + Shift + 6 - Monitor/Owner Login (funciona em PT-PT)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === '6' || e.code === 'Digit6')) {
         e.preventDefault();
