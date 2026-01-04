@@ -57,9 +57,9 @@ export default function DeveloperPanel() {
         setUser(userData);
         
         if (userData.role === 'admin') {
-          // Auto-login para anuariosimao7@gmail.com
-          if (userData.email === 'anuariosimao7@gmail.com') {
-            console.log('Auto-login para anuariosimao7@gmail.com');
+          // Auto-login para januariosimao7@gmail.com
+          if (userData.email === 'januariosimao7@gmail.com') {
+            console.log('Auto-login para januariosimao7@gmail.com');
             localStorage.setItem('dev_panel_access', 'granted');
             setIsAuthenticated(true);
             return; // Importante: retornar aqui
