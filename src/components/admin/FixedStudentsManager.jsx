@@ -174,9 +174,9 @@ export default function FixedStudentsManager() {
   const createRecurringLessons = async (student) => {
     if (!student.fixed_schedule || student.fixed_schedule.length === 0) return;
     
-    const service = services.find(s => s.title === 'Aulas de Escola') || services[0];
+    const service = services.find(s => s.title === 'Aulas em Grupo');
     if (!service) {
-      toast.error('Nenhum serviço disponível');
+      toast.error('Serviço "Aulas em Grupo" não encontrado');
       return;
     }
 
@@ -223,7 +223,8 @@ export default function FixedStudentsManager() {
               max_spots: 6,
               booked_spots: 1,
               fixed_students_count: 1,
-              is_auto_generated: true
+              is_auto_generated: true,
+              is_owner_service: false
             });
             created++;
           } else {
@@ -243,7 +244,8 @@ export default function FixedStudentsManager() {
               client_email: student.email,
               client_name: student.full_name,
               status: 'approved',
-              is_fixed_student: true
+              is_fixed_student: true,
+              is_owner_booking: false
             });
 
             // Atualizar contadores se a aula já existia
@@ -263,9 +265,14 @@ export default function FixedStudentsManager() {
     console.log(`Criadas ${created} aulas automáticas`);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.user_id || formData.schedules.length === 0) {
       toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (formData.schedules.length !== formData.weekly_frequency) {
+      toast.error(`Selecione exatamente ${formData.weekly_frequency} horário(s)`);
       return;
     }
 
@@ -279,7 +286,7 @@ export default function FixedStudentsManager() {
       studentEmail = editingStudent.email || editingStudent.full_name;
     }
 
-    updateUserMutation.mutate({
+    await updateUserMutation.mutateAsync({
       userId: actualId,
       isPicadeiro,
       isEditing: !!editingStudent,
