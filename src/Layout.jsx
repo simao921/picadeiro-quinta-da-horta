@@ -65,7 +65,15 @@ const LayoutContent = ({ children, currentPageName }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Atalhos removidos - login não funcional
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '6') {
+        window.location.href = createPageUrl('AdminLogin');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const updateWishlistCount = async () => {
