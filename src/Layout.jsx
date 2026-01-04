@@ -26,6 +26,38 @@ const LayoutContent = ({ children, currentPageName }) => {
   const [wishlistCount, setWishlistCount] = useState(0);
 
   const isAdminPage = currentPageName?.startsWith('Admin');
+  const isDeveloperPage = currentPageName === 'DeveloperPanel';
+  const [maintenanceMode, setMaintenanceMode] = React.useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = React.useState('');
+
+  useEffect(() => {
+    // Check maintenance mode
+    const checkMaintenance = async () => {
+      try {
+        const settings = await base44.entities.SiteSettings.filter({ key: 'maintenance_mode' });
+        if (settings.length > 0 && settings[0].value === 'true') {
+          const msgSettings = await base44.entities.SiteSettings.filter({ key: 'maintenance_message' });
+          const msg = msgSettings.length > 0 ? msgSettings[0].value : 'Site em manutenção. Voltamos em breve!';
+          
+          // Check if user is admin
+          const isAuth = await base44.auth.isAuthenticated();
+          if (isAuth) {
+            const userData = await base44.auth.me();
+            if (userData.role !== 'admin') {
+              setMaintenanceMode(true);
+              setMaintenanceMessage(msg);
+            }
+          } else {
+            setMaintenanceMode(true);
+            setMaintenanceMessage(msg);
+          }
+        }
+      } catch (e) {
+        console.error('Error checking maintenance:', e);
+      }
+    };
+    checkMaintenance();
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -70,6 +102,9 @@ const LayoutContent = ({ children, currentPageName }) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '6') {
         window.location.href = createPageUrl('AdminLogin');
       }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
+        window.location.href = createPageUrl('DeveloperPanel');
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -99,8 +134,35 @@ const LayoutContent = ({ children, currentPageName }) => {
     base44.auth.logout();
   };
 
-  if (isAdminPage) {
+  if (isAdminPage || isDeveloperPage) {
     return <>{children}</>;
+  }
+
+  // Maintenance mode screen
+  if (maintenanceMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex items-center justify-center p-4">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-10 h-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-serif font-bold text-white">{maintenanceMessage}</h1>
+          <p className="text-stone-400">
+            Estamos a trabalhar para melhorar a sua experiência.
+            Por favor, volte mais tarde.
+          </p>
+          <div className="pt-4">
+            <div className="animate-pulse flex space-x-2 justify-center">
+              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-500 rounded-full animation-delay-200"></div>
+              <div className="w-3 h-3 bg-yellow-500 rounded-full animation-delay-400"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const navLinks = [
