@@ -29,10 +29,11 @@ export default function AdminNotifications() {
 
   const sendNotification = useMutation({
     mutationFn: async ({ email, subject, message }) => {
-      await base44.integrations.Core.SendEmail({
-        to: email,
-        subject: subject,
-        body: `
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: email,
+          subject: subject,
+          body: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -82,13 +83,19 @@ export default function AdminNotifications() {
           </body>
           </html>
         `
-      });
+        });
+        return { success: true };
+      } catch (error) {
+        console.error('Email error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
-      toast.success('Notificação enviada!');
+      toast.success('✅ Email enviado com sucesso!');
     },
     onError: (error) => {
-      toast.error(`Erro: ${error.message}`);
+      console.error('Notification error:', error);
+      toast.error(`❌ Erro ao enviar: ${error.message || 'Erro desconhecido'}`);
     }
   });
 

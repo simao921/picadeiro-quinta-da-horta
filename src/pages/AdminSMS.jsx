@@ -35,13 +35,13 @@ export default function AdminSMS() {
     if (phone.length === 9) phone = `+351${phone}`;
     else if (!phone.startsWith('+')) phone = `+${phone}`;
 
-    // Usar integração Core (que tem Twilio configurado)
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Send SMS via Twilio API to ${phone} with message: ${message}`,
-      add_context_from_internet: false
-    });
-
-    return result;
+    // NOTA: Twilio SMS requer backend function para manter as credenciais seguras
+    // Por enquanto, simular envio e avisar o usuário
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    toast.info('💡 SMS requer configuração de backend functions. Configure em Dashboard > Funções.');
+    
+    return { success: true, message: 'SMS functionality requires backend' };
   };
 
   const sendSingleSMS = useMutation({
@@ -110,10 +110,11 @@ export default function AdminSMS() {
           <MessageSquare className="w-8 h-8 text-[#4A5D23]" />
         </div>
 
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Configure as credenciais Twilio nas variáveis de ambiente (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-900">
+            ⚠️ <strong>SMS requer Backend Functions:</strong> Para enviar SMS via Twilio, é necessário criar uma função backend. 
+            As credenciais Twilio já estão configuradas, mas por segurança não podem ser usadas diretamente do navegador.
           </AlertDescription>
         </Alert>
 
