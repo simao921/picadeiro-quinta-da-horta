@@ -144,7 +144,7 @@ export default function FixedStudentsManager() {
       } else {
         await base44.entities.User.update(userId, data);
       }
-      return { userId, data, isPicadeiro };
+      return { userId, data, isPicadeiro, oldSchedules };
     },
     onSuccess: async (result) => {
       // Construir aluno com dados atualizados
