@@ -67,7 +67,7 @@ const LayoutContent = ({ children, currentPageName }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === '6') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '6') {
         window.location.href = createPageUrl('AdminLogin');
       }
     };
