@@ -4,12 +4,12 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        // Invite januariosimao7@gmail.com as developer
-        await base44.users.inviteUser("januariosimao7@gmail.com", "developer");
+        // Invite januariosimao7@gmail.com as admin (will change to developer after)
+        await base44.users.inviteUser("januariosimao7@gmail.com", "admin");
         
         return Response.json({ 
             success: true, 
-            message: "Developer invited successfully" 
+            message: "Admin invited. Login and role will be updated to developer." 
         });
     } catch (error) {
         return Response.json({ 
