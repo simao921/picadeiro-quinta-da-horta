@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   Code, Settings, AlertTriangle, Play, Database, 
-  FileCode, Eye, EyeOff, Lock, Unlock, Wrench
+  FileCode, Eye, EyeOff, Lock, Unlock, Wrench, Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,6 +34,24 @@ export default function DeveloperPanel() {
   const [siteSettings, setSiteSettings] = useState({});
   const [editingKey, setEditingKey] = useState('');
   const [editingValue, setEditingValue] = useState('');
+
+  // Database Tools
+  const [selectedEntity, setSelectedEntity] = useState('User');
+  const [queryFilter, setQueryFilter] = useState('{}');
+  const [queryResults, setQueryResults] = useState(null);
+  const [bulkDeleteEntity, setBulkDeleteEntity] = useState('');
+  const [bulkDeleteFilter, setBulkDeleteFilter] = useState('{}');
+
+  // User Management
+  const [userEmail, setUserEmail] = useState('');
+  const [userAction, setUserAction] = useState('promote');
+
+  // System Stats
+  const [systemStats, setSystemStats] = useState(null);
+
+  const entities = ['User', 'Service', 'Lesson', 'Booking', 'Payment', 'Horse', 'Instructor', 
+                    'PicadeiroStudent', 'BlockedSlot', 'Order', 'Product', 'GalleryImage', 
+                    'ContactMessage', 'Review', 'SiteSettings'];
 
   useEffect(() => {
     // Verificar se chegou pelo atalho de teclado OU tem acesso concedido
@@ -172,10 +190,155 @@ export default function DeveloperPanel() {
     } catch (e) {
       setCodeOutput('❌ Erro:\n' + e.message);
       toast.error('Erro na execução!');
-    } finally {
+      } finally {
       setExecuting(false);
-    }
-  };
+      }
+      };
+
+      const executeQuery = async () => {
+      try {
+      let filter = {};
+      try {
+        filter = JSON.parse(queryFilter);
+      } catch (e) {
+        toast.error('JSON inválido no filtro!');
+        return;
+      }
+
+      const results = await base44.entities[selectedEntity].filter(filter);
+      setQueryResults(results);
+      toast.success(`Encontrados ${results.length} registros!`);
+      } catch (e) {
+      toast.error('Erro na query: ' + e.message);
+      setQueryResults({ error: e.message });
+      }
+      };
+
+      const bulkDeleteRecords = async () => {
+      if (!confirm(`Tem certeza que deseja deletar registros de ${bulkDeleteEntity}? Esta ação é IRREVERSÍVEL!`)) {
+      return;
+      }
+
+      try {
+      let filter = {};
+      try {
+        filter = JSON.parse(bulkDeleteFilter);
+      } catch (e) {
+        toast.error('JSON inválido no filtro!');
+        return;
+      }
+
+      toast.loading('Deletando registros...');
+      const records = await base44.entities[bulkDeleteEntity].filter(filter);
+
+      for (const record of records) {
+        await base44.entities[bulkDeleteEntity].delete(record.id);
+      }
+
+      toast.dismiss();
+      toast.success(`${records.length} registros deletados!`);
+      setBulkDeleteEntity('');
+      setBulkDeleteFilter('{}');
+      } catch (e) {
+      toast.dismiss();
+      toast.error('Erro ao deletar: ' + e.message);
+      }
+      };
+
+      const manageUser = async () => {
+      try {
+      const users = await base44.entities.User.filter({ email: userEmail });
+      if (users.length === 0) {
+        toast.error('Usuário não encontrado!');
+        return;
+      }
+
+      const user = users[0];
+
+      if (userAction === 'promote') {
+        await base44.entities.User.update(user.id, { role: 'admin' });
+        toast.success('Usuário promovido a admin!');
+      } else if (userAction === 'demote') {
+        await base44.entities.User.update(user.id, { role: 'user' });
+        toast.success('Usuário rebaixado a user!');
+      } else if (userAction === 'delete') {
+        if (!confirm(`Deletar usuário ${userEmail}? IRREVERSÍVEL!`)) return;
+        await base44.entities.User.delete(user.id);
+        toast.success('Usuário deletado!');
+      }
+
+      setUserEmail('');
+      } catch (e) {
+      toast.error('Erro: ' + e.message);
+      }
+      };
+
+      const loadSystemStats = async () => {
+      try {
+      toast.loading('Carregando estatísticas...');
+
+      const [users, bookings, lessons, payments, orders, services] = await Promise.all([
+        base44.entities.User.list(),
+        base44.entities.Booking.list(),
+        base44.entities.Lesson.list(),
+        base44.entities.Payment.list(),
+        base44.entities.Order.list(),
+        base44.entities.Service.list()
+      ]);
+
+      setSystemStats({
+        totalUsers: users.length,
+        totalAdmins: users.filter(u => u.role === 'admin').length,
+        totalBookings: bookings.length,
+        approvedBookings: bookings.filter(b => b.status === 'approved').length,
+        pendingBookings: bookings.filter(b => b.status === 'pending').length,
+        totalLessons: lessons.length,
+        autoGeneratedLessons: lessons.filter(l => l.is_auto_generated).length,
+        totalPayments: payments.length,
+        paidPayments: payments.filter(p => p.status === 'paid').length,
+        pendingPayments: payments.filter(p => p.status === 'pending').length,
+        totalRevenue: payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + (p.total || 0), 0),
+        totalOrders: orders.length,
+        totalServices: services.length
+      });
+
+      toast.dismiss();
+      toast.success('Estatísticas carregadas!');
+      } catch (e) {
+      toast.dismiss();
+      toast.error('Erro ao carregar: ' + e.message);
+      }
+      };
+
+      const clearTestData = async () => {
+      if (!confirm('Deletar TODOS os dados de teste? Esta ação é IRREVERSÍVEL!')) return;
+      if (!confirm('Tem CERTEZA ABSOLUTA? Vai deletar bookings, lessons e payments pendentes!')) return;
+
+      try {
+      toast.loading('Limpando dados de teste...');
+
+      // Deletar bookings pendentes
+      const pendingBookings = await base44.entities.Booking.filter({ status: 'pending' });
+      for (const b of pendingBookings) {
+        await base44.entities.Booking.delete(b.id);
+      }
+
+      // Deletar lessons auto-geradas sem bookings
+      const lessons = await base44.entities.Lesson.filter({ is_auto_generated: true });
+      for (const l of lessons) {
+        const bookings = await base44.entities.Booking.filter({ lesson_id: l.id });
+        if (bookings.length === 0) {
+          await base44.entities.Lesson.delete(l.id);
+        }
+      }
+
+      toast.dismiss();
+      toast.success('Dados de teste limpos!');
+      } catch (e) {
+      toast.dismiss();
+      toast.error('Erro: ' + e.message);
+      }
+      };
 
   const updateSiteSetting = async () => {
     if (!editingKey || !editingValue) {
@@ -320,17 +483,29 @@ export default function DeveloperPanel() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="maintenance" className="space-y-6">
-          <TabsList className="bg-stone-800 border border-stone-700">
+          <TabsList className="bg-stone-800 border border-stone-700 flex-wrap h-auto">
             <TabsTrigger value="maintenance" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">
               <Settings className="w-4 h-4 mr-2" />
               Manutenção
             </TabsTrigger>
             <TabsTrigger value="code" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">
               <Code className="w-4 h-4 mr-2" />
-              Editor de Código
+              Código
+            </TabsTrigger>
+            <TabsTrigger value="database" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">
+              <Database className="w-4 h-4 mr-2" />
+              Database
+            </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">
+              <Users className="w-4 h-4 mr-2" />
+              Usuários
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              Estatísticas
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">
-              <Database className="w-4 h-4 mr-2" />
+              <Wrench className="w-4 h-4 mr-2" />
               Configurações
             </TabsTrigger>
           </TabsList>
@@ -422,6 +597,243 @@ return users;"
                     <pre className="bg-stone-900 border border-stone-700 rounded-lg p-4 text-green-400 text-xs font-mono overflow-auto max-h-[300px]">
                       {codeOutput}
                     </pre>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Database Tab */}
+          <TabsContent value="database">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Query Builder */}
+              <Card className="border-stone-700 bg-stone-800/50">
+                <CardHeader>
+                  <CardTitle className="text-green-500 flex items-center gap-2">
+                    <Database className="w-5 h-5" />
+                    Query Database
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-stone-300">Entidade</Label>
+                    <select
+                      value={selectedEntity}
+                      onChange={(e) => setSelectedEntity(e.target.value)}
+                      className="w-full bg-stone-900 border border-stone-700 text-white rounded-lg p-2"
+                    >
+                      {entities.map(e => (
+                        <option key={e} value={e}>{e}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-stone-300">Filtro (JSON)</Label>
+                    <Textarea
+                      value={queryFilter}
+                      onChange={(e) => setQueryFilter(e.target.value)}
+                      placeholder='{"status": "pending"}'
+                      className="bg-stone-900 border-stone-700 text-green-400 font-mono"
+                    />
+                    <p className="text-xs text-stone-500">
+                      Exemplos: {'{}'} (tudo), {`{"status": "pending"}`}, {`{"role": "admin"}`}
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={executeQuery}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Executar Query
+                  </Button>
+
+                  {queryResults && (
+                    <div className="space-y-2">
+                      <Label className="text-stone-300">Resultados</Label>
+                      <pre className="bg-stone-900 border border-stone-700 rounded-lg p-4 text-green-400 text-xs font-mono overflow-auto max-h-[400px]">
+                        {JSON.stringify(queryResults, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Bulk Delete */}
+              <Card className="border-red-700 bg-stone-800/50">
+                <CardHeader>
+                  <CardTitle className="text-red-500 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    Deletar em Massa
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <p className="text-sm text-red-400">
+                      ⚠️ PERIGO: Esta ação é IRREVERSÍVEL!
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-stone-300">Entidade</Label>
+                    <select
+                      value={bulkDeleteEntity}
+                      onChange={(e) => setBulkDeleteEntity(e.target.value)}
+                      className="w-full bg-stone-900 border border-stone-700 text-white rounded-lg p-2"
+                    >
+                      <option value="">Selecione...</option>
+                      {entities.map(e => (
+                        <option key={e} value={e}>{e}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-stone-300">Filtro (JSON)</Label>
+                    <Textarea
+                      value={bulkDeleteFilter}
+                      onChange={(e) => setBulkDeleteFilter(e.target.value)}
+                      placeholder='{"status": "test"}'
+                      className="bg-stone-900 border-stone-700 text-red-400 font-mono"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={bulkDeleteRecords}
+                    disabled={!bulkDeleteEntity}
+                    className="w-full bg-red-600 hover:bg-red-700"
+                  >
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    Deletar Registros
+                  </Button>
+
+                  <Button
+                    onClick={clearTestData}
+                    variant="outline"
+                    className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500/10"
+                  >
+                    Limpar Dados de Teste
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <Card className="border-stone-700 bg-stone-800/50">
+              <CardHeader>
+                <CardTitle className="text-green-500 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Gestão de Usuários
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-stone-300">Email do Usuário</Label>
+                    <Input
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
+                      placeholder="email@exemplo.com"
+                      className="bg-stone-900 border-stone-700 text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-stone-300">Ação</Label>
+                    <select
+                      value={userAction}
+                      onChange={(e) => setUserAction(e.target.value)}
+                      className="w-full bg-stone-900 border border-stone-700 text-white rounded-lg p-2"
+                    >
+                      <option value="promote">Promover a Admin</option>
+                      <option value="demote">Rebaixar a User</option>
+                      <option value="delete">Deletar Usuário</option>
+                    </select>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={manageUser}
+                  disabled={!userEmail}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  Executar Ação
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Stats Tab */}
+          <TabsContent value="stats">
+            <Card className="border-stone-700 bg-stone-800/50">
+              <CardHeader>
+                <CardTitle className="text-green-500 flex items-center gap-2">
+                  <FileCode className="w-5 h-5" />
+                  Estatísticas do Sistema
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={loadSystemStats}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Carregar Estatísticas
+                </Button>
+
+                {systemStats && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Total Usuários</p>
+                      <p className="text-2xl font-bold text-white">{systemStats.totalUsers}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Admins</p>
+                      <p className="text-2xl font-bold text-green-500">{systemStats.totalAdmins}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Total Reservas</p>
+                      <p className="text-2xl font-bold text-white">{systemStats.totalBookings}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Aprovadas</p>
+                      <p className="text-2xl font-bold text-green-500">{systemStats.approvedBookings}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Pendentes</p>
+                      <p className="text-2xl font-bold text-yellow-500">{systemStats.pendingBookings}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Total Aulas</p>
+                      <p className="text-2xl font-bold text-white">{systemStats.totalLessons}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Auto-Geradas</p>
+                      <p className="text-2xl font-bold text-blue-500">{systemStats.autoGeneratedLessons}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Pagamentos</p>
+                      <p className="text-2xl font-bold text-white">{systemStats.totalPayments}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Pagos</p>
+                      <p className="text-2xl font-bold text-green-500">{systemStats.paidPayments}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Receita Total</p>
+                      <p className="text-2xl font-bold text-green-500">{systemStats.totalRevenue}€</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Encomendas</p>
+                      <p className="text-2xl font-bold text-white">{systemStats.totalOrders}</p>
+                    </div>
+                    <div className="p-4 bg-stone-900/50 rounded-lg border border-stone-700">
+                      <p className="text-xs text-stone-400">Serviços</p>
+                      <p className="text-2xl font-bold text-white">{systemStats.totalServices}</p>
+                    </div>
                   </div>
                 )}
               </CardContent>

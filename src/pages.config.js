@@ -19,10 +19,12 @@ import AdminSettings from './pages/AdminSettings';
 import AdminShop from './pages/AdminShop';
 import AdminStudentSchedules from './pages/AdminStudentSchedules';
 import AdminStudents from './pages/AdminStudents';
+import AdminUsers from './pages/AdminUsers';
 import Bookings from './pages/Bookings';
 import Cart from './pages/Cart';
 import ClientDashboard from './pages/ClientDashboard';
 import Contact from './pages/Contact';
+import DeveloperPanel from './pages/DeveloperPanel';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
@@ -30,8 +32,6 @@ import Services from './pages/Services';
 import Shop from './pages/Shop';
 import UserPreferences from './pages/UserPreferences';
 import Wishlist from './pages/Wishlist';
-import AdminUsers from './pages/AdminUsers';
-import DeveloperPanel from './pages/DeveloperPanel';
 import __Layout from './Layout.jsx';
 
 
@@ -57,10 +57,12 @@ export const PAGES = {
     "AdminShop": AdminShop,
     "AdminStudentSchedules": AdminStudentSchedules,
     "AdminStudents": AdminStudents,
+    "AdminUsers": AdminUsers,
     "Bookings": Bookings,
     "Cart": Cart,
     "ClientDashboard": ClientDashboard,
     "Contact": Contact,
+    "DeveloperPanel": DeveloperPanel,
     "Gallery": Gallery,
     "Home": Home,
     "ProductDetail": ProductDetail,
@@ -68,8 +70,6 @@ export const PAGES = {
     "Shop": Shop,
     "UserPreferences": UserPreferences,
     "Wishlist": Wishlist,
-    "AdminUsers": AdminUsers,
-    "DeveloperPanel": DeveloperPanel,
 }
 
 export const pagesConfig = {
