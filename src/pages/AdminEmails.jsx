@@ -43,7 +43,7 @@ export default function AdminEmails() {
         console.log('Para:', singleEmail);
         console.log('Assunto:', singleSubject);
 
-        const result = await base44.functions.invoke('sendEmail', {
+        const result = await base44.integrations.Core.SendEmail({
           to: singleEmail.trim(),
           subject: singleSubject,
           body: `
@@ -130,7 +130,7 @@ export default function AdminEmails() {
         if (!email) continue;
 
         try {
-          await base44.functions.invoke('sendEmail', {
+          await base44.integrations.Core.SendEmail({
             to: email,
             subject: bulkSubject,
             body: `
