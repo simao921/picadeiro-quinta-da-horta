@@ -79,7 +79,7 @@ export default function HeroSection() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-white/80 text-white hover:bg-white/10 hover:border-white backdrop-blur-sm px-8 transition-all"
+                className="bg-transparent border-2 border-white/80 text-white hover:bg-white/10 hover:border-white backdrop-blur-sm px-8 transition-all"
               >
                 {t('hero_cta_secondary')}
               </Button>
