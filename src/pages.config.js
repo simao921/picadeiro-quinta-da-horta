@@ -31,6 +31,7 @@ import Wishlist from './pages/Wishlist';
 import UserPreferences from './pages/UserPreferences';
 import AdminEmails from './pages/AdminEmails';
 import AdminNotifications from './pages/AdminNotifications';
+import AdminSMS from './pages/AdminSMS';
 import __Layout from './Layout.jsx';
 
 
@@ -68,6 +69,7 @@ export const PAGES = {
     "UserPreferences": UserPreferences,
     "AdminEmails": AdminEmails,
     "AdminNotifications": AdminNotifications,
+    "AdminSMS": AdminSMS,
 }
 
 export const pagesConfig = {

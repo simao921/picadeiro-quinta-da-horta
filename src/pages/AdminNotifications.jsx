@@ -58,32 +58,32 @@ export default function AdminNotifications() {
     }
   });
 
-  const sendApprovalNotification = async (booking) => {
+  const handleApprovalNotification = (booking) => {
     const lesson = lessons.find(l => l.id === booking.lesson_id);
     const service = services.find(s => s.id === lesson?.service_id);
 
-    await sendNotification.mutateAsync({
+    sendNotification.mutate({
       email: booking.client_email,
       subject: '✅ Aula Aprovada - Picadeiro Quinta da Horta',
       message: `Olá ${booking.client_name}!\n\nA sua reserva foi aprovada!\n\nDetalhes:\n📅 Data: ${lesson?.date}\n⏰ Horário: ${lesson?.start_time} - ${lesson?.end_time}\n🏇 Serviço: ${service?.title || 'N/A'}\n\nAguardamos por si!\n\nPicadeiro Quinta da Horta\n+351 932 111 786`
     });
   };
 
-  const sendRejectionNotification = async (booking) => {
+  const handleRejectionNotification = (booking) => {
     const lesson = lessons.find(l => l.id === booking.lesson_id);
 
-    await sendNotification.mutateAsync({
+    sendNotification.mutate({
       email: booking.client_email,
       subject: '❌ Reserva Não Aprovada - Picadeiro Quinta da Horta',
       message: `Olá ${booking.client_name},\n\nInfelizmente não foi possível aprovar a sua reserva para o dia ${lesson?.date} às ${lesson?.start_time}.\n\nPor favor contacte-nos para mais informações ou para agendar outra data.\n\nPicadeiro Quinta da Horta\n+351 932 111 786`
     });
   };
 
-  const sendReminderNotification = async (booking) => {
+  const handleReminderNotification = (booking) => {
     const lesson = lessons.find(l => l.id === booking.lesson_id);
     const service = services.find(s => s.id === lesson?.service_id);
 
-    await sendNotification.mutateAsync({
+    sendNotification.mutate({
       email: booking.client_email,
       subject: '⏰ Lembrete de Aula - Picadeiro Quinta da Horta',
       message: `Olá ${booking.client_name}!\n\nLembrete: Tem uma aula amanhã!\n\n📅 Data: ${lesson?.date}\n⏰ Horário: ${lesson?.start_time} - ${lesson?.end_time}\n🏇 Serviço: ${service?.title || 'N/A'}\n\nAté amanhã!\n\nPicadeiro Quinta da Horta\n+351 932 111 786`
@@ -169,7 +169,7 @@ export default function AdminNotifications() {
                       </div>
                       <Button 
                         size="sm"
-                        onClick={() => sendReminderNotification(booking)}
+                        onClick={() => handleReminderNotification(booking)}
                         disabled={sendNotification.isPending}
                       >
                         <Send className="w-4 h-4 mr-2" />
@@ -216,7 +216,7 @@ export default function AdminNotifications() {
                           className="text-green-600 border-green-600 hover:bg-green-50"
                           onClick={async () => {
                             await base44.entities.Booking.update(booking.id, { status: 'approved' });
-                            await sendApprovalNotification(booking);
+                            handleApprovalNotification(booking);
                             queryClient.invalidateQueries({ queryKey: ['bookings-notifications'] });
                           }}
                           disabled={sendNotification.isPending}
@@ -230,7 +230,7 @@ export default function AdminNotifications() {
                           className="text-red-600 border-red-600 hover:bg-red-50"
                           onClick={async () => {
                             await base44.entities.Booking.update(booking.id, { status: 'rejected' });
-                            await sendRejectionNotification(booking);
+                            handleRejectionNotification(booking);
                             queryClient.invalidateQueries({ queryKey: ['bookings-notifications'] });
                           }}
                           disabled={sendNotification.isPending}

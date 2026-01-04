@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Mail, Users, Send } from 'lucide-react';
+import { Mail, Users, Send, Sparkles, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminEmails() {
@@ -19,6 +19,8 @@ export default function AdminEmails() {
   const [bulkSubject, setBulkSubject] = useState('');
   const [bulkMessage, setBulkMessage] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users-for-emails'],
@@ -115,6 +117,49 @@ export default function AdminEmails() {
     }
   });
 
+  const generateAIContent = async () => {
+    if (!aiPrompt) {
+      toast.error('Por favor, descreva o que pretende no email');
+      return;
+    }
+
+    setAiGenerating(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Você é um assistente de email profissional do Picadeiro Quinta da Horta, um centro equestre de excelência em Alcochete.
+
+Gere um email profissional e personalizado baseado nesta solicitação: "${aiPrompt}"
+
+O email deve:
+- Ser cordial e profissional
+- Usar uma linguagem adequada para o contexto equestre
+- Incluir saudação e despedida apropriadas
+- Ser claro e conciso
+- Refletir a qualidade e excelência do Picadeiro Quinta da Horta
+
+Forneça o email em formato JSON com:
+- subject: assunto do email
+- message: corpo da mensagem (use \\n para quebras de linha)`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            subject: { type: 'string' },
+            message: { type: 'string' }
+          },
+          required: ['subject', 'message']
+        }
+      });
+
+      setSingleSubject(result.subject);
+      setSingleMessage(result.message);
+      toast.success('Conteúdo gerado pela IA!');
+    } catch (error) {
+      toast.error('Erro ao gerar conteúdo: ' + error.message);
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   const templates = [
     { 
       name: 'Lembrete de Aula', 
@@ -186,6 +231,36 @@ export default function AdminEmails() {
           </TabsList>
 
           <TabsContent value="single" className="space-y-4">
+            <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  Assistente IA de Emails
+                </CardTitle>
+                <CardDescription>Deixe a IA criar o conteúdo perfeito para você</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>O que pretende comunicar?</Label>
+                  <Textarea 
+                    placeholder="Ex: Enviar promoção de aulas de hipoterapia com 20% desconto para novos alunos..."
+                    rows={3}
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    className="bg-white"
+                  />
+                </div>
+                <Button 
+                  onClick={generateAIContent}
+                  disabled={!aiPrompt || aiGenerating}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  {aiGenerating ? 'Gerando...' : 'Gerar Email com IA'}
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Enviar Email Individual</CardTitle>
