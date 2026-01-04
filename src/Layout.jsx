@@ -29,6 +29,7 @@ const LayoutContent = ({ children, currentPageName }) => {
   const isDeveloperPage = currentPageName === 'DeveloperPanel';
   const [maintenanceMode, setMaintenanceMode] = React.useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = React.useState('');
+  const [maintenanceChecked, setMaintenanceChecked] = React.useState(false);
 
   useEffect(() => {
     // Check maintenance mode
@@ -60,6 +61,8 @@ const LayoutContent = ({ children, currentPageName }) => {
         }
       } catch (e) {
         console.error('Error checking maintenance:', e);
+      } finally {
+        setMaintenanceChecked(true);
       }
     };
     checkMaintenance();
@@ -143,6 +146,11 @@ const LayoutContent = ({ children, currentPageName }) => {
   };
 
   if (isAdminPage || isDeveloperPage) {
+    return <>{children}</>;
+  }
+
+  // Show loading only if maintenance not yet checked
+  if (!maintenanceChecked) {
     return <>{children}</>;
   }
 
