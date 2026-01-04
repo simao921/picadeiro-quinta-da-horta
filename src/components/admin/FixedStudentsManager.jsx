@@ -125,27 +125,31 @@ export default function FixedStudentsManager() {
       return { userId, data, isPicadeiro };
     },
     onSuccess: async (result) => {
-      // Buscar o aluno atualizado com os novos dados
+      // Construir aluno com dados atualizados (priorizar result.data)
       let updatedStudent;
       if (result.isPicadeiro) {
         const student = picadeiroStudents.find(s => s.id === result.userId);
         updatedStudent = {
           id: result.userId,
-          email: student?.email || '',
-          full_name: student?.name,
+          email: student?.email || student?.phone || '',
+          full_name: student?.name || '',
+          fixed_schedule: result.data.fixed_schedule || [],
           ...result.data
         };
       } else {
+        const user = allUsers.find(u => u.id === result.userId);
         updatedStudent = {
           id: result.userId,
-          email: allUsers.find(u => u.id === result.userId)?.email,
-          full_name: allUsers.find(u => u.id === result.userId)?.full_name,
+          email: user?.email || '',
+          full_name: user?.full_name || '',
+          fixed_schedule: result.data.fixed_schedule || [],
           ...result.data
         };
       }
       
+      // SEMPRE recriar aulas se tiver horários definidos
       if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0) {
-        toast.loading('A criar novas aulas automáticas...');
+        toast.loading('A criar novas aulas automáticas para 52 semanas...');
         await createRecurringLessons(updatedStudent);
         toast.dismiss();
       }
@@ -153,6 +157,7 @@ export default function FixedStudentsManager() {
       queryClient.invalidateQueries(['all-users']);
       queryClient.invalidateQueries(['picadeiro-students']);
       queryClient.invalidateQueries(['lessons']);
+      queryClient.invalidateQueries(['admin-all-bookings']);
       setDialogOpen(false);
       setEditingStudent(null);
       setFormData({
@@ -162,7 +167,7 @@ export default function FixedStudentsManager() {
         weekly_frequency: 1,
         schedules: []
       });
-      toast.success('Aluno fixo atualizado e aulas reagendadas!');
+      toast.success('Aluno fixo atualizado e 52 semanas de aulas criadas!');
     }
   });
 
