@@ -75,12 +75,18 @@ export default function DeveloperPanel() {
     }
   };
 
-  const handleLogin = () => {
-    // Senha de desenvolvedor (pode ser alterada)
+  const handleLogin = async () => {
+    // Senha de desenvolvedor
     if (password === 'DevSimão26!') {
+      if (!user || user.role !== 'admin') {
+        toast.error('Apenas admins podem aceder ao painel de desenvolvedor!');
+        return;
+      }
       localStorage.setItem('dev_panel_access', 'granted');
       setIsAuthenticated(true);
       toast.success('Acesso de desenvolvedor concedido!');
+      // Recarregar após 500ms
+      setTimeout(() => window.location.reload(), 500);
     } else {
       toast.error('Senha incorreta!');
     }

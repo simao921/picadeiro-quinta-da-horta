@@ -39,15 +39,21 @@ const LayoutContent = ({ children, currentPageName }) => {
           const msgSettings = await base44.entities.SiteSettings.filter({ key: 'maintenance_message' });
           const msg = msgSettings.length > 0 ? msgSettings[0].value : 'Site em manutenção. Voltamos em breve!';
           
-          // Check if user is admin
-          const isAuth = await base44.auth.isAuthenticated();
-          if (isAuth) {
-            const userData = await base44.auth.me();
-            if (userData.role !== 'admin') {
+          // Allow access only to admins during maintenance
+          try {
+            const isAuth = await base44.auth.isAuthenticated();
+            if (isAuth) {
+              const userData = await base44.auth.me();
+              if (userData.role !== 'admin') {
+                setMaintenanceMode(true);
+                setMaintenanceMessage(msg);
+              }
+            } else {
               setMaintenanceMode(true);
               setMaintenanceMessage(msg);
             }
-          } else {
+          } catch (e) {
+            // Not authenticated or error - show maintenance
             setMaintenanceMode(true);
             setMaintenanceMessage(msg);
           }
