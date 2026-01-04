@@ -91,22 +91,29 @@ Cliente: ${targetUser.full_name}
 Número de aulas frequentadas: ${userBookings.length}
 
 Oferece uma promoção relevante baseada no perfil:
-- Se tem mais de 10 aulas: Cliente fiel - oferecer pacote premium com desconto
+- Se tem mais de 10 aulas: Cliente fiel - oferecer pacote premium com desconto de 15%
 - Se tem 5-10 aulas: Cliente regular - oferecer aula extra gratuita
-- Se tem menos de 5 aulas: Cliente novo - oferecer desconto na próxima aula
+- Se tem menos de 5 aulas: Cliente novo - oferecer desconto de 10% na próxima aula
 
 Escreve um email curto, amigável e personalizado em português. Inclui:
-1. Saudação personalizada
-2. Reconhecimento do seu percurso
-3. Oferta específica
-4. Call to action
+1. Saudação personalizada com nome
+2. Reconhecimento do seu percurso no picadeiro
+3. Oferta específica clara
+4. Call to action SIMPLES como "Entre em contacto connosco para aproveitar esta oferta"
 
-Responde apenas com o corpo do email em HTML simples.`
+IMPORTANTE: 
+- NÃO incluir botões HTML
+- NÃO incluir links clicáveis
+- Apenas texto simples em HTML
+- Mencionar que deve contactar por telefone (+351 932 111 786) ou visitar o site para aproveitar
+- Usar estilo inline CSS básico
+
+Responde apenas com o corpo do email em HTML simples sem botões.`
         });
 
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: targetUser.email,
-          subject: '🎁 Oferta Especial Para Si!',
+          subject: '🎁 Oferta Especial Para Si - Picadeiro Quinta da Horta',
           body: personalizedMessage
         });
 
