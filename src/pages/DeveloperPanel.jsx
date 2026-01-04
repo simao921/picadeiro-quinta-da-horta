@@ -55,11 +55,15 @@ export default function DeveloperPanel() {
       if (isAuth) {
         const userData = await base44.auth.me();
         setUser(userData);
+        
         if (userData.role === 'admin') {
           const devAccess = localStorage.getItem('dev_panel_access');
           if (devAccess === 'granted') {
             setIsAuthenticated(true);
           }
+        } else {
+          // Não é admin, redirecionar
+          window.location.href = createPageUrl('Home');
         }
       }
     } catch (e) {
