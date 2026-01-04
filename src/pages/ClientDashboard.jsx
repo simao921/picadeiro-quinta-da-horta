@@ -118,6 +118,12 @@ export default function ClientDashboard() {
 
   const isBlocked = totalDebt > 30;
 
+  const isLessonCompleted = (lesson) => {
+    if (!lesson?.date || !lesson?.end_time) return false;
+    const lessonDateTime = new Date(`${lesson.date}T${lesson.end_time}:00`);
+    return lessonDateTime < new Date();
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
@@ -332,6 +338,12 @@ export default function ClientDashboard() {
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              {isLessonCompleted(lesson) && booking.status === 'approved' && (
+                                <Badge className="bg-green-600 text-white">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Efetuada
+                                </Badge>
+                              )}
                               {getStatusBadge(booking.status)}
                               {booking.attendance && (
                                 <Badge variant="outline">
