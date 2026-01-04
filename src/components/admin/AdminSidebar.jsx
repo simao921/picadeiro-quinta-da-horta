@@ -5,12 +5,15 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Brain, CalendarDays, Users, UserCog,
   Settings, ShoppingBag, Package, Tag, Image,
-  MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3, UserCheck, Ban, Mail, Bell, Smartphone
+  MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3, UserCheck, Ban, Mail, Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', page: 'AdminDashboard' },
+  { icon: Brain, label: 'IA Assistente', page: 'AdminAI' },
+  { icon: Mail, label: 'Emails', page: 'AdminEmails' },
+  { icon: Bell, label: 'Notificações', page: 'AdminNotifications' },
   { icon: FileText, label: 'Conteúdo', page: 'AdminContent' },
   { icon: Users, label: 'Utilizadores', page: 'AdminUsers' },
   { icon: BarChart3, label: 'Relatórios', page: 'AdminReports' },

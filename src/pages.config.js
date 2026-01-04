@@ -29,6 +29,8 @@ import Services from './pages/Services';
 import Shop from './pages/Shop';
 import Wishlist from './pages/Wishlist';
 import UserPreferences from './pages/UserPreferences';
+import AdminEmails from './pages/AdminEmails';
+import AdminNotifications from './pages/AdminNotifications';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +66,8 @@ export const PAGES = {
     "Shop": Shop,
     "Wishlist": Wishlist,
     "UserPreferences": UserPreferences,
+    "AdminEmails": AdminEmails,
+    "AdminNotifications": AdminNotifications,
 }
 
 export const pagesConfig = {
