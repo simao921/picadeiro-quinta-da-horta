@@ -14,6 +14,14 @@ export default function AdminLogin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Verificar se chegou pelo atalho de teclado
+    const keyboardAccess = sessionStorage.getItem('admin_keyboard_access');
+    if (!keyboardAccess) {
+      window.location.href = createPageUrl('Home');
+      return;
+    }
+    sessionStorage.removeItem('admin_keyboard_access');
+
     const checkAuth = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();

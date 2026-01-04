@@ -106,6 +106,7 @@ const LayoutContent = ({ children, currentPageName }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '6') {
+        sessionStorage.setItem('admin_keyboard_access', 'true');
         window.location.href = createPageUrl('AdminLogin');
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
