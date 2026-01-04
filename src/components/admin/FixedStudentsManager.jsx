@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, Edit, Search, CalendarPlus } from 'lucide-react';
+import { Calendar, Plus, Trash2, Edit, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -356,34 +356,7 @@ export default function FixedStudentsManager() {
     }
   });
 
-  const generateYearLessonsMutation = useMutation({
-    mutationFn: async ({ studentId, isPicadeiro }) => {
-      const result = await base44.functions.invoke('generateYearLessons', {
-        studentId,
-        isPicadeiro
-      });
-      return result.data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(['lessons']);
-      queryClient.invalidateQueries(['admin-all-bookings']);
-      toast.success(data.message || 'Aulas geradas com sucesso!');
-    },
-    onError: (error) => {
-      toast.error(`Erro: ${error.message || 'Não foi possível gerar as aulas'}`);
-    }
-  });
 
-  const generateYearLessons = (student) => {
-    if (confirm(`Gerar aulas para o próximo ano inteiro para ${student.full_name || student.name}?\n\nIsto irá criar todas as aulas semanais automaticamente.`)) {
-      const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
-      toast.loading('A gerar aulas para o próximo ano...');
-      generateYearLessonsMutation.mutate({
-        studentId: student.id,
-        isPicadeiro
-      });
-    }
-  };
 
   const removeFixedStudent = (student) => {
     if (confirm('Remover aluno fixo do sistema? Todas as aulas automáticas associadas e reservas também serão removidas.')) {
@@ -644,17 +617,7 @@ export default function FixedStudentsManager() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      size="sm"
-                      onClick={() => generateYearLessons(student)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      disabled={generateYearLessonsMutation.isPending}
-                    >
-                      <CalendarPlus className="w-4 h-4 mr-1" />
-                      Gerar Ano
-                    </Button>
-                    <div className="flex gap-1">
+                  <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
