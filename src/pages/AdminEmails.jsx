@@ -43,7 +43,7 @@ export default function AdminEmails() {
         console.log('Para:', singleEmail);
         console.log('Assunto:', singleSubject);
 
-        const result = await base44.integrations.Core.SendEmail({
+        const result = await base44.functions.invoke('sendEmail', {
           to: singleEmail.trim(),
           subject: singleSubject,
           body: `
@@ -99,7 +99,7 @@ export default function AdminEmails() {
         });
 
         console.log('✅ Resposta da API:', result);
-        return result;
+        return result.data;
       } catch (err) {
         console.error('❌ ERRO COMPLETO:', err);
         console.error('Detalhes:', JSON.stringify(err, null, 2));
@@ -108,15 +108,15 @@ export default function AdminEmails() {
     },
     onSuccess: (data) => {
       console.log('✅ Sucesso! Dados:', data);
-      toast.success('Email enviado com sucesso!');
+      toast.success('✅ Email enviado com sucesso!');
       setSingleEmail('');
       setSingleSubject('');
       setSingleMessage('');
     },
     onError: (error) => {
       console.error('❌ ERRO NA MUTATION:', error);
-      const errorMsg = error?.response?.data?.message || error?.message || 'Erro desconhecido';
-      toast.error(`Erro: ${errorMsg}. Abra o console (F12) para mais detalhes.`);
+      const errorMsg = error?.response?.data?.error || error?.message || 'Erro desconhecido';
+      toast.error(`❌ ${errorMsg}`);
     }
   });
 
@@ -130,7 +130,7 @@ export default function AdminEmails() {
         if (!email) continue;
 
         try {
-          await base44.integrations.Core.SendEmail({
+          await base44.functions.invoke('sendEmail', {
             to: email,
             subject: bulkSubject,
             body: `
