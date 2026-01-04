@@ -36,13 +36,14 @@ export default function DeveloperPanel() {
   const [editingValue, setEditingValue] = useState('');
 
   useEffect(() => {
-    // Verificar se chegou pelo atalho de teclado
+    // Verificar se chegou pelo atalho de teclado OU tem acesso concedido
     const keyboardAccess = sessionStorage.getItem('dev_keyboard_access');
-    if (!keyboardAccess) {
+    const grantedAccess = localStorage.getItem('dev_panel_access');
+    
+    if (!keyboardAccess && grantedAccess !== 'granted') {
       window.location.href = createPageUrl('Home');
       return;
     }
-    sessionStorage.removeItem('dev_keyboard_access');
     
     checkAuth();
     loadSettings();
@@ -91,10 +92,9 @@ export default function DeveloperPanel() {
         return;
       }
       localStorage.setItem('dev_panel_access', 'granted');
+      sessionStorage.removeItem('dev_keyboard_access');
       setIsAuthenticated(true);
       toast.success('Acesso de desenvolvedor concedido!');
-      // Recarregar após 500ms
-      setTimeout(() => window.location.reload(), 500);
     } else {
       toast.error('Senha incorreta!');
     }

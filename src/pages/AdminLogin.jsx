@@ -20,9 +20,9 @@ export default function AdminLogin() {
       window.location.href = createPageUrl('Home');
       return;
     }
-    sessionStorage.removeItem('admin_keyboard_access');
 
     const checkAuth = async () => {
+      sessionStorage.removeItem('admin_keyboard_access');
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (isAuth) {
