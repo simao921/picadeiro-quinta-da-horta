@@ -36,6 +36,14 @@ export default function DeveloperPanel() {
   const [editingValue, setEditingValue] = useState('');
 
   useEffect(() => {
+    // Verificar se chegou pelo atalho de teclado
+    const keyboardAccess = sessionStorage.getItem('dev_keyboard_access');
+    if (!keyboardAccess) {
+      window.location.href = createPageUrl('Home');
+      return;
+    }
+    sessionStorage.removeItem('dev_keyboard_access');
+    
     checkAuth();
     loadSettings();
   }, []);

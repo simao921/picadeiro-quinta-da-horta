@@ -109,6 +109,7 @@ const LayoutContent = ({ children, currentPageName }) => {
         window.location.href = createPageUrl('AdminLogin');
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
+        sessionStorage.setItem('dev_keyboard_access', 'true');
         window.location.href = createPageUrl('DeveloperPanel');
       }
     };
