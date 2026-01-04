@@ -67,8 +67,15 @@ const LayoutContent = ({ children, currentPageName }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Control + Shift + 6 - Monitor/Owner Login
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '6') {
-        window.location.href = createPageUrl('AdminLogin');
+        e.preventDefault();
+        window.location.href = createPageUrl('StaffLogin');
+      }
+      // Control + Shift + 9 - Developer Login
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
+        e.preventDefault();
+        window.location.href = createPageUrl('DeveloperLogin');
       }
     };
     window.addEventListener('keydown', handleKeyDown);

@@ -3,11 +3,13 @@ import AdminBlockedSlots from './pages/AdminBlockedSlots';
 import AdminContent from './pages/AdminContent';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminEmails from './pages/AdminEmails';
 import AdminGallery from './pages/AdminGallery';
 import AdminInstructors from './pages/AdminInstructors';
 import AdminLessons from './pages/AdminLessons';
 import AdminLogin from './pages/AdminLogin';
 import AdminMessages from './pages/AdminMessages';
+import AdminNotifications from './pages/AdminNotifications';
 import AdminOrders from './pages/AdminOrders';
 import AdminPayments from './pages/AdminPayments';
 import AdminPicadeiroStudents from './pages/AdminPicadeiroStudents';
@@ -27,10 +29,12 @@ import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
-import Wishlist from './pages/Wishlist';
 import UserPreferences from './pages/UserPreferences';
-import AdminEmails from './pages/AdminEmails';
-import AdminNotifications from './pages/AdminNotifications';
+import Wishlist from './pages/Wishlist';
+import StaffLogin from './pages/StaffLogin';
+import DeveloperLogin from './pages/DeveloperLogin';
+import StaffDashboard from './pages/StaffDashboard';
+import DeveloperDashboard from './pages/DeveloperDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -40,11 +44,13 @@ export const PAGES = {
     "AdminContent": AdminContent,
     "AdminCoupons": AdminCoupons,
     "AdminDashboard": AdminDashboard,
+    "AdminEmails": AdminEmails,
     "AdminGallery": AdminGallery,
     "AdminInstructors": AdminInstructors,
     "AdminLessons": AdminLessons,
     "AdminLogin": AdminLogin,
     "AdminMessages": AdminMessages,
+    "AdminNotifications": AdminNotifications,
     "AdminOrders": AdminOrders,
     "AdminPayments": AdminPayments,
     "AdminPicadeiroStudents": AdminPicadeiroStudents,
@@ -64,10 +70,12 @@ export const PAGES = {
     "ProductDetail": ProductDetail,
     "Services": Services,
     "Shop": Shop,
-    "Wishlist": Wishlist,
     "UserPreferences": UserPreferences,
-    "AdminEmails": AdminEmails,
-    "AdminNotifications": AdminNotifications,
+    "Wishlist": Wishlist,
+    "StaffLogin": StaffLogin,
+    "DeveloperLogin": DeveloperLogin,
+    "StaffDashboard": StaffDashboard,
+    "DeveloperDashboard": DeveloperDashboard,
 }
 
 export const pagesConfig = {

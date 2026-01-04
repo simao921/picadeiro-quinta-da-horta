@@ -18,7 +18,7 @@ export default function AdminLayout({ children, currentPage }) {
           return;
         }
         const userData = await base44.auth.me();
-        if (userData.role !== 'admin') {
+        if (userData.role !== 'owner') {
           window.location.href = createPageUrl('Home');
           return;
         }
