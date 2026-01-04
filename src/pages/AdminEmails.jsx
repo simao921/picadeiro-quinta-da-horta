@@ -34,7 +34,8 @@ export default function AdminEmails() {
 
   const sendSingleEmail = useMutation({
     mutationFn: async () => {
-      await base44.integrations.Core.SendEmail({
+      console.log('Tentando enviar email para:', singleEmail);
+      const result = await base44.integrations.Core.SendEmail({
         to: singleEmail,
         subject: singleSubject,
         body: `
@@ -90,18 +91,21 @@ export default function AdminEmails() {
           </body>
           </html>
         `
-      });
-    },
-    onSuccess: () => {
-      toast.success('Email enviado com sucesso!');
-      setSingleEmail('');
-      setSingleSubject('');
-      setSingleMessage('');
-    },
-    onError: (error) => {
-      toast.error(`Erro: ${error.message}`);
-    }
-  });
+        });
+        console.log('Email enviado com sucesso:', result);
+        return result;
+        },
+        onSuccess: () => {
+        toast.success('✅ Email enviado com sucesso!');
+        setSingleEmail('');
+        setSingleSubject('');
+        setSingleMessage('');
+        },
+        onError: (error) => {
+        console.error('Erro ao enviar email:', error);
+        toast.error(`❌ Erro ao enviar: ${error?.message || 'Erro desconhecido'}. Verifique o console.`);
+        }
+        });
 
   const sendBulkEmail = useMutation({
     mutationFn: async () => {
