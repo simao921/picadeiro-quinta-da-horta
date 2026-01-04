@@ -309,46 +309,52 @@ export default function FixedStudentsManager() {
     mutationFn: async ({ userId, isPicadeiro, studentEmail }) => {
       toast.loading('A remover aluno fixo e aulas associadas...');
 
-      // Apagar todas as reservas e aulas automáticas do aluno
+      // Apagar todas as reservas fixas do aluno
       if (studentEmail) {
         const bookings = await base44.entities.Booking.filter({
           client_email: studentEmail,
           is_fixed_student: true
         });
 
+        console.log(`Encontradas ${bookings.length} reservas fixas para ${studentEmail}`);
+
+        // Agrupar por lesson_id para processar
+        const lessonIds = [...new Set(bookings.map(b => b.lesson_id))];
+        
+        // Apagar todas as reservas primeiro
         for (const booking of bookings) {
           try {
-            // Buscar a aula antes de apagar a reserva
-            const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
-            
-            // Apagar a reserva
             await base44.entities.Booking.delete(booking.id);
+          } catch (e) {
+            console.error('Erro ao apagar reserva:', e);
+          }
+        }
 
-            // Se a aula existe e é auto-gerada
-            if (lessons.length > 0) {
-              const lesson = lessons[0];
-              
-              // Verificar quantas reservas restam nesta aula
-              const remainingBookings = await base44.entities.Booking.filter({
-                lesson_id: lesson.id
+        // Agora processar cada aula
+        for (const lessonId of lessonIds) {
+          try {
+            const lessons = await base44.entities.Lesson.filter({ id: lessonId });
+            if (lessons.length === 0) continue;
+            
+            const lesson = lessons[0];
+            
+            // Verificar se ainda há outras reservas nesta aula
+            const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lessonId });
+
+            if (remainingBookings.length === 0 && lesson.is_auto_generated) {
+              // Aula vazia e auto-gerada = apagar
+              await base44.entities.Lesson.delete(lesson.id);
+              console.log(`Aula ${lessonId} apagada`);
+            } else if (remainingBookings.length > 0) {
+              // Atualizar contadores
+              await base44.entities.Lesson.update(lesson.id, {
+                booked_spots: remainingBookings.length,
+                fixed_students_count: remainingBookings.filter(b => b.is_fixed_student).length
               });
-
-              if (remainingBookings.length === 0 && lesson.is_auto_generated) {
-                // Se não há mais reservas e é auto-gerada, apagar a aula
-                await base44.entities.Lesson.delete(lesson.id);
-              } else {
-                // Se há outras reservas, atualizar contadores
-                const newBookedSpots = Math.max(0, (lesson.booked_spots || 0) - 1);
-                const newFixedCount = Math.max(0, (lesson.fixed_students_count || 0) - 1);
-                
-                await base44.entities.Lesson.update(lesson.id, {
-                  booked_spots: newBookedSpots,
-                  fixed_students_count: newFixedCount
-                });
-              }
+              console.log(`Aula ${lessonId} atualizada`);
             }
           } catch (e) {
-            console.error('Erro ao apagar reserva/aula:', e);
+            console.error('Erro ao processar aula:', e);
           }
         }
       }
