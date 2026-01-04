@@ -545,8 +545,13 @@ export default function NewBookingForm({ user, isBlocked }) {
       const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
       const fixedStudentsCount = lessonsAtTime.reduce((sum, l) => sum + (l.fixed_students_count || 0), 0);
       
-      // CRÍTICO: Se tem alunos fixos E está lotada, bloquear completamente
-      // Alunos fixos têm prioridade absoluta nesses horários
+      // BLOQUEIO AUTOMÁTICO: Se existe pelo menos 1 aluno fixo neste horário, BLOQUEAR COMPLETAMENTE
+      // Alunos fixos têm prioridade absoluta e o horário fica reservado para eles
+      if (fixedStudentsCount > 0) {
+        return false;
+      }
+      
+      // Se está lotada (6 pessoas), também bloquear
       if (totalBooked >= 6) {
         return false;
       }
@@ -563,6 +568,10 @@ export default function NewBookingForm({ user, isBlocked }) {
         if (nextSlot) {
           const lessonsAtNextTime = lessonsToCheck.filter(l => l.start_time === nextSlot);
           const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
+          const fixedStudentsNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.fixed_students_count || 0), 0);
+          
+          // BLOQUEIO: Se a próxima meia hora tem alunos fixos, bloquear
+          if (fixedStudentsNext > 0) return false;
           
           // Se a próxima meia hora tem 6 pessoas, este horário não está disponível
           if (totalBookedNext >= 6) return false;
