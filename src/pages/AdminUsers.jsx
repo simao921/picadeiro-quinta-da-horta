@@ -79,7 +79,8 @@ export default function AdminUsers() {
     },
     onSuccess: async (data) => {
       await refetch();
-      toast.success(`Utilizador agora é ${data.newRole === 'admin' ? 'Administrador' : 'Utilizador'}!`);
+      const roleNames = { user: 'Cliente', monitor: 'Monitor', owner: 'Proprietário', developer: 'Developer' };
+      toast.success(`Utilizador agora é ${roleNames[data.newRole]}!`);
     },
     onError: (error) => {
       console.error('Update error:', error);
@@ -115,8 +116,10 @@ export default function AdminUsers() {
 
   const stats = {
     total: users.length,
-    admins: users.filter(u => u.role === 'admin').length,
-    users: users.filter(u => u.role === 'user').length
+    owners: users.filter(u => u.role === 'owner').length,
+    monitors: users.filter(u => u.role === 'monitor').length,
+    developers: users.filter(u => u.role === 'developer').length,
+    clients: users.filter(u => u.role === 'user').length
   };
 
   return (
@@ -138,45 +141,48 @@ export default function AdminUsers() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">{stats.total}</p>
-                  <p className="text-sm text-stone-500">Total Utilizadores</p>
-                </div>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#2C3E1F]">{stats.total}</p>
+                <p className="text-xs text-stone-500">Total</p>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <Crown className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">{stats.admins}</p>
-                  <p className="text-sm text-stone-500">Administradores</p>
-                </div>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-600">{stats.owners}</p>
+                <p className="text-xs text-stone-500">Proprietário</p>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">{stats.users}</p>
-                  <p className="text-sm text-stone-500">Utilizadores</p>
-                </div>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">{stats.monitors}</p>
+                <p className="text-xs text-stone-500">Monitores</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-cyan-600">{stats.developers}</p>
+                <p className="text-xs text-stone-500">Developer</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{stats.clients}</p>
+                <p className="text-xs text-stone-500">Clientes</p>
               </div>
             </CardContent>
           </Card>
@@ -218,15 +224,24 @@ export default function AdminUsers() {
                       <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        {user.role === 'admin' ? (
+                        {user.role === 'owner' ? (
                           <Badge className="bg-amber-100 text-amber-800">
                             <Crown className="w-3 h-3 mr-1" />
-                            Administrador
+                            Proprietário
+                          </Badge>
+                        ) : user.role === 'monitor' ? (
+                          <Badge className="bg-green-100 text-green-800">
+                            <Users className="w-3 h-3 mr-1" />
+                            Monitor
+                          </Badge>
+                        ) : user.role === 'developer' ? (
+                          <Badge className="bg-cyan-100 text-cyan-800">
+                            Developer
                           </Badge>
                         ) : (
                           <Badge className="bg-blue-100 text-blue-800">
                             <Shield className="w-3 h-3 mr-1" />
-                            Utilizador
+                            Cliente
                           </Badge>
                         )}
                       </TableCell>
@@ -235,39 +250,21 @@ export default function AdminUsers() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          {user.role === 'admin' ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                updateRoleMutation.mutate({ userId: user.id, newRole: 'user' });
-                              }}
-                              disabled={updateRoleMutation.isPending}
-                              className="text-amber-600 border-amber-600 hover:bg-amber-50"
-                            >
-                              {updateRoleMutation.isPending ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                'Remover Admin'
-                              )}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                updateRoleMutation.mutate({ userId: user.id, newRole: 'admin' });
-                              }}
-                              disabled={updateRoleMutation.isPending}
-                              className="text-green-600 border-green-600 hover:bg-green-50"
-                            >
-                              {updateRoleMutation.isPending ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                'Tornar Admin'
-                              )}
-                            </Button>
-                          )}
+                          <select
+                            value={user.role}
+                            onChange={(e) => {
+                              if (e.target.value !== user.role) {
+                                updateRoleMutation.mutate({ userId: user.id, newRole: e.target.value });
+                              }
+                            }}
+                            disabled={updateRoleMutation.isPending || user.role === 'developer'}
+                            className="text-xs border rounded px-2 py-1"
+                          >
+                            <option value="user">Cliente</option>
+                            <option value="monitor">Monitor</option>
+                            <option value="owner">Proprietário</option>
+                            {user.role === 'developer' && <option value="developer">Developer</option>}
+                          </select>
                           <Button
                             variant="outline"
                             size="sm"
@@ -275,6 +272,7 @@ export default function AdminUsers() {
                               setUserToDelete(user);
                               setDeleteDialogOpen(true);
                             }}
+                            disabled={user.role === 'developer'}
                             className="text-red-600 border-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -337,24 +335,15 @@ export default function AdminUsers() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Função</label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={inviteRole === 'user' ? 'default' : 'outline'}
-                    onClick={() => setInviteRole('user')}
-                    className={inviteRole === 'user' ? 'bg-[#B8956A]' : ''}
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Utilizador
-                  </Button>
-                  <Button
-                    variant={inviteRole === 'admin' ? 'default' : 'outline'}
-                    onClick={() => setInviteRole('admin')}
-                    className={inviteRole === 'admin' ? 'bg-[#B8956A]' : ''}
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Administrador
-                  </Button>
-                </div>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="user">Cliente</option>
+                  <option value="monitor">Monitor</option>
+                  <option value="owner">Proprietário</option>
+                </select>
               </div>
               <Button
                 onClick={() => inviteMutation.mutate({ email: inviteEmail, role: inviteRole })}
