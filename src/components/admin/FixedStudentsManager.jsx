@@ -78,43 +78,63 @@ export default function FixedStudentsManager() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail }) => {
-      // Se está editando, apagar aulas antigas automáticas
-      if (isEditing && studentEmail) {
-        toast.loading('A atualizar aulas...');
+    mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, oldSchedules }) => {
+      // Se está editando, remover apenas as aulas dos horários que foram alterados
+      if (isEditing && studentEmail && oldSchedules) {
+        toast.loading('A atualizar horários...');
         
-        // Buscar todas as reservas do aluno
-        const bookings = await base44.entities.Booking.filter({ 
-          client_email: studentEmail,
-          is_fixed_student: true
-        });
+        const newSchedules = data.fixed_schedule || [];
+        const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
         
-        // Para cada reserva, buscar a aula e apagar se for auto-gerada
-        for (const booking of bookings) {
-          try {
-            const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
-            if (lessons.length > 0 && lessons[0].is_auto_generated) {
-              // Apagar a reserva
-              await base44.entities.Booking.delete(booking.id);
+        // Identificar horários removidos (estavam nos antigos mas não estão nos novos)
+        const removedSchedules = oldSchedules.filter(old => 
+          !newSchedules.some(ns => ns.day === old.day && ns.time === old.time)
+        );
+        
+        console.log('Horários removidos:', removedSchedules);
+        
+        // Remover aulas dos horários antigos que não existem mais
+        for (const oldSchedule of removedSchedules) {
+          const targetDay = daysMap[oldSchedule.day];
+          
+          // Buscar todas as reservas fixas do aluno
+          const bookings = await base44.entities.Booking.filter({ 
+            client_email: studentEmail,
+            is_fixed_student: true
+          });
+          
+          // Filtrar apenas as que correspondem ao horário removido
+          for (const booking of bookings) {
+            try {
+              const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
+              if (lessons.length === 0) continue;
               
-              // Atualizar contadores da aula
               const lesson = lessons[0];
-              const newBookedSpots = Math.max(0, (lesson.booked_spots || 0) - 1);
-              const newFixedCount = Math.max(0, (lesson.fixed_students_count || 0) - 1);
+              const lessonDate = new Date(lesson.date);
+              const lessonDay = lessonDate.getDay();
               
-              if (newBookedSpots === 0) {
-                // Se não tem mais reservas, apagar a aula
-                await base44.entities.Lesson.delete(lesson.id);
-              } else {
-                // Senão, só atualizar os contadores
-                await base44.entities.Lesson.update(lesson.id, {
-                  booked_spots: newBookedSpots,
-                  fixed_students_count: newFixedCount
-                });
+              // Se a aula é no dia/hora removido
+              if (lessonDay === targetDay && lesson.start_time === oldSchedule.time && lesson.is_auto_generated) {
+                // Apagar a reserva
+                await base44.entities.Booking.delete(booking.id);
+                
+                // Verificar se ainda há outras reservas
+                const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+                
+                if (remainingBookings.length === 0) {
+                  // Aula vazia = apagar
+                  await base44.entities.Lesson.delete(lesson.id);
+                } else {
+                  // Atualizar contadores
+                  await base44.entities.Lesson.update(lesson.id, {
+                    booked_spots: remainingBookings.length,
+                    fixed_students_count: remainingBookings.filter(b => b.is_fixed_student).length
+                  });
+                }
               }
+            } catch (e) {
+              console.error('Erro ao processar aula:', e);
             }
-          } catch (e) {
-            console.error('Erro ao apagar aula:', e);
           }
         }
       }
@@ -159,9 +179,13 @@ export default function FixedStudentsManager() {
         const nextYear = new Date().getFullYear() + 1;
         toast.loading(`A criar aulas até fim de ${nextYear}...`);
         console.log('Criando aulas para:', updatedStudent);
-        await createRecurringLessons(updatedStudent);
+        
+        // Se está editando, passar os horários antigos para criar apenas os novos
+        const isEditing = !!result.oldSchedules && result.oldSchedules.length > 0;
+        await createRecurringLessons(updatedStudent, isEditing, result.oldSchedules || []);
+        
         toast.dismiss();
-        toast.success(`Aluno fixo guardado e aulas criadas até ${nextYear}!`);
+        toast.success(`Aluno fixo guardado e horários atualizados até ${nextYear}!`);
       } else {
         toast.success('Aluno fixo atualizado!');
       }
@@ -182,7 +206,7 @@ export default function FixedStudentsManager() {
     }
   });
 
-  const createRecurringLessons = async (student) => {
+  const createRecurringLessons = async (student, onlyNewSchedules = false, oldSchedules = []) => {
     if (!student.fixed_schedule || student.fixed_schedule.length === 0) {
       console.log('Sem horários fixos definidos');
       return;
@@ -201,8 +225,23 @@ export default function FixedStudentsManager() {
       return;
     }
 
-    console.log(`Criando aulas para ${student.full_name} (${student.email})`);
-    console.log('Horários:', student.fixed_schedule);
+    // Se estamos editando, criar apenas os novos horários
+    let schedulesToCreate = student.fixed_schedule;
+    if (onlyNewSchedules && oldSchedules.length > 0) {
+      schedulesToCreate = student.fixed_schedule.filter(ns => 
+        !oldSchedules.some(old => old.day === ns.day && old.time === ns.time)
+      );
+      console.log('Criando apenas novos horários:', schedulesToCreate);
+    } else {
+      console.log(`Criando todas as aulas para ${student.full_name} (${student.email})`);
+    }
+
+    if (schedulesToCreate.length === 0) {
+      console.log('Nenhum horário novo para criar');
+      return;
+    }
+
+    console.log('Horários a criar:', schedulesToCreate);
 
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -218,7 +257,7 @@ export default function FixedStudentsManager() {
     
     // Criar aulas até a data final
     for (let week = 0; week < weeksDiff; week++) {
-      for (const schedule of student.fixed_schedule) {
+      for (const schedule of schedulesToCreate) {
         const targetDay = daysMap[schedule.day];
         const currentDay = today.getDay();
         
@@ -315,10 +354,12 @@ export default function FixedStudentsManager() {
     const isPicadeiro = formData.user_id.startsWith('picadeiro-');
     const actualId = formData.user_id.replace('user-', '').replace('picadeiro-', '');
     
-    // Obter email do aluno para apagar aulas antigas
+    // Obter dados do aluno para comparar horários
     let studentEmail = '';
+    let oldSchedules = [];
     if (editingStudent) {
       studentEmail = editingStudent.email || editingStudent.full_name;
+      oldSchedules = editingStudent.fixed_schedule || [];
     }
 
     await updateUserMutation.mutateAsync({
@@ -326,6 +367,7 @@ export default function FixedStudentsManager() {
       isPicadeiro,
       isEditing: !!editingStudent,
       studentEmail,
+      oldSchedules,
       data: {
         student_type: 'fixo',
         student_level: formData.student_level,
