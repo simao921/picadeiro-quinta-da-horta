@@ -49,14 +49,15 @@ export default function CTASection() {
                 </Button>
               </Link>
               <a href="tel:+351932111786">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 px-8"
-                >
-                  <Phone className="w-5 h-5 mr-2" />
-                  {t('cta_call')}
-                </Button>
+<Button
+  size="lg"
+  variant="outline"
+  className="bg-transparent border-white/30 text-white hover:bg-white/10 px-8"
+>
+  <Phone className="w-5 h-5 mr-2" />
+  {t('cta_call')}
+</Button>
+
               </a>
             </div>
           </motion.div>
