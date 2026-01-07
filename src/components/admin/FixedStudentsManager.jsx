@@ -8,11 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, Edit, Search } from 'lucide-react';
+import { Calendar, Plus, Trash2, Edit, Search, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-const horses = ["Vidre", "Borboleta", "Égua Louza", "U for me", "Faz de conta", "Domino", "Chá", "Árabe", "Floribela", "Joselito"];
 const weekDays = [
   { value: 'monday', label: 'Segunda-feira' },
   { value: 'tuesday', label: 'Terça-feira' },
@@ -42,18 +41,24 @@ export default function FixedStudentsManager() {
     schedules: []
   });
 
-  const { data: allUsers = [], refetch: refetchUsers } = useQuery({
+  const { data: allUsers = [] } = useQuery({
     queryKey: ['all-users'],
     queryFn: () => base44.entities.User.list('-created_date', 500),
     initialData: [],
     staleTime: 0
   });
 
-  const { data: picadeiroStudents = [], refetch: refetchStudents } = useQuery({
+  const { data: picadeiroStudents = [] } = useQuery({
     queryKey: ['picadeiro-students'],
-    queryFn: () => base44.entities.PicadeiroStudent.list('-created_date'),
+    queryFn: () => base44.entities.PicadeiroStudent.list('-created_date', 500),
     initialData: [],
     staleTime: 0
+  });
+
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => base44.entities.Service.list('-created_date', 100),
+    initialData: []
   });
 
   const fixedStudentsFromUsers = allUsers.filter(u => u.student_type === 'fixo');
@@ -71,61 +76,56 @@ export default function FixedStudentsManager() {
     return name.includes(query) || email.includes(query);
   });
 
-  const { data: services = [] } = useQuery({
-    queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list(),
-    initialData: []
-  });
+  // ========== SINCRONIZAR AULAS COM HORÁRIOS ==========
+  const syncLessonsWithSchedules = async (studentEmail, oldSchedules, newSchedules) => {
+    if (!studentEmail) return { removed: 0, added: [] };
 
-  const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, oldSchedules }) => {
-      // Se está editando, remover apenas as aulas dos horários que foram alterados
-      if (isEditing && studentEmail && oldSchedules) {
-        toast.loading('A atualizar horários...');
+    console.log('🔄 Sincronizando aulas...');
+    const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
+
+    // Identificar horários removidos
+    const removedSchedules = oldSchedules.filter(oldSch => 
+      !newSchedules.some(newSch => newSch.day === oldSch.day && newSch.time === oldSch.time)
+    );
+
+    // Identificar horários adicionados
+    const addedSchedules = newSchedules.filter(newSch =>
+      !oldSchedules.some(oldSch => oldSch.day === newSch.day && oldSch.time === newSch.time)
+    );
+
+    let removed = 0;
+
+    // Remover aulas dos horários antigos
+    if (removedSchedules.length > 0) {
+      for (const oldSchedule of removedSchedules) {
+        const targetDay = daysMap[oldSchedule.day];
         
-        const newSchedules = data.fixed_schedule || [];
-        const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
-        
-        // Identificar horários removidos (estavam nos antigos mas não estão nos novos)
-        const removedSchedules = oldSchedules.filter(old => 
-          !newSchedules.some(ns => ns.day === old.day && ns.time === old.time)
-        );
-        
-        console.log('Horários removidos:', removedSchedules);
-        
-        // Remover aulas dos horários antigos que não existem mais
-        for (const oldSchedule of removedSchedules) {
-          const targetDay = daysMap[oldSchedule.day];
-          
-          // Buscar todas as reservas fixas do aluno
-          const bookings = await base44.entities.Booking.filter({ 
+        try {
+          const allBookings = await base44.entities.Booking.filter({ 
             client_email: studentEmail,
             is_fixed_student: true
           });
-          
-          // Filtrar apenas as que correspondem ao horário removido
-          for (const booking of bookings) {
+
+          for (const booking of allBookings) {
             try {
               const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
               if (lessons.length === 0) continue;
               
               const lesson = lessons[0];
               const lessonDate = new Date(lesson.date);
+              if (lessonDate < new Date()) continue; // Apenas futuras
+              
               const lessonDay = lessonDate.getDay();
               
-              // Se a aula é no dia/hora removido
-              if (lessonDay === targetDay && lesson.start_time === oldSchedule.time && lesson.is_auto_generated) {
-                // Apagar a reserva
+              if (lessonDay === targetDay && lesson.start_time === oldSchedule.time) {
                 await base44.entities.Booking.delete(booking.id);
+                removed++;
                 
-                // Verificar se ainda há outras reservas
                 const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
                 
-                if (remainingBookings.length === 0) {
-                  // Aula vazia = apagar
+                if (remainingBookings.length === 0 && lesson.is_auto_generated) {
                   await base44.entities.Lesson.delete(lesson.id);
-                } else {
-                  // Atualizar contadores
+                } else if (remainingBookings.length > 0) {
                   await base44.entities.Lesson.update(lesson.id, {
                     booked_spots: remainingBookings.length,
                     fixed_students_count: remainingBookings.filter(b => b.is_fixed_student).length
@@ -133,148 +133,53 @@ export default function FixedStudentsManager() {
                 }
               }
             } catch (e) {
-              console.error('Erro ao processar aula:', e);
+              console.error('Erro ao processar reserva:', e);
             }
           }
+        } catch (e) {
+          console.error('Erro ao remover horário:', e);
         }
       }
-      
-      if (isPicadeiro) {
-        await base44.entities.PicadeiroStudent.update(userId, data);
-      } else {
-        await base44.entities.User.update(userId, data);
-      }
-      return { userId, data, isPicadeiro, oldSchedules };
-    },
-    onSuccess: async (result) => {
-      // Construir aluno com dados atualizados
-      let updatedStudent;
-      if (result.isPicadeiro) {
-        // Re-fetch para obter dados mais recentes
-        await queryClient.invalidateQueries(['picadeiro-students']);
-        const students = await base44.entities.PicadeiroStudent.list();
-        const student = students.find(s => s.id === result.userId);
-        updatedStudent = {
-          id: result.userId,
-          email: student?.email || student?.phone || `picadeiro-${student?.name}`,
-          full_name: student?.name || '',
-          fixed_schedule: result.data.fixed_schedule || [],
-          ...result.data
-        };
-      } else {
-        await queryClient.invalidateQueries(['all-users']);
-        const users = await base44.entities.User.list('-created_date', 500);
-        const user = users.find(u => u.id === result.userId);
-        updatedStudent = {
-          id: result.userId,
-          email: user?.email || '',
-          full_name: user?.full_name || '',
-          fixed_schedule: result.data.fixed_schedule || [],
-          ...result.data
-        };
-      }
-      
-      // SEMPRE recriar aulas se tiver horários definidos
-      if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && updatedStudent.email) {
-        const nextYear = new Date().getFullYear() + 1;
-        toast.loading(`A criar aulas até fim de ${nextYear}...`);
-        console.log('Criando aulas para:', updatedStudent);
-        
-        // Se está editando, passar os horários antigos para criar apenas os novos
-        const isEditing = !!result.oldSchedules && result.oldSchedules.length > 0;
-        await createRecurringLessons(updatedStudent, isEditing, result.oldSchedules || []);
-        
-        toast.dismiss();
-        toast.success(`Aluno fixo guardado e horários atualizados até ${nextYear}!`);
-      } else {
-        toast.success('Aluno fixo atualizado!');
-      }
-      
-      await queryClient.invalidateQueries(['all-users']);
-      await queryClient.invalidateQueries(['picadeiro-students']);
-      await queryClient.invalidateQueries(['lessons']);
-      await queryClient.invalidateQueries(['admin-all-bookings']);
-      setDialogOpen(false);
-      setEditingStudent(null);
-      setFormData({
-        user_id: '',
-        student_level: 'iniciante',
-        duration: 30,
-        weekly_frequency: 1,
-        schedules: []
-      });
     }
-  });
 
-  const createRecurringLessons = async (student, onlyNewSchedules = false, oldSchedules = []) => {
-    if (!student.fixed_schedule || student.fixed_schedule.length === 0) {
-      console.log('Sem horários fixos definidos');
-      return;
-    }
+    return { removed, added: addedSchedules };
+  };
+
+  // ========== CRIAR AULAS RECORRENTES ==========
+  const createRecurringLessons = async (student, schedulesToCreate = null) => {
+    const schedules = schedulesToCreate || student.fixed_schedule;
     
-    if (!student.email) {
-      console.error('Aluno sem email:', student);
-      toast.error('Erro: aluno sem email');
-      return;
-    }
+    if (!schedules || schedules.length === 0 || !student.email) return;
     
     const service = services.find(s => s.title === 'Aulas em Grupo');
     if (!service) {
-      console.error('Serviço "Aulas em Grupo" não encontrado');
       toast.error('Serviço "Aulas em Grupo" não encontrado');
       return;
     }
 
-    // Se estamos editando, criar apenas os novos horários
-    let schedulesToCreate = student.fixed_schedule;
-    if (onlyNewSchedules && oldSchedules.length > 0) {
-      schedulesToCreate = student.fixed_schedule.filter(ns => 
-        !oldSchedules.some(old => old.day === ns.day && old.time === ns.time)
-      );
-      console.log('Criando apenas novos horários:', schedulesToCreate);
-    } else {
-      console.log(`Criando todas as aulas para ${student.full_name} (${student.email})`);
-    }
-
-    if (schedulesToCreate.length === 0) {
-      console.log('Nenhum horário novo para criar');
-      return;
-    }
-
-    console.log('Horários a criar:', schedulesToCreate);
-
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const endDate = new Date(currentYear + 1, 11, 31); // Fim do próximo ano
-    console.log(`Criando de ${format(today, 'yyyy-MM-dd')} até ${format(endDate, 'yyyy-MM-dd')}`);
+    const endDate = new Date(today.getFullYear() + 1, 11, 31);
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
     
     let created = 0;
-    let updated = 0;
-    
-    // Calcular número de semanas até a data final
     const weeksDiff = Math.ceil((endDate - today) / (7 * 24 * 60 * 60 * 1000));
     
-    // Criar aulas até a data final
     for (let week = 0; week < weeksDiff; week++) {
-      for (const schedule of schedulesToCreate) {
+      for (const schedule of schedules) {
         const targetDay = daysMap[schedule.day];
         const currentDay = today.getDay();
         
-        // Calcular próxima ocorrência do dia da semana
         let daysUntilTarget = (targetDay - currentDay + 7) % 7;
         if (daysUntilTarget === 0 && week === 0) daysUntilTarget = 7;
         
         const lessonDate = new Date(today);
         lessonDate.setDate(today.getDate() + daysUntilTarget + (week * 7));
         
-        // Parar se ultrapassar a data final
         if (lessonDate > endDate) break;
         
         const dateStr = format(lessonDate, 'yyyy-MM-dd');
         
         try {
-          // Verificar se já existe aula neste horário
           const existingLessons = await base44.entities.Lesson.filter({ 
             date: dateStr,
             start_time: schedule.time,
@@ -283,7 +188,6 @@ export default function FixedStudentsManager() {
 
           let lesson;
           if (existingLessons.length === 0) {
-            // Criar nova aula
             const [hours, minutes] = schedule.time.split(':');
             const endTime = new Date(2000, 0, 1, parseInt(hours), parseInt(minutes));
             endTime.setMinutes(endTime.getMinutes() + (schedule.duration || 30));
@@ -302,17 +206,14 @@ export default function FixedStudentsManager() {
             created++;
           } else {
             lesson = existingLessons[0];
-            updated++;
           }
 
-          // Verificar se já existe reserva do aluno
           const existingBookings = await base44.entities.Booking.filter({
             lesson_id: lesson.id,
             client_email: student.email
           });
 
           if (existingBookings.length === 0) {
-            // Criar reserva automática
             await base44.entities.Booking.create({
               lesson_id: lesson.id,
               client_email: student.email,
@@ -322,7 +223,6 @@ export default function FixedStudentsManager() {
               is_owner_booking: false
             });
 
-            // Atualizar contadores se a aula já existia
             if (existingLessons.length > 0) {
               await base44.entities.Lesson.update(lesson.id, {
                 booked_spots: (lesson.booked_spots || 0) + 1,
@@ -331,13 +231,90 @@ export default function FixedStudentsManager() {
             }
           }
         } catch (e) {
-          console.error(`Erro ao criar aula ${dateStr} ${schedule.time}:`, e);
+          console.error(`Erro ao criar aula ${dateStr}:`, e);
         }
       }
     }
     
-    console.log(`✅ Criadas ${created} novas aulas e atualizadas ${updated} aulas existentes`);
+    console.log(`✅ ${created} aulas criadas`);
   };
+
+  // ========== MUTATION ATUALIZAR ==========
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, oldSchedules }) => {
+      let syncResult = { removed: 0, added: [] };
+      
+      if (isEditing && studentEmail && oldSchedules && oldSchedules.length > 0) {
+        const newSchedules = data.fixed_schedule || [];
+        syncResult = await syncLessonsWithSchedules(studentEmail, oldSchedules, newSchedules);
+      }
+      
+      if (isPicadeiro) {
+        await base44.entities.PicadeiroStudent.update(userId, data);
+      } else {
+        await base44.entities.User.update(userId, data);
+      }
+      
+      return { userId, data, isPicadeiro, syncResult };
+    },
+    onSuccess: async (result) => {
+      let updatedStudent;
+      if (result.isPicadeiro) {
+        await queryClient.invalidateQueries(['picadeiro-students']);
+        const students = await base44.entities.PicadeiroStudent.list('-created_date', 500);
+        const student = students.find(s => s.id === result.userId);
+        updatedStudent = {
+          id: result.userId,
+          email: student?.email || student?.phone || '',
+          full_name: student?.name || '',
+          fixed_schedule: result.data.fixed_schedule || [],
+          ...result.data
+        };
+      } else {
+        await queryClient.invalidateQueries(['all-users']);
+        const users = await base44.entities.User.list('-created_date', 500);
+        const user = users.find(u => u.id === result.userId);
+        updatedStudent = {
+          id: result.userId,
+          email: user?.email || '',
+          full_name: user?.full_name || '',
+          fixed_schedule: result.data.fixed_schedule || [],
+          ...result.data
+        };
+      }
+      
+      if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && updatedStudent.email) {
+        const nextYear = new Date().getFullYear() + 1;
+        
+        if (result.syncResult && result.syncResult.added && result.syncResult.added.length > 0) {
+          toast.loading(`Criando aulas para novos horários até ${nextYear}...`);
+          await createRecurringLessons(updatedStudent, result.syncResult.added);
+        } else {
+          toast.loading(`Criando aulas até ${nextYear}...`);
+          await createRecurringLessons(updatedStudent);
+        }
+        
+        toast.dismiss();
+        toast.success(`Aluno atualizado! Aulas sincronizadas até ${nextYear}`);
+      } else {
+        toast.success('Aluno fixo atualizado!');
+      }
+      
+      await queryClient.invalidateQueries(['admin-lessons']);
+      await queryClient.invalidateQueries(['admin-all-lessons']);
+      await queryClient.invalidateQueries(['admin-all-bookings']);
+      
+      setDialogOpen(false);
+      setEditingStudent(null);
+      setFormData({
+        user_id: '',
+        student_level: 'iniciante',
+        duration: 30,
+        weekly_frequency: 1,
+        schedules: []
+      });
+    }
+  });
 
   const handleSave = async () => {
     if (!formData.user_id || formData.schedules.length === 0) {
@@ -354,7 +331,6 @@ export default function FixedStudentsManager() {
     const isPicadeiro = formData.user_id.startsWith('picadeiro-');
     const actualId = formData.user_id.replace('user-', '').replace('picadeiro-', '');
     
-    // Obter dados do aluno para comparar horários
     let studentEmail = '';
     let oldSchedules = [];
     if (editingStudent) {
@@ -389,23 +365,19 @@ export default function FixedStudentsManager() {
     setFormData({ ...formData, schedules: newSchedules });
   };
 
+  // ========== MUTATION REMOVER ==========
   const removeStudentMutation = useMutation({
     mutationFn: async ({ userId, isPicadeiro, studentEmail }) => {
-      toast.loading('A remover aluno fixo e aulas associadas...');
+      toast.loading('Removendo aluno e aulas...');
 
-      // Apagar todas as reservas fixas do aluno
       if (studentEmail) {
         const bookings = await base44.entities.Booking.filter({
           client_email: studentEmail,
           is_fixed_student: true
         });
 
-        console.log(`Encontradas ${bookings.length} reservas fixas para ${studentEmail}`);
-
-        // Agrupar por lesson_id para processar
         const lessonIds = [...new Set(bookings.map(b => b.lesson_id))];
         
-        // Apagar todas as reservas primeiro
         for (const booking of bookings) {
           try {
             await base44.entities.Booking.delete(booking.id);
@@ -414,28 +386,21 @@ export default function FixedStudentsManager() {
           }
         }
 
-        // Agora processar cada aula
         for (const lessonId of lessonIds) {
           try {
             const lessons = await base44.entities.Lesson.filter({ id: lessonId });
             if (lessons.length === 0) continue;
             
             const lesson = lessons[0];
-            
-            // Verificar se ainda há outras reservas nesta aula
             const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lessonId });
 
-            if (remainingBookings.length === 0) {
-              // Aula vazia = apagar (auto-gerada ou não)
+            if (remainingBookings.length === 0 && lesson.is_auto_generated) {
               await base44.entities.Lesson.delete(lesson.id);
-              console.log(`Aula ${lessonId} apagada (estava vazia)`);
-            } else {
-              // Atualizar contadores
+            } else if (remainingBookings.length > 0) {
               await base44.entities.Lesson.update(lesson.id, {
                 booked_spots: remainingBookings.length,
                 fixed_students_count: remainingBookings.filter(b => b.is_fixed_student).length
               });
-              console.log(`Aula ${lessonId} atualizada (${remainingBookings.length} alunos restantes)`);
             }
           } catch (e) {
             console.error('Erro ao processar aula:', e);
@@ -446,35 +411,31 @@ export default function FixedStudentsManager() {
       if (isPicadeiro) {
         await base44.entities.PicadeiroStudent.delete(userId);
       } else {
-        await base44.entities.User.update(userId, { student_type: 'avulso', fixed_schedule: [], monthly_fee: 0 });
+        await base44.entities.User.update(userId, { 
+          student_type: 'avulso', 
+          fixed_schedule: [], 
+          monthly_fee: 0 
+        });
       }
-      return { userId, isPicadeiro };
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries(['all-users']);
       await queryClient.invalidateQueries(['picadeiro-students']);
-      await queryClient.invalidateQueries(['lessons']);
+      await queryClient.invalidateQueries(['admin-lessons']);
+      await queryClient.invalidateQueries(['admin-all-lessons']);
       await queryClient.invalidateQueries(['admin-all-bookings']);
       toast.dismiss();
-      toast.success('Aluno fixo e aulas associadas removidos com sucesso!');
-    },
-    onError: (error) => {
-      toast.dismiss();
-      toast.error(`Erro ao remover aluno: ${error.message}`);
+      toast.success('Aluno removido com sucesso!');
     }
   });
 
-
-
   const removeFixedStudent = (student) => {
-    if (confirm('Remover aluno fixo do sistema? Todas as aulas automáticas associadas e reservas também serão removidas.')) {
+    if (confirm('Remover aluno fixo? Todas as aulas associadas serão apagadas.')) {
       const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
-      const studentEmail = student.email || student.full_name;
-
       removeStudentMutation.mutate({
         userId: student.id,
         isPicadeiro,
-        studentEmail
+        studentEmail: student.email || student.full_name
       });
     }
   };
@@ -502,185 +463,187 @@ export default function FixedStudentsManager() {
               Alunos Fixos ({allFixedStudents.length})
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Aluno Fixo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingStudent ? 'Editar Aluno Fixo' : 'Registar Aluno Fixo'}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Selecionar Aluno</Label>
-                  <Select
-                    value={formData.user_id}
-                    onValueChange={(v) => setFormData({ ...formData, user_id: v })}
-                    disabled={!!editingStudent}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Escolha um aluno" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => (
-                        <SelectItem key={`picadeiro-${s.id}`} value={`picadeiro-${s.id}`}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Nível</Label>
-                  <Select
-                    value={formData.student_level}
-                    onValueChange={(v) => setFormData({ ...formData, student_level: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="iniciante">Iniciante</SelectItem>
-                      <SelectItem value="intermedio">Intermédio</SelectItem>
-                      <SelectItem value="avancado">Avançado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Duração da Aula</Label>
-                    <Select
-                      value={String(formData.duration)}
-                      onValueChange={(v) => setFormData({ ...formData, duration: parseInt(v) })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30">30 minutos</SelectItem>
-                        <SelectItem value="60">60 minutos</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Frequência Semanal</Label>
-                    <Select
-                      value={String(formData.weekly_frequency)}
-                      onValueChange={(v) => {
-                        const newFreq = parseInt(v);
-                        const currentSchedules = formData.schedules;
-                        // Ajustar número de horários ao mudar frequência
-                        if (currentSchedules.length < newFreq) {
-                          // Adicionar horários vazios se necessário
-                          const needToAdd = newFreq - currentSchedules.length;
-                          const newSchedules = [...currentSchedules];
-                          for (let i = 0; i < needToAdd; i++) {
-                            newSchedules.push({ day: 'monday', time: '09:00', duration: formData.duration });
-                          }
-                          setFormData({ ...formData, weekly_frequency: newFreq, schedules: newSchedules });
-                        } else if (currentSchedules.length > newFreq) {
-                          // Remover horários extra se reduzir frequência
-                          setFormData({ ...formData, weekly_frequency: newFreq, schedules: currentSchedules.slice(0, newFreq) });
-                        } else {
-                          setFormData({ ...formData, weekly_frequency: newFreq });
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1x por semana</SelectItem>
-                        <SelectItem value="2">2x por semana</SelectItem>
-                        <SelectItem value="3">3x por semana</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {formData.duration && formData.weekly_frequency && (
-                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-sm text-green-800 font-medium">
-                      Mensalidade: {monthlyFees[formData.duration][formData.weekly_frequency]}€/mês
-                    </p>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Horários Fixos *</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addScheduleSlot}
-                      disabled={formData.schedules.length >= formData.weekly_frequency}
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Adicionar Horário
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {formData.schedules.map((schedule, index) => (
-                      <div key={index} className="flex gap-2 items-end">
-                        <div className="flex-1">
-                          <Select
-                            value={schedule.day}
-                            onValueChange={(v) => {
-                              const newSchedules = [...formData.schedules];
-                              newSchedules[index].day = v;
-                              setFormData({ ...formData, schedules: newSchedules });
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {weekDays.map(d => (
-                                <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex-1">
-                          <Input
-                            type="time"
-                            value={schedule.time}
-                            onChange={(e) => {
-                              const newSchedules = [...formData.schedules];
-                              newSchedules[index].time = e.target.value;
-                              setFormData({ ...formData, schedules: newSchedules });
-                            }}
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeScheduleSlot(index)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={handleSave} 
-                  className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
-                  disabled={updateUserMutation.isPending}
-                >
-                  {updateUserMutation.isPending ? 'A guardar...' : 'Guardar Aluno Fixo'}
+              <DialogTrigger asChild>
+                <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Aluno Fixo
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingStudent ? 'Editar Aluno Fixo' : 'Registar Aluno Fixo'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {editingStudent && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-800">
+                        <strong>Atenção:</strong> Ao alterar horários, as aulas antigas serão removidas e novas serão criadas automaticamente.
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>Selecionar Aluno</Label>
+                    <Select
+                      value={formData.user_id}
+                      onValueChange={(v) => setFormData({ ...formData, user_id: v })}
+                      disabled={!!editingStudent}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolha um aluno" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => (
+                          <SelectItem key={`picadeiro-${s.id}`} value={`picadeiro-${s.id}`}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Nível</Label>
+                    <Select
+                      value={formData.student_level}
+                      onValueChange={(v) => setFormData({ ...formData, student_level: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="iniciante">Iniciante</SelectItem>
+                        <SelectItem value="intermedio">Intermédio</SelectItem>
+                        <SelectItem value="avancado">Avançado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Duração da Aula</Label>
+                      <Select
+                        value={String(formData.duration)}
+                        onValueChange={(v) => setFormData({ ...formData, duration: parseInt(v) })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="30">30 minutos</SelectItem>
+                          <SelectItem value="60">60 minutos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Frequência Semanal</Label>
+                      <Select
+                        value={String(formData.weekly_frequency)}
+                        onValueChange={(v) => {
+                          const newFreq = parseInt(v);
+                          const currentSchedules = formData.schedules;
+                          if (currentSchedules.length < newFreq) {
+                            const needToAdd = newFreq - currentSchedules.length;
+                            const newSchedules = [...currentSchedules];
+                            for (let i = 0; i < needToAdd; i++) {
+                              newSchedules.push({ day: 'monday', time: '09:00', duration: formData.duration });
+                            }
+                            setFormData({ ...formData, weekly_frequency: newFreq, schedules: newSchedules });
+                          } else if (currentSchedules.length > newFreq) {
+                            setFormData({ ...formData, weekly_frequency: newFreq, schedules: currentSchedules.slice(0, newFreq) });
+                          } else {
+                            setFormData({ ...formData, weekly_frequency: newFreq });
+                          }
+                        }}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1x por semana</SelectItem>
+                          <SelectItem value="2">2x por semana</SelectItem>
+                          <SelectItem value="3">3x por semana</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {formData.duration && formData.weekly_frequency && (
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-sm text-green-800 font-medium">
+                        💰 Mensalidade: {monthlyFees[formData.duration][formData.weekly_frequency]}€/mês
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Horários Fixos *</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addScheduleSlot}
+                        disabled={formData.schedules.length >= formData.weekly_frequency}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Adicionar
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {formData.schedules.map((schedule, index) => (
+                        <div key={index} className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <Select
+                              value={schedule.day}
+                              onValueChange={(v) => {
+                                const newSchedules = [...formData.schedules];
+                                newSchedules[index].day = v;
+                                setFormData({ ...formData, schedules: newSchedules });
+                              }}
+                            >
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {weekDays.map(d => (
+                                  <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex-1">
+                            <Input
+                              type="time"
+                              value={schedule.time}
+                              onChange={(e) => {
+                                const newSchedules = [...formData.schedules];
+                                newSchedules[index].time = e.target.value;
+                                setFormData({ ...formData, schedules: newSchedules });
+                              }}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeScheduleSlot(index)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={handleSave} 
+                    className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                    disabled={updateUserMutation.isPending}
+                  >
+                    {updateUserMutation.isPending ? 'A guardar...' : 'Guardar Aluno Fixo'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
