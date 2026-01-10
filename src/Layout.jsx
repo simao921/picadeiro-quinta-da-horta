@@ -111,11 +111,15 @@ const LayoutContent = ({ children, currentPageName }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '6') {
+      // Usar e.code para compatibilidade entre Windows e Mac
+      // Digit6 e Digit9 são consistentes independentemente do layout de teclado
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit6' || e.key === '6')) {
+        e.preventDefault();
         sessionStorage.setItem('admin_keyboard_access', 'true');
         window.location.href = createPageUrl('AdminLogin');
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit9' || e.key === '9')) {
+        e.preventDefault();
         sessionStorage.setItem('dev_keyboard_access', 'true');
         window.location.href = createPageUrl('DeveloperPanel');
       }
