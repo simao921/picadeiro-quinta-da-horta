@@ -148,7 +148,12 @@ function WeeklyLessonSelector({
                       }
                       onClick={() => {
                         const newTimes = [...selectedTimes];
-                        newTimes[index] = slot;
+                        // Permitir deselecionar se já está selecionado
+                        if (currentTime === slot) {
+                          newTimes[index] = null;
+                        } else {
+                          newTimes[index] = slot;
+                        }
                         setSelectedTimes(newTimes);
                       }}
                     >
@@ -397,6 +402,14 @@ export default function NewBookingForm({ user, isBlocked }) {
         return bookingsToCreate;
       } else {
         // Reserva única
+        if (!selectedTime) {
+          throw new Error('Por favor selecione um horário');
+        }
+        
+        if (!selectedDate) {
+          throw new Error('Por favor selecione uma data');
+        }
+        
         const lessonsAtTime = lessons.filter(l => l.start_time === selectedTime);
         const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
         
@@ -1130,20 +1143,30 @@ export default function NewBookingForm({ user, isBlocked }) {
                   ) : (
                     <>
                       <div className="grid grid-cols-3 gap-2">
-                        {getAvailableSlots().map((slot) => (
-                          <Button
-                            key={slot}
-                            variant={selectedTime === slot ? 'default' : 'outline'}
-                            size="sm"
-                            className={selectedTime === slot 
-                              ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md' 
-                              : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all'
-                            }
-                            onClick={() => setSelectedTime(slot)}
-                          >
-                            {slot}
-                          </Button>
-                        ))}
+                        {getAvailableSlots().map((slot) => {
+                          const isSelected = selectedTime === slot;
+                          return (
+                            <Button
+                              key={slot}
+                              variant={isSelected ? 'default' : 'outline'}
+                              size="sm"
+                              className={isSelected
+                                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md' 
+                                : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all'
+                              }
+                              onClick={() => {
+                                // Permitir deselecionar se já está selecionado
+                                if (isSelected) {
+                                  setSelectedTime(null);
+                                } else {
+                                  setSelectedTime(slot);
+                                }
+                              }}
+                            >
+                              {slot}
+                            </Button>
+                          );
+                        })}
                       </div>
                       {getAvailableSlots().length === 0 && (
                         <div className="text-center py-8 text-stone-500">
@@ -1235,7 +1258,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     </div>
                     <div className="flex justify-between py-3 border-b border-stone-200">
                       <span className="text-stone-600">Hora</span>
-                      <span className="font-semibold text-[#2C3E1F]">{selectedTime}</span>
+                      <span className="font-semibold text-[#2C3E1F]">{selectedTime || '-'}</span>
                     </div>
                   </>
                 )}

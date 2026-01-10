@@ -80,60 +80,74 @@ export default function FixedStudentsManager() {
   const updateUserMutation = useMutation({
     mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, oldSchedules }) => {
       // Se está editando, remover apenas as aulas dos horários que foram alterados
-      if (isEditing && studentEmail && oldSchedules) {
+      if (isEditing && studentEmail && oldSchedules && oldSchedules.length > 0) {
         toast.loading('A atualizar horários...');
         
         const newSchedules = data.fixed_schedule || [];
         const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
         
-        // Identificar horários removidos (estavam nos antigos mas não estão nos novos)
+        // Identificar horários removidos ou alterados (estavam nos antigos mas não estão nos novos)
         const removedSchedules = oldSchedules.filter(old => 
           !newSchedules.some(ns => ns.day === old.day && ns.time === old.time)
         );
         
-        console.log('Horários removidos:', removedSchedules);
+        console.log('Horários removidos/alterados:', removedSchedules);
         
-        // Remover aulas dos horários antigos que não existem mais
-        for (const oldSchedule of removedSchedules) {
-          const targetDay = daysMap[oldSchedule.day];
-          
+        // Remover aulas dos horários antigos que não existem mais ou foram alterados
+        if (removedSchedules.length > 0) {
           // Buscar todas as reservas fixas do aluno
-          const bookings = await base44.entities.Booking.filter({ 
+          const allBookings = await base44.entities.Booking.filter({ 
             client_email: studentEmail,
             is_fixed_student: true
           });
           
-          // Filtrar apenas as que correspondem ao horário removido
-          for (const booking of bookings) {
-            try {
-              const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
-              if (lessons.length === 0) continue;
-              
-              const lesson = lessons[0];
-              const lessonDate = new Date(lesson.date);
-              const lessonDay = lessonDate.getDay();
-              
-              // Se a aula é no dia/hora removido
-              if (lessonDay === targetDay && lesson.start_time === oldSchedule.time && lesson.is_auto_generated) {
-                // Apagar a reserva
-                await base44.entities.Booking.delete(booking.id);
+          console.log(`Encontradas ${allBookings.length} reservas fixas para ${studentEmail}`);
+          
+          // Processar cada horário removido/alterado
+          for (const oldSchedule of removedSchedules) {
+            const targetDay = daysMap[oldSchedule.day];
+            
+            // Filtrar apenas as reservas que correspondem ao horário antigo
+            for (const booking of allBookings) {
+              try {
+                const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
+                if (lessons.length === 0) continue;
                 
-                // Verificar se ainda há outras reservas
-                const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+                const lesson = lessons[0];
                 
-                if (remainingBookings.length === 0) {
-                  // Aula vazia = apagar
-                  await base44.entities.Lesson.delete(lesson.id);
-                } else {
-                  // Atualizar contadores
-                  await base44.entities.Lesson.update(lesson.id, {
-                    booked_spots: remainingBookings.length,
-                    fixed_students_count: remainingBookings.filter(b => b.is_fixed_student).length
-                  });
+                // Verificar se a aula é auto-gerada (só remover essas)
+                if (!lesson.is_auto_generated) continue;
+                
+                const lessonDate = new Date(lesson.date);
+                const lessonDay = lessonDate.getDay();
+                
+                // Se a aula é no dia/hora do horário removido
+                if (lessonDay === targetDay && lesson.start_time === oldSchedule.time) {
+                  console.log(`Removendo reserva ${booking.id} da aula ${lesson.id} (${lesson.date} ${lesson.start_time})`);
+                  
+                  // Apagar a reserva
+                  await base44.entities.Booking.delete(booking.id);
+                  
+                  // Verificar se ainda há outras reservas nesta aula
+                  const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+                  
+                  if (remainingBookings.length === 0) {
+                    // Aula vazia = apagar
+                    await base44.entities.Lesson.delete(lesson.id);
+                    console.log(`Aula ${lesson.id} apagada (estava vazia)`);
+                  } else {
+                    // Atualizar contadores
+                    const fixedCount = remainingBookings.filter(b => b.is_fixed_student).length;
+                    await base44.entities.Lesson.update(lesson.id, {
+                      booked_spots: remainingBookings.length,
+                      fixed_students_count: fixedCount
+                    });
+                    console.log(`Aula ${lesson.id} atualizada: ${remainingBookings.length}/6 (${fixedCount} fixos)`);
+                  }
                 }
+              } catch (e) {
+                console.error('Erro ao processar reserva:', e);
               }
-            } catch (e) {
-              console.error('Erro ao processar aula:', e);
             }
           }
         }
@@ -194,6 +208,8 @@ export default function FixedStudentsManager() {
       await queryClient.invalidateQueries(['picadeiro-students']);
       await queryClient.invalidateQueries(['lessons']);
       await queryClient.invalidateQueries(['admin-all-bookings']);
+      await queryClient.invalidateQueries(['admin-lessons']);
+      await queryClient.invalidateQueries(['admin-all-lessons']);
       setDialogOpen(false);
       setEditingStudent(null);
       setFormData({

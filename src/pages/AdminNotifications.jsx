@@ -256,9 +256,30 @@ export default function AdminNotifications() {
                           variant="outline"
                           className="text-green-600 border-green-600 hover:bg-green-50"
                           onClick={async () => {
-                            await base44.entities.Booking.update(booking.id, { status: 'approved' });
+                            await base44.entities.Booking.update(booking.id, { 
+                              status: 'approved',
+                              approved_at: new Date().toISOString(),
+                              approved_by: 'admin'
+                            });
+                            
+                            // Recalcular contadores da aula
+                            const lesson = lessons.find(l => l.id === booking.lesson_id);
+                            if (lesson) {
+                              const allBookingsForLesson = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+                              const approvedBookings = allBookingsForLesson.filter(b => b.status === 'approved');
+                              const fixedStudentsCount = approvedBookings.filter(b => b.is_fixed_student).length;
+                              
+                              await base44.entities.Lesson.update(lesson.id, {
+                                booked_spots: approvedBookings.length,
+                                fixed_students_count: fixedStudentsCount
+                              });
+                            }
+                            
                             handleApprovalNotification(booking);
                             queryClient.invalidateQueries({ queryKey: ['bookings-notifications'] });
+                            queryClient.invalidateQueries({ queryKey: ['lessons-notifications'] });
+                            queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+                            queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
                           }}
                           disabled={sendNotification.isPending}
                         >
@@ -271,8 +292,25 @@ export default function AdminNotifications() {
                           className="text-red-600 border-red-600 hover:bg-red-50"
                           onClick={async () => {
                             await base44.entities.Booking.update(booking.id, { status: 'rejected' });
+                            
+                            // Recalcular contadores da aula
+                            const lesson = lessons.find(l => l.id === booking.lesson_id);
+                            if (lesson) {
+                              const allBookingsForLesson = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+                              const approvedBookings = allBookingsForLesson.filter(b => b.status === 'approved');
+                              const fixedStudentsCount = approvedBookings.filter(b => b.is_fixed_student).length;
+                              
+                              await base44.entities.Lesson.update(lesson.id, {
+                                booked_spots: approvedBookings.length,
+                                fixed_students_count: fixedStudentsCount
+                              });
+                            }
+                            
                             handleRejectionNotification(booking);
                             queryClient.invalidateQueries({ queryKey: ['bookings-notifications'] });
+                            queryClient.invalidateQueries({ queryKey: ['lessons-notifications'] });
+                            queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+                            queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
                           }}
                           disabled={sendNotification.isPending}
                         >

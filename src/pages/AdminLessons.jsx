@@ -223,14 +223,35 @@ export default function AdminLessons() {
 
   const updateBookingMutation = useMutation({
     mutationFn: async ({ id, status, booking }) => {
+      // Obter a aula antes de atualizar a reserva
+      const lesson = allLessons.find(l => l.id === booking.lesson_id);
+      
+      // Atualizar status da reserva
       await base44.entities.Booking.update(id, { 
         status,
         approved_at: status === 'approved' ? new Date().toISOString() : null,
         approved_by: status === 'approved' ? 'admin' : null
       });
 
+      // Recalcular contadores da aula baseado no status das reservas
+      if (lesson) {
+        // Buscar todas as reservas da aula para recalcular contadores
+        const allBookingsForLesson = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+        
+        // Contar apenas reservas aprovadas (não rejeitadas ou canceladas)
+        const approvedBookings = allBookingsForLesson.filter(b => b.status === 'approved');
+        const fixedStudentsCount = approvedBookings.filter(b => b.is_fixed_student).length;
+        
+        // Atualizar contadores da aula
+        await base44.entities.Lesson.update(lesson.id, {
+          booked_spots: approvedBookings.length,
+          fixed_students_count: fixedStudentsCount
+        });
+        
+        console.log(`Aula ${lesson.id} atualizada: ${approvedBookings.length}/6 (${fixedStudentsCount} fixos)`);
+      }
+
       // Enviar email de confirmação
-      const lesson = allLessons.find(l => l.id === booking.lesson_id);
       const service = services.find(s => s.id === lesson?.service_id);
       
       if (status === 'approved') {
