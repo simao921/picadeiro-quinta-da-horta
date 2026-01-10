@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, Edit, Search } from 'lucide-react';
+import { Calendar, Plus, Trash2, Edit, Search, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -33,6 +33,7 @@ export default function FixedStudentsManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   const [formData, setFormData] = useState({
     user_id: '',
@@ -71,6 +72,34 @@ export default function FixedStudentsManager() {
     return name.includes(query) || email.includes(query);
   });
 
+  // Lista combinada de todos os alunos (users + picadeiro) para seleção
+  const allStudentsForSelection = [
+    ...allUsers.filter(u => u.student_type !== 'fixo' || u.id === editingStudent?.id).map(u => ({
+      id: `user-${u.id}`,
+      name: u.full_name || '',
+      email: u.email || '',
+      phone: '',
+      source: 'user'
+    })),
+    ...picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => ({
+      id: `picadeiro-${s.id}`,
+      name: s.name || '',
+      email: s.email || '',
+      phone: s.phone || '',
+      source: 'picadeiro'
+    }))
+  ];
+
+  // Filtrar alunos baseado na pesquisa
+  const filteredStudentsForSelection = allStudentsForSelection.filter(student => {
+    if (!studentSearchQuery) return true;
+    const query = studentSearchQuery.toLowerCase();
+    const name = (student.name || '').toLowerCase();
+    const email = (student.email || '').toLowerCase();
+    const phone = (student.phone || '').toLowerCase();
+    return name.includes(query) || email.includes(query) || phone.includes(query);
+  });
+
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.list(),
@@ -78,10 +107,10 @@ export default function FixedStudentsManager() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, oldSchedules }) => {
-      // Se está editando, remover apenas as aulas dos horários que foram alterados
+    mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, studentName, oldSchedules }) => {
+      // Se está editando, remover todas as aulas dos horários que foram alterados
       if (isEditing && studentEmail && oldSchedules && oldSchedules.length > 0) {
-        toast.loading('A atualizar horários...');
+        toast.loading('A remover aulas antigas e atualizar horários...');
         
         const newSchedules = data.fixed_schedule || [];
         const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
@@ -93,50 +122,88 @@ export default function FixedStudentsManager() {
         
         console.log('Horários removidos/alterados:', removedSchedules);
         
-        // Remover aulas dos horários antigos que não existem mais ou foram alterados
+        // Remover TODAS as aulas futuras dos horários antigos que foram alterados
         if (removedSchedules.length > 0) {
-          // Buscar todas as reservas fixas do aluno
-          const allBookings = await base44.entities.Booking.filter({ 
-            client_email: studentEmail,
-            is_fixed_student: true
-          });
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
           
-          console.log(`Encontradas ${allBookings.length} reservas fixas para ${studentEmail}`);
+          // Buscar o serviço "Aulas em Grupo" - usar serviços do query
+          const serviceList = await base44.entities.Service.list();
+          const service = serviceList.find(s => s.title === 'Aulas em Grupo');
+          if (!service) {
+            console.error('Serviço "Aulas em Grupo" não encontrado');
+            toast.error('Serviço "Aulas em Grupo" não encontrado');
+            // Continuar mesmo sem serviço para não bloquear a atualização
+          }
           
           // Processar cada horário removido/alterado
           for (const oldSchedule of removedSchedules) {
             const targetDay = daysMap[oldSchedule.day];
+            console.log(`Removendo aulas do horário antigo: ${oldSchedule.day} ${oldSchedule.time}`);
             
-            // Filtrar apenas as reservas que correspondem ao horário antigo
-            for (const booking of allBookings) {
-              try {
-                const lessons = await base44.entities.Lesson.filter({ id: booking.lesson_id });
-                if (lessons.length === 0) continue;
-                
-                const lesson = lessons[0];
-                
-                // Verificar se a aula é auto-gerada (só remover essas)
-                if (!lesson.is_auto_generated) continue;
+            // Buscar TODAS as aulas futuras com este dia e horário (não apenas as que têm reservas)
+            try {
+              // Buscar todas as aulas futuras do serviço (se serviço encontrado)
+              let allFutureLessons = [];
+              if (service) {
+                allFutureLessons = await base44.entities.Lesson.filter({
+                  service_id: service.id,
+                  start_time: oldSchedule.time
+                });
+              } else {
+                // Se não encontrar serviço, buscar todas as aulas e filtrar por horário e auto-geradas
+                const allLessons = await base44.entities.Lesson.list('-created_date', 2000);
+                allFutureLessons = allLessons.filter(l => 
+                  l.start_time === oldSchedule.time && l.is_auto_generated === true
+                );
+              }
+              
+              console.log(`Encontradas ${allFutureLessons.length} aulas com horário ${oldSchedule.time}`);
+              
+              // Filtrar apenas aulas futuras no dia correto e auto-geradas
+              const lessonsToProcess = allFutureLessons.filter(lesson => {
+                // Já filtrado por auto-geradas se serviço não encontrado, mas verificar novamente por segurança
+                if (!lesson.is_auto_generated) return false;
                 
                 const lessonDate = new Date(lesson.date);
+                lessonDate.setHours(0, 0, 0, 0);
+                
+                // Verificar se é futura (hoje ou depois)
+                if (lessonDate < today) return false;
+                
                 const lessonDay = lessonDate.getDay();
                 
-                // Se a aula é no dia/hora do horário removido
-                if (lessonDay === targetDay && lesson.start_time === oldSchedule.time) {
-                  console.log(`Removendo reserva ${booking.id} da aula ${lesson.id} (${lesson.date} ${lesson.start_time})`);
+                // Verificar se é no dia correto da semana
+                return lessonDay === targetDay;
+              });
+              
+              console.log(`Processando ${lessonsToProcess.length} aulas futuras no dia ${oldSchedule.day}`);
+              
+              // Para cada aula, remover a reserva do aluno se existir
+              for (const lesson of lessonsToProcess) {
+                try {
+                  // Buscar reserva do aluno nesta aula
+                  const studentBookings = await base44.entities.Booking.filter({
+                    lesson_id: lesson.id,
+                    client_email: studentEmail,
+                    is_fixed_student: true
+                  });
                   
-                  // Apagar a reserva
-                  await base44.entities.Booking.delete(booking.id);
+                  // Remover todas as reservas do aluno nesta aula
+                  for (const booking of studentBookings) {
+                    console.log(`Removendo reserva ${booking.id} da aula ${lesson.id} (${lesson.date} ${lesson.start_time})`);
+                    await base44.entities.Booking.delete(booking.id);
+                  }
                   
                   // Verificar se ainda há outras reservas nesta aula
                   const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
                   
                   if (remainingBookings.length === 0) {
-                    // Aula vazia = apagar
+                    // Aula vazia = apagar (apenas se for auto-gerada)
                     await base44.entities.Lesson.delete(lesson.id);
-                    console.log(`Aula ${lesson.id} apagada (estava vazia)`);
+                    console.log(`Aula ${lesson.id} apagada (estava vazia após remoção)`);
                   } else {
-                    // Atualizar contadores
+                    // Atualizar contadores da aula
                     const fixedCount = remainingBookings.filter(b => b.is_fixed_student).length;
                     await base44.entities.Lesson.update(lesson.id, {
                       booked_spots: remainingBookings.length,
@@ -144,10 +211,12 @@ export default function FixedStudentsManager() {
                     });
                     console.log(`Aula ${lesson.id} atualizada: ${remainingBookings.length}/6 (${fixedCount} fixos)`);
                   }
+                } catch (e) {
+                  console.error(`Erro ao processar aula ${lesson.id}:`, e);
                 }
-              } catch (e) {
-                console.error('Erro ao processar reserva:', e);
               }
+            } catch (e) {
+              console.error(`Erro ao buscar aulas do horário ${oldSchedule.day} ${oldSchedule.time}:`, e);
             }
           }
         }
@@ -158,14 +227,14 @@ export default function FixedStudentsManager() {
       } else {
         await base44.entities.User.update(userId, data);
       }
-      return { userId, data, isPicadeiro, oldSchedules };
+      return { userId, data, isPicadeiro, oldSchedules, studentEmail, studentName };
     },
     onSuccess: async (result) => {
       // Construir aluno com dados atualizados
       let updatedStudent;
       if (result.isPicadeiro) {
         // Re-fetch para obter dados mais recentes
-        await queryClient.invalidateQueries(['picadeiro-students']);
+        await queryClient.invalidateQueries({ queryKey: ['picadeiro-students'] });
         const students = await base44.entities.PicadeiroStudent.list();
         const student = students.find(s => s.id === result.userId);
         updatedStudent = {
@@ -176,7 +245,7 @@ export default function FixedStudentsManager() {
           ...result.data
         };
       } else {
-        await queryClient.invalidateQueries(['all-users']);
+        await queryClient.invalidateQueries({ queryKey: ['all-users'] });
         const users = await base44.entities.User.list('-created_date', 500);
         const user = users.find(u => u.id === result.userId);
         updatedStudent = {
@@ -188,15 +257,25 @@ export default function FixedStudentsManager() {
         };
       }
       
-      // SEMPRE recriar aulas se tiver horários definidos
+      // Garantir que tem email e nome (usar dados passados se necessário)
+      if (result.studentEmail && !updatedStudent.email) {
+        updatedStudent.email = result.studentEmail;
+      }
+      if (result.studentName && !updatedStudent.full_name) {
+        updatedStudent.full_name = result.studentName;
+      }
+      
+      // SEMPRE criar/atualizar aulas para todos os horários se tiver horários definidos
       if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && updatedStudent.email) {
         const nextYear = new Date().getFullYear() + 1;
         toast.loading(`A criar aulas até fim de ${nextYear}...`);
         console.log('Criando aulas para:', updatedStudent);
         
-        // Se está editando, passar os horários antigos para criar apenas os novos
+        // Se está editando, criar aulas para todos os horários novos (já removemos as antigas na mutationFn)
+        // Isso garante que todos os horários atuais têm aulas
         const isEditing = !!result.oldSchedules && result.oldSchedules.length > 0;
-        await createRecurringLessons(updatedStudent, isEditing, result.oldSchedules || []);
+        // Criar aulas para TODOS os horários atuais (os antigos já foram removidos)
+        await createRecurringLessons(updatedStudent, false, []); // false = criar todas as aulas
         
         toast.dismiss();
         toast.success(`Aluno fixo guardado e horários atualizados até ${nextYear}!`);
@@ -204,14 +283,16 @@ export default function FixedStudentsManager() {
         toast.success('Aluno fixo atualizado!');
       }
       
-      await queryClient.invalidateQueries(['all-users']);
-      await queryClient.invalidateQueries(['picadeiro-students']);
-      await queryClient.invalidateQueries(['lessons']);
-      await queryClient.invalidateQueries(['admin-all-bookings']);
-      await queryClient.invalidateQueries(['admin-lessons']);
-      await queryClient.invalidateQueries(['admin-all-lessons']);
+      // Invalidar todas as queries relacionadas para atualizar a seção de aulas do admin
+      await queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      await queryClient.invalidateQueries({ queryKey: ['picadeiro-students'] });
+      await queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
       setDialogOpen(false);
       setEditingStudent(null);
+      setStudentSearchQuery('');
       setFormData({
         user_id: '',
         student_level: 'iniciante',
@@ -260,44 +341,58 @@ export default function FixedStudentsManager() {
     console.log('Horários a criar:', schedulesToCreate);
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const currentYear = today.getFullYear();
     const endDate = new Date(currentYear + 1, 11, 31); // Fim do próximo ano
+    endDate.setHours(23, 59, 59, 999);
     console.log(`Criando de ${format(today, 'yyyy-MM-dd')} até ${format(endDate, 'yyyy-MM-dd')}`);
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
     
     let created = 0;
-    let updated = 0;
+    let bookingsCreated = 0;
+    let lessonsUpdated = 0;
     
-    // Calcular número de semanas até a data final
-    const weeksDiff = Math.ceil((endDate - today) / (7 * 24 * 60 * 60 * 1000));
+    // Calcular todas as datas de uma vez (otimização)
+    const allDates = [];
+    for (const schedule of schedulesToCreate) {
+      const targetDay = daysMap[schedule.day];
+      const currentDate = new Date(today);
+      
+      // Calcular primeira ocorrência
+      const currentDay = currentDate.getDay();
+      let daysUntilTarget = (targetDay - currentDay + 7) % 7;
+      if (daysUntilTarget === 0) daysUntilTarget = 7;
+      currentDate.setDate(currentDate.getDate() + daysUntilTarget);
+      
+      // Adicionar todas as ocorrências semanais até a data final
+      while (currentDate <= endDate) {
+        allDates.push({
+          date: format(currentDate, 'yyyy-MM-dd'),
+          dateObj: new Date(currentDate),
+          schedule: schedule
+        });
+        currentDate.setDate(currentDate.getDate() + 7);
+      }
+    }
     
-    // Criar aulas até a data final
-    for (let week = 0; week < weeksDiff; week++) {
-      for (const schedule of schedulesToCreate) {
-        const targetDay = daysMap[schedule.day];
-        const currentDay = today.getDay();
-        
-        // Calcular próxima ocorrência do dia da semana
-        let daysUntilTarget = (targetDay - currentDay + 7) % 7;
-        if (daysUntilTarget === 0 && week === 0) daysUntilTarget = 7;
-        
-        const lessonDate = new Date(today);
-        lessonDate.setDate(today.getDate() + daysUntilTarget + (week * 7));
-        
-        // Parar se ultrapassar a data final
-        if (lessonDate > endDate) break;
-        
-        const dateStr = format(lessonDate, 'yyyy-MM-dd');
-        
+    console.log(`Total de aulas a processar: ${allDates.length}`);
+    
+    // Processar em batches para melhor performance
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < allDates.length; i += BATCH_SIZE) {
+      const batch = allDates.slice(i, i + BATCH_SIZE);
+      const batchPromises = batch.map(async ({ date, schedule }) => {
         try {
           // Verificar se já existe aula neste horário
           const existingLessons = await base44.entities.Lesson.filter({ 
-            date: dateStr,
+            date: date,
             start_time: schedule.time,
             service_id: service.id
           });
 
           let lesson;
+          let isNewLesson = false;
+          
           if (existingLessons.length === 0) {
             // Criar nova aula
             const [hours, minutes] = schedule.time.split(':');
@@ -306,29 +401,30 @@ export default function FixedStudentsManager() {
             
             lesson = await base44.entities.Lesson.create({
               service_id: service.id,
-              date: dateStr,
+              date: date,
               start_time: schedule.time,
               end_time: `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`,
               max_spots: 6,
-              booked_spots: 1,
-              fixed_students_count: 1,
+              booked_spots: 0, // Será atualizado depois ao criar booking
+              fixed_students_count: 0, // Será atualizado depois ao criar booking
               is_auto_generated: true,
               is_owner_service: false
             });
+            isNewLesson = true;
             created++;
           } else {
             lesson = existingLessons[0];
-            updated++;
           }
 
-          // Verificar se já existe reserva do aluno
+          // SEMPRE verificar e criar reserva do aluno fixo se não existir
+          // Isso garante que mesmo se a aula foi alterada manualmente ou já existe, o aluno fixo sempre aparece
           const existingBookings = await base44.entities.Booking.filter({
             lesson_id: lesson.id,
             client_email: student.email
           });
 
           if (existingBookings.length === 0) {
-            // Criar reserva automática
+            // Criar reserva automática do aluno fixo
             await base44.entities.Booking.create({
               lesson_id: lesson.id,
               client_email: student.email,
@@ -337,22 +433,58 @@ export default function FixedStudentsManager() {
               is_fixed_student: true,
               is_owner_booking: false
             });
+            bookingsCreated++;
 
-            // Atualizar contadores se a aula já existia
-            if (existingLessons.length > 0) {
-              await base44.entities.Lesson.update(lesson.id, {
-                booked_spots: (lesson.booked_spots || 0) + 1,
-                fixed_students_count: (lesson.fixed_students_count || 0) + 1
+            // Atualizar contadores da aula - buscar TODAS as reservas após criar
+            const allLessonBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+            const approvedBookings = allLessonBookings.filter(b => b.status === 'approved');
+            const fixedCount = approvedBookings.filter(b => b.is_fixed_student).length;
+            
+            await base44.entities.Lesson.update(lesson.id, {
+              booked_spots: approvedBookings.length,
+              fixed_students_count: fixedCount
+            });
+            
+            if (!isNewLesson) {
+              lessonsUpdated++;
+            }
+          } else {
+            // Se já existe reserva, garantir que está marcada como aluno fixo e aprovada
+            const studentBooking = existingBookings[0];
+            if (!studentBooking.is_fixed_student || studentBooking.status !== 'approved') {
+              await base44.entities.Booking.update(studentBooking.id, {
+                is_fixed_student: true,
+                status: 'approved'
               });
+              // Atualizar contadores
+              const allLessonBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+              const approvedBookings = allLessonBookings.filter(b => b.status === 'approved');
+              const fixedCount = approvedBookings.filter(b => b.is_fixed_student).length;
+              await base44.entities.Lesson.update(lesson.id, {
+                booked_spots: approvedBookings.length,
+                fixed_students_count: fixedCount
+              });
+              if (!isNewLesson) {
+                lessonsUpdated++;
+              }
             }
           }
         } catch (e) {
-          console.error(`Erro ao criar aula ${dateStr} ${schedule.time}:`, e);
+          console.error(`Erro ao criar aula ${date} ${schedule.time}:`, e);
         }
+      });
+      
+      // Executar batch e aguardar
+      await Promise.all(batchPromises);
+      
+      // Atualizar progresso
+      if (i + BATCH_SIZE < allDates.length) {
+        const progress = Math.round(((i + BATCH_SIZE) / allDates.length) * 100);
+        toast.loading(`A criar aulas... ${progress}%`);
       }
     }
     
-    console.log(`✅ Criadas ${created} novas aulas e atualizadas ${updated} aulas existentes`);
+    console.log(`✅ Criadas ${created} novas aulas, ${bookingsCreated} reservas criadas, ${lessonsUpdated} aulas atualizadas`);
   };
 
   const handleSave = async () => {
@@ -372,10 +504,23 @@ export default function FixedStudentsManager() {
     
     // Obter dados do aluno para comparar horários
     let studentEmail = '';
+    let studentName = '';
     let oldSchedules = [];
     if (editingStudent) {
-      studentEmail = editingStudent.email || editingStudent.full_name;
+      // Tentar obter email de diferentes fontes
+      studentEmail = editingStudent.email || 
+                     (editingStudent.source === 'picadeiro' ? editingStudent.phone : '') ||
+                     editingStudent.full_name || 
+                     editingStudent.name || '';
+      studentName = editingStudent.full_name || editingStudent.name || '';
       oldSchedules = editingStudent.fixed_schedule || [];
+    } else {
+      // Se não está editando, obter dados do aluno selecionado
+      const selectedStudent = filteredStudentsForSelection.find(s => s.id === formData.user_id);
+      if (selectedStudent) {
+        studentEmail = selectedStudent.email || selectedStudent.phone || '';
+        studentName = selectedStudent.name || '';
+      }
     }
 
     await updateUserMutation.mutateAsync({
@@ -383,6 +528,7 @@ export default function FixedStudentsManager() {
       isPicadeiro,
       isEditing: !!editingStudent,
       studentEmail,
+      studentName,
       oldSchedules,
       data: {
         student_type: 'fixo',
@@ -467,10 +613,13 @@ export default function FixedStudentsManager() {
       return { userId, isPicadeiro };
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries(['all-users']);
-      await queryClient.invalidateQueries(['picadeiro-students']);
-      await queryClient.invalidateQueries(['lessons']);
-      await queryClient.invalidateQueries(['admin-all-bookings']);
+      // Invalidar todas as queries para atualizar a seção de aulas do admin
+      await queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      await queryClient.invalidateQueries({ queryKey: ['picadeiro-students'] });
+      await queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
       toast.dismiss();
       toast.success('Aluno fixo e aulas associadas removidos com sucesso!');
     },
@@ -496,7 +645,14 @@ export default function FixedStudentsManager() {
   };
 
   const editFixedStudent = (student) => {
-    setEditingStudent(student);
+    // Garantir que temos todos os dados do aluno
+    const studentData = {
+      ...student,
+      email: student.email || student.phone || '',
+      full_name: student.full_name || student.name || '',
+      name: student.name || student.full_name || ''
+    };
+    setEditingStudent(studentData);
     const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
     setFormData({
       user_id: `${isPicadeiro ? 'picadeiro' : 'user'}-${student.id}`,
@@ -505,6 +661,7 @@ export default function FixedStudentsManager() {
       weekly_frequency: student.fixed_schedule?.length || 1,
       schedules: student.fixed_schedule || []
     });
+    setStudentSearchQuery(''); // Limpar pesquisa ao editar
     setDialogOpen(true);
   };
 
@@ -517,7 +674,21 @@ export default function FixedStudentsManager() {
               <Calendar className="w-5 h-5 text-[#4A5D23]" />
               Alunos Fixos ({allFixedStudents.length})
             </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open && !updateUserMutation.isPending) {
+                // Limpar formulário ao fechar apenas se não estiver salvando
+                setEditingStudent(null);
+                setStudentSearchQuery('');
+                setFormData({
+                  user_id: '',
+                  student_level: 'iniciante',
+                  duration: 30,
+                  weekly_frequency: 1,
+                  schedules: []
+                });
+              }
+            }}>
             <DialogTrigger asChild>
               <Button className="bg-[#4A5D23] hover:bg-[#3A4A1B]">
                 <Plus className="w-4 h-4 mr-2" />
@@ -530,23 +701,68 @@ export default function FixedStudentsManager() {
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Selecionar Aluno</Label>
-                  <Select
-                    value={formData.user_id}
-                    onValueChange={(v) => setFormData({ ...formData, user_id: v })}
-                    disabled={!!editingStudent}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Escolha um aluno" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => (
-                        <SelectItem key={`picadeiro-${s.id}`} value={`picadeiro-${s.id}`}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Selecionar Aluno *</Label>
+                  <div className="space-y-2">
+                    {/* Barra de pesquisa */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                      <Input
+                        placeholder="Pesquisar por nome, email ou telefone..."
+                        value={studentSearchQuery}
+                        onChange={(e) => setStudentSearchQuery(e.target.value)}
+                        className="pl-9"
+                        disabled={!!editingStudent}
+                      />
+                    </div>
+                    <Select
+                      value={formData.user_id || undefined}
+                      onValueChange={(v) => {
+                        setFormData({ ...formData, user_id: v });
+                        setStudentSearchQuery(''); // Limpar pesquisa após seleção
+                      }}
+                      disabled={!!editingStudent}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolha um aluno" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredStudentsForSelection.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            {studentSearchQuery ? 'Nenhum aluno encontrado' : 'Sem alunos disponíveis'}
+                          </SelectItem>
+                        ) : (
+                          filteredStudentsForSelection.map(student => (
+                            <SelectItem key={student.id} value={student.id}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{student.name}</span>
+                                <span className="text-xs text-stone-500">
+                                  {student.email || student.phone || 'Sem contacto'} 
+                                  {student.source === 'picadeiro' && ' (Picadeiro)'}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {formData.user_id && (
+                      <div className="flex items-center gap-2 p-3 bg-stone-50 rounded-lg border">
+                        <div className="w-8 h-8 rounded-full bg-[#4A5D23] text-white flex items-center justify-center font-bold">
+                          {filteredStudentsForSelection.find(s => s.id === formData.user_id)?.name?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm text-[#2C3E1F]">
+                            {filteredStudentsForSelection.find(s => s.id === formData.user_id)?.name}
+                          </p>
+                          <p className="text-xs text-stone-500">
+                            {filteredStudentsForSelection.find(s => s.id === formData.user_id)?.email || 
+                             filteredStudentsForSelection.find(s => s.id === formData.user_id)?.phone || 
+                             'Sem contacto'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
