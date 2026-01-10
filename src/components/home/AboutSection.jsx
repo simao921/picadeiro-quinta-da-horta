@@ -1,13 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Award, Shield, Heart, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';
+import LazyImage from '@/components/ui/LazyImage';
+import { getSiteImage, DEFAULT_IMAGES } from '@/lib/siteImages';
 
 export default function AboutSection() {
   const { t } = useLanguage();
+  const [aboutImages, setAboutImages] = useState({
+    decorative: DEFAULT_IMAGES.about_decorative,
+    grid1: DEFAULT_IMAGES.about_grid_1,
+    grid2: DEFAULT_IMAGES.about_grid_2,
+    grid3: DEFAULT_IMAGES.about_grid_3,
+    grid4: DEFAULT_IMAGES.about_grid_4,
+  });
+
+  useEffect(() => {
+    Promise.all([
+      getSiteImage('about_decorative', DEFAULT_IMAGES.about_decorative),
+      getSiteImage('about_grid_1', DEFAULT_IMAGES.about_grid_1),
+      getSiteImage('about_grid_2', DEFAULT_IMAGES.about_grid_2),
+      getSiteImage('about_grid_3', DEFAULT_IMAGES.about_grid_3),
+      getSiteImage('about_grid_4', DEFAULT_IMAGES.about_grid_4),
+    ]).then(([decorative, grid1, grid2, grid3, grid4]) => {
+      setAboutImages({ decorative, grid1, grid2, grid3, grid4 });
+    });
+  }, []);
   
   const features = [
     {
@@ -34,9 +55,9 @@ export default function AboutSection() {
   return (
     <section className="py-24 bg-[#1A1A1A] relative overflow-hidden">
       {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-1/3 h-full opacity-10">
-        <img
-          src="https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&q=80"
+      <div className="absolute top-0 right-0 w-1/3 h-full opacity-10 hidden lg:block">
+        <LazyImage
+          src={aboutImages.decorative}
           alt=""
           className="w-full h-full object-cover"
         />
@@ -67,7 +88,7 @@ export default function AboutSection() {
               {t('about_p2')}
             </p>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {features.map((feature, index) => (
                 <motion.div
                   key={feature.title}
@@ -107,32 +128,32 @@ export default function AboutSection() {
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div className="aspect-[4/5] rounded-2xl overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=600&q=80"
+                <div className="aspect-[4/5] rounded-2xl overflow-hidden relative">
+                  <LazyImage
+                    src={aboutImages.grid1}
                     alt="Cavalo elegante"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="aspect-square rounded-2xl overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80"
+                <div className="aspect-square rounded-2xl overflow-hidden relative">
+                  <LazyImage
+                    src={aboutImages.grid2}
                     alt="Aula de equitação"
                     className="w-full h-full object-cover"
                   />
                 </div>
               </div>
               <div className="space-y-4 pt-8">
-                <div className="aspect-square rounded-2xl overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=400&q=80"
+                <div className="aspect-square rounded-2xl overflow-hidden relative">
+                  <LazyImage
+                    src={aboutImages.grid3}
                     alt="Instalações"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="aspect-[4/5] rounded-2xl overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80"
+                <div className="aspect-[4/5] rounded-2xl overflow-hidden relative">
+                  <LazyImage
+                    src={aboutImages.grid4}
                     alt="Equitação"
                     className="w-full h-full object-cover"
                   />

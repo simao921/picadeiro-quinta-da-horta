@@ -1,19 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar, Phone, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';
+import LazyImage from '@/components/ui/LazyImage';
+import { getSiteImage, DEFAULT_IMAGES } from '@/lib/siteImages';
 
 export default function CTASection() {
   const { t } = useLanguage();
+  const [ctaImage, setCtaImage] = useState(DEFAULT_IMAGES.cta);
+
+  useEffect(() => {
+    getSiteImage('cta', DEFAULT_IMAGES.cta).then(setCtaImage);
+  }, []);
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
+        <LazyImage
+          src={ctaImage}
           alt="Cavalos ao pôr do sol"
           className="w-full h-full object-cover"
         />
@@ -48,16 +55,15 @@ export default function CTASection() {
                   {t('cta_book')}
                 </Button>
               </Link>
-              <a href="tel:+351932111786">
-<Button
-  size="lg"
-  variant="outline"
-  className="bg-transparent border-white/30 text-white hover:bg-white/10 px-8"
->
-  <Phone className="w-5 h-5 mr-2" />
-  {t('cta_call')}
-</Button>
-
+              <a href="tel:+351932111786" aria-label="Ligar para +351 932 111 786">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-transparent border-white/30 text-white hover:bg-white/10 px-8"
+                >
+                  <Phone className="w-5 h-5 mr-2" />
+                  {t('cta_call')}
+                </Button>
               </a>
             </div>
           </motion.div>

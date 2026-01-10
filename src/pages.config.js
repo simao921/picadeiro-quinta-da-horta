@@ -5,6 +5,7 @@ import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminEmails from './pages/AdminEmails';
 import AdminGallery from './pages/AdminGallery';
+import AdminImages from './pages/AdminImages';
 import AdminInstructors from './pages/AdminInstructors';
 import AdminLessons from './pages/AdminLessons';
 import AdminLogin from './pages/AdminLogin';
@@ -43,6 +44,7 @@ export const PAGES = {
     "AdminDashboard": AdminDashboard,
     "AdminEmails": AdminEmails,
     "AdminGallery": AdminGallery,
+    "AdminImages": AdminImages,
     "AdminInstructors": AdminInstructors,
     "AdminLessons": AdminLessons,
     "AdminLogin": AdminLogin,

@@ -15,6 +15,7 @@ const menuItems = [
   { icon: Mail, label: 'Emails', page: 'AdminEmails' },
   { icon: Bell, label: 'Notificações', page: 'AdminNotifications' },
   { icon: FileText, label: 'Conteúdo', page: 'AdminContent' },
+  { icon: Image, label: 'Imagens do Site', page: 'AdminImages' },
   { icon: Users, label: 'Utilizadores', page: 'AdminUsers' },
   { icon: BarChart3, label: 'Relatórios', page: 'AdminReports' },
   { icon: CalendarDays, label: 'Aulas', page: 'AdminLessons' },

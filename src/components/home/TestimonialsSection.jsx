@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Quote, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import LazyImage from '@/components/ui/LazyImage';
 
 const testimonials = [
   {
@@ -31,8 +32,8 @@ const testimonials = [
 export default function TestimonialsSection() {
   const [current, setCurrent] = useState(0);
 
-  const next = () => setCurrent((prev) => (prev + 1) % testimonials.length);
-  const prev = () => setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  const next = useCallback(() => setCurrent((prev) => (prev + 1) % testimonials.length), []);
+  const prev = useCallback(() => setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length), []);
 
   return (
     <section className="py-24 bg-gradient-to-b from-white to-stone-50 relative overflow-hidden">
@@ -97,7 +98,7 @@ export default function TestimonialsSection() {
 
                     {/* Author */}
                     <div className="flex items-center gap-4">
-                      <img
+                      <LazyImage
                         src={testimonials[current].image}
                         alt={testimonials[current].name}
                         className="w-14 h-14 rounded-full object-cover border-2 border-[#C9A961]"
@@ -128,7 +129,8 @@ export default function TestimonialsSection() {
                 <button
                   key={index}
                   onClick={() => setCurrent(index)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  aria-label={`Ver testemunho ${index + 1}`}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:ring-offset-2 ${
                     index === current 
                       ? 'bg-[#C9A961] w-8' 
                       : 'bg-stone-300 hover:bg-stone-400'

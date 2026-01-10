@@ -1,22 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';
+import LazyImage from '@/components/ui/LazyImage';
+import { getSiteImage, DEFAULT_IMAGES } from '@/lib/siteImages';
 
 export default function HeroSection() {
   const { t } = useLanguage();
+  const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero);
+
+  useEffect(() => {
+    getSiteImage('hero', DEFAULT_IMAGES.hero).then(setHeroImage);
+  }, []);
   
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1920&q=80"
+        <LazyImage
+          src={heroImage}
           alt="Cavalo elegante"
           className="w-full h-full object-cover"
+          priority={true}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/90 via-[#1A1A1A]/70 to-transparent" />
       </div>
@@ -91,17 +99,17 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex gap-8 mt-12 pt-8 border-t border-white/20"
+            className="flex flex-wrap gap-6 sm:gap-8 mt-12 pt-8 border-t border-white/20"
           >
-            <div>
+            <div className="min-w-[80px]">
               <p className="text-3xl font-bold text-[#B8956A]">15+</p>
               <p className="text-sm text-stone-400">{t('hero_stat_1')}</p>
             </div>
-            <div>
+            <div className="min-w-[80px]">
               <p className="text-3xl font-bold text-[#B8956A]">500+</p>
               <p className="text-sm text-stone-400">{t('hero_stat_2')}</p>
             </div>
-            <div>
+            <div className="min-w-[80px]">
               <p className="text-3xl font-bold text-[#B8956A]">2x</p>
               <p className="text-sm text-stone-400">{t('hero_stat_3')}</p>
             </div>

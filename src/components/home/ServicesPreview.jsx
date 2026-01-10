@@ -9,34 +9,39 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';
+import LazyImage from '@/components/ui/LazyImage';
+import { DEFAULT_IMAGES } from '@/lib/siteImages';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const iconMap = {
+  'GraduationCap': GraduationCap,
+  'Users': Users,
+  'Heart': Heart,
+  'PartyPopper': PartyPopper,
+};
+
+const colorMap = [
+  'from-[#4A5D23]/80 to-[#6B7F3A]/80',
+  'from-[#8B7355]/80 to-[#A68B6A]/80',
+  'from-[#2C3E1F]/80 to-[#4A5D23]/80',
+  'from-[#B8956A]/80 to-[#C9A961]/80',
+  'from-[#6B5845]/80 to-[#8B7355]/80',
+];
 
 export default function ServicesPreview() {
   const { t } = useLanguage();
   
-  const services = [
-    {
-      icon: GraduationCap,
-      titleKey: 'service_1_title',
-      descKey: 'service_1_desc',
-      color: 'from-[#4A5D23]/80 to-[#6B7F3A]/80',
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'
-    },
-    {
-      icon: Users,
-      titleKey: 'service_2_title',
-      descKey: 'service_2_desc',
-      color: 'from-[#8B7355]/80 to-[#A68B6A]/80',
-      image: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80'
-    },
+  // Fetch services from database
+  const { data: services = [], isLoading } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => base44.entities.Service.list(),
+    initialData: []
+  });
 
-    {
-      icon: PartyPopper,
-      titleKey: 'service_4_title',
-      descKey: 'service_4_desc',
-      color: 'from-[#2C3E1F]/80 to-[#4A5D23]/80',
-      image: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=600&q=80'
-    }
-  ];
+  // Get only first 3 services for homepage preview
+  const displayServices = services.slice(0, 3);
   return (
     <section className="py-24 bg-gradient-to-b from-stone-50 to-white relative overflow-hidden">
       {/* Background Pattern */}
@@ -82,52 +87,78 @@ export default function ServicesPreview() {
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {services.map((service, index) => (
-            <motion.div
-              key={service.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="group overflow-hidden border-0 shadow-lg hover:shadow-2xl 
-                              transition-all duration-500 h-full">
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    className="w-full h-full object-cover transition-transform duration-700 
-                               group-hover:scale-110"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-50`} />
-                  <div className="absolute bottom-4 right-4 w-14 h-14 bg-white rounded-xl 
-                                  shadow-lg flex items-center justify-center 
-                                  group-hover:scale-110 transition-transform duration-300">
-                    <service.icon className="w-7 h-7 text-[#8B7355]" />
-                  </div>
-                </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="overflow-hidden border-0 shadow-lg h-full">
+                <Skeleton className="h-48 w-full" />
                 <CardContent className="p-6">
-                  <h3 className="font-serif text-xl font-bold text-[#1A1A1A] mb-2 
-                                 group-hover:text-[#8B7355] transition-colors">
-                    {t(service.titleKey)}
-                  </h3>
-                  <p className="text-stone-600 text-sm leading-relaxed mb-4">
-                    {t(service.descKey)}
-                  </p>
-                  <Link 
-                    to={createPageUrl('Services')}
-                    className="inline-flex items-center text-[#B8956A] font-medium text-sm 
-                               hover:text-[#8B7355] transition-colors group/link"
-                  >
-                    {t('learn_more')}
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover/link:translate-x-1 transition-transform" />
-                  </Link>
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-5/6 mb-4" />
+                  <Skeleton className="h-4 w-1/3" />
                 </CardContent>
               </Card>
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : displayServices.length > 0 ? (
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${displayServices.length >= 3 ? 'lg:grid-cols-3' : ''} gap-6 lg:gap-8`}>
+            {displayServices.map((service, index) => {
+              const IconComponent = iconMap[service.icon] || GraduationCap;
+              const color = colorMap[index % colorMap.length];
+              const imageUrl = service.image_url || DEFAULT_IMAGES[`service_${index + 1}`] || DEFAULT_IMAGES.service_1;
+              
+              return (
+                <motion.div
+                  key={service.id || index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="group overflow-hidden border-0 shadow-lg hover:shadow-2xl 
+                                  transition-all duration-500 h-full">
+                    <div className="relative h-48 overflow-hidden">
+                      <LazyImage
+                        src={imageUrl}
+                        alt={service.title || 'Serviço'}
+                        className="w-full h-full object-cover transition-transform duration-700 
+                                   group-hover:scale-110"
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${color} opacity-50 pointer-events-none`} />
+                      <div className="absolute bottom-4 right-4 w-14 h-14 bg-white rounded-xl 
+                                      shadow-lg flex items-center justify-center 
+                                      group-hover:scale-110 transition-transform duration-300">
+                        <IconComponent className="w-7 h-7 text-[#8B7355]" />
+                      </div>
+                    </div>
+                    <CardContent className="p-6">
+                      <h3 className="font-serif text-xl font-bold text-[#1A1A1A] mb-2 
+                                     group-hover:text-[#8B7355] transition-colors">
+                        {service.title}
+                      </h3>
+                      <p className="text-stone-600 text-sm leading-relaxed mb-4">
+                        {service.short_description || service.description || ''}
+                      </p>
+                      <Link 
+                        to={createPageUrl('Services')}
+                        className="inline-flex items-center text-[#B8956A] font-medium text-sm 
+                                   hover:text-[#8B7355] transition-colors group/link"
+                      >
+                        {t('learn_more')}
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover/link:translate-x-1 transition-transform" />
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-stone-500">Nenhum serviço disponível no momento.</p>
+          </div>
+        )}
 
         {/* CTA */}
         <motion.div

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LanguageProvider, useLanguage } from '@/components/LanguageProvider';
 import LanguageSelector from '@/components/LanguageSelector';
+import LazyImage from '@/components/ui/LazyImage';
+import { getSiteImage, DEFAULT_IMAGES } from '@/lib/siteImages';
 
 
 const LayoutContent = ({ children, currentPageName }) => {
@@ -24,6 +26,7 @@ const LayoutContent = ({ children, currentPageName }) => {
   const [user, setUser] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [logoUrl, setLogoUrl] = useState('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG');
 
   const isAdminPage = currentPageName?.startsWith('Admin');
   const isDeveloperPage = currentPageName === 'DeveloperPanel';
@@ -91,11 +94,18 @@ const LayoutContent = ({ children, currentPageName }) => {
   }, []);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-      setShowScrollTop(window.scrollY > 400);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 50);
+          setShowScrollTop(window.scrollY > 400);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -125,13 +135,18 @@ const LayoutContent = ({ children, currentPageName }) => {
     }
   }, [user?.email]);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  useEffect(() => {
+    // Load logo image
+    getSiteImage('logo', DEFAULT_IMAGES.logo).then(setLogoUrl);
+  }, []);
 
-  const handleLogout = () => {
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleLogout = useCallback(() => {
     base44.auth.logout();
-  };
+  }, []);
 
   if (isAdminPage || isDeveloperPage) {
     return <>{children}</>;
@@ -252,11 +267,16 @@ const LayoutContent = ({ children, currentPageName }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link to={createPageUrl('Home')} className="flex items-center gap-3">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+            <Link 
+              to={createPageUrl('Home')} 
+              className="flex items-center gap-3 transition-opacity hover:opacity-80"
+              aria-label="Ir para página inicial"
+            >
+              <LazyImage
+                src={logoUrl}
                 alt="Picadeiro Quinta da Horta"
                 className="h-14 w-14 object-cover rounded-full"
+                priority={true}
               />
               <div className="hidden md:block">
                 <h1 className="text-lg font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
@@ -286,18 +306,34 @@ const LayoutContent = ({ children, currentPageName }) => {
               <LanguageSelector />
 
               {user && (
-                <Link to={createPageUrl('Wishlist')} className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group">
+                <Link 
+                to={createPageUrl('Wishlist')} 
+                className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group"
+                aria-label={`Lista de desejos${wishlistCount > 0 ? ` (${wishlistCount} itens)` : ''}`}
+              >
                   <Heart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
+                    <span 
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold"
+                      aria-hidden="true"
+                    >
                       {wishlistCount}
                     </span>
                   )}
                 </Link>
               )}
-              <Link to={createPageUrl('Cart')} className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group">
+              <Link 
+                to={createPageUrl('Cart')} 
+                className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group"
+                aria-label="Carrinho de compras"
+              >
                 <ShoppingCart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8956A] text-white text-xs rounded-full flex items-center justify-center font-semibold" id="cart-count">
+                <span 
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8956A] text-white text-xs rounded-full flex items-center justify-center font-semibold" 
+                  id="cart-count"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
                   0
                 </span>
               </Link>
@@ -340,6 +376,8 @@ const LayoutContent = ({ children, currentPageName }) => {
               <button
                 className="lg:hidden p-2 hover:bg-stone-100 rounded-lg transition-colors"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -349,18 +387,19 @@ const LayoutContent = ({ children, currentPageName }) => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-t shadow-lg">
-            <nav className="flex flex-col p-4 gap-2">
+          <div className="lg:hidden bg-white border-t shadow-lg animate-in slide-in-from-top-2">
+            <nav className="flex flex-col p-4 gap-2" role="navigation" aria-label="Menu principal">
               {navLinks.map((link) => (
                 <Link
                   key={link.page}
                   to={createPageUrl(link.page)}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-lg transition-colors ${
+                  className={`px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8956A] focus:ring-offset-2 ${
                     currentPageName === link.page 
                       ? 'bg-[#B8956A] text-white' 
                       : 'text-[#2D2D2D] hover:bg-stone-100'
                   }`}
+                  aria-current={currentPageName === link.page ? 'page' : undefined}
                 >
                   {link.name}
                 </Link>
@@ -383,8 +422,8 @@ const LayoutContent = ({ children, currentPageName }) => {
             <div>
               <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
                 <div className="w-20 h-20 rounded-full bg-white p-2 flex items-center justify-center">
-                  <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                  <LazyImage
+                    src={logoUrl}
                     alt="Picadeiro Quinta da Horta"
                     className="w-full h-full object-cover rounded-full"
                   />
@@ -470,9 +509,11 @@ const LayoutContent = ({ children, currentPageName }) => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
+          aria-label="Voltar ao topo"
           className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 
                      bg-[#2D2D2D] text-white rounded-full shadow-lg 
                      flex items-center justify-center hover:bg-[#1A1A1A] transition-all duration-300
+                     hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#B8956A] focus:ring-offset-2
                      animate-in fade-in slide-in-from-bottom-4 z-40"
         >
           <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
