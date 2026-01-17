@@ -11,8 +11,8 @@ export default function Home() {
     <div>
       <MetaTags 
         title="Picadeiro Quinta da Horta - Centro Equestre de Excelência em Alcochete"
-        description="Centro equestre de excelência em Alcochete. Aulas de equitação, hipoterapia e eventos com o Bi-Campeão Mundial Gilberto Filipe. Experimente a paixão pelos cavalos!"
-        keywords="equitação alcochete, aulas de equitação, hipoterapia, cavalos portugal, picadeiro, gilberto filipe campeão, centro equestre, aulas cavalos, eventos cavalos"
+        description="Centro equestre de excelência em Alcochete. Aulas de equitação e eventos com o Bi-Campeão Mundial Gilberto Filipe. Experimente a paixão pelos cavalos!"
+        keywords="equitação alcochete, aulas de equitação, cavalos portugal, picadeiro, gilberto filipe campeão, centro equestre, aulas cavalos, eventos cavalos"
       />
       <HeroSection />
       <ServicesPreview />

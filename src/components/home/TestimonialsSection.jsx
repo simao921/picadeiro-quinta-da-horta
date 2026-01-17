@@ -22,9 +22,9 @@ const testimonials = [
   },
   {
     name: 'Ana Costa',
-    role: 'Hipoterapia',
+    role: 'Mãe de Aluno',
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
-    text: 'As sessões de hipoterapia transformaram a vida do meu filho. O carinho e profissionalismo da equipa são incomparáveis.',
+    text: 'As aulas transformaram a vida do meu filho. O carinho e profissionalismo da equipa são incomparáveis.',
     rating: 5
   }
 ];

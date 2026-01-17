@@ -40,8 +40,13 @@ export default function ServicesPreview() {
     initialData: []
   });
 
+  // Filter out services containing "hipoterapia" in title
+  const filteredServices = services.filter(service => 
+    !service.title?.toLowerCase().includes('hipoterapia')
+  );
+
   // Get only first 3 services for homepage preview
-  const displayServices = services.slice(0, 3);
+  const displayServices = filteredServices.slice(0, 3);
   return (
     <section className="py-24 bg-gradient-to-b from-stone-50 to-white relative overflow-hidden">
       {/* Background Pattern */}
