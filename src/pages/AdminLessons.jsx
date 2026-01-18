@@ -397,13 +397,27 @@ export default function AdminLessons() {
 
   const markAttendanceMutation = useMutation({
     mutationFn: async ({ bookingId, attendance }) => {
-      await base44.entities.Booking.update(bookingId, { 
+      console.log('Marking attendance:', { bookingId, attendance });
+      // Try different field names in case attendance_status doesn't exist
+      const updateData = { 
         attendance_status: attendance,
         attendance_marked_at: new Date().toISOString(),
         attendance_marked_by: 'admin'
-      });
+      };
+      
+      // If attendance_status doesn't work, try attendance
+      if (attendance === 'present') {
+        updateData.attendance = 'present';
+        updateData.notes = (updateData.notes || '') + ' [PRESENTE]';
+      } else if (attendance === 'absent') {
+        updateData.attendance = 'absent';
+        updateData.notes = (updateData.notes || '') + ' [AUSENTE]';
+      }
+      
+      await base44.entities.Booking.update(bookingId, updateData);
     },
     onSuccess: () => {
+      console.log('Attendance marked successfully');
       queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
       toast.success('Presença marcada com sucesso!');
@@ -440,9 +454,9 @@ export default function AdminLessons() {
 
   const getAttendanceStats = (lessonBookings) => {
     const approvedBookings = lessonBookings.filter(b => b.status === 'approved');
-    const present = approvedBookings.filter(b => b.attendance_status === 'present').length;
-    const absent = approvedBookings.filter(b => b.attendance_status === 'absent').length;
-    const unmarked = approvedBookings.filter(b => !b.attendance_status).length;
+    const present = approvedBookings.filter(b => b.attendance_status === 'present' || b.attendance === 'present').length;
+    const absent = approvedBookings.filter(b => b.attendance_status === 'absent' || b.attendance === 'absent').length;
+    const unmarked = approvedBookings.filter(b => !b.attendance_status && !b.attendance).length;
     
     return { present, absent, unmarked, total: approvedBookings.length };
   };
@@ -949,12 +963,12 @@ export default function AdminLessons() {
                                           
                                           {booking.status === 'approved' && (
                                             <div className="flex items-center gap-1">
-                                              {booking.attendance_status === 'present' ? (
+                                              {(booking.attendance_status === 'present' || booking.attendance === 'present') ? (
                                                 <Badge className="bg-green-600 text-white px-2 py-1 text-xs">
                                                   <UserCheck className="w-3 h-3 mr-1" />
                                                   Presente
                                                 </Badge>
-                                              ) : booking.attendance_status === 'absent' ? (
+                                              ) : (booking.attendance_status === 'absent' || booking.attendance === 'absent') ? (
                                                 <Badge className="bg-red-500 text-white px-2 py-1 text-xs">
                                                   <UserX className="w-3 h-3 mr-1" />
                                                   Ausente
