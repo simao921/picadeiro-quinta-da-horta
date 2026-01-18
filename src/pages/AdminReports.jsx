@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { 
-  TrendingUp, Euro, ShoppingBag, Users, 
-  Calendar, Package, Loader2 
+  TrendingUp, Euro, ShoppingBag, 
+  Calendar 
 } from 'lucide-react';
-import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
 const COLORS = ['#B8956A', '#8B7355', '#C9A961', '#A68B6A', '#6B5845'];

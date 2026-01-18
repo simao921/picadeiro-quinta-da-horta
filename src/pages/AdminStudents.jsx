@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -21,8 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
-import { Users, Search, Mail, Phone, Euro, AlertCircle, CheckCircle, Loader2, Plus } from 'lucide-react';
-import { format } from 'date-fns';
+import { Search, Mail, AlertCircle, CheckCircle, Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminStudents() {

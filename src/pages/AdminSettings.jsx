@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Euro, Bell, Shield, Loader2, Save, DollarSign, Clock } from 'lucide-react';
+import { Settings, Euro, Bell, Loader2, Save, DollarSign, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const weekDays = [

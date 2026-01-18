@@ -26,10 +26,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Package, Eye, Loader2, Search } from 'lucide-react';
+import { Package, Eye, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
-import { pt } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 const statusOptions = {

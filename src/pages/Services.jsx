@@ -9,9 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  GraduationCap, Users, Heart, PartyPopper, 
-  Clock, Euro, Users2, ArrowRight, Trophy, 
-  Star, CheckCircle 
+  GraduationCap, Users, Heart, PartyPopper, Euro, Users2, ArrowRight, Trophy, CheckCircle 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';

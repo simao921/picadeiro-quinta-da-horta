@@ -4,8 +4,6 @@ import AdminContent from './pages/AdminContent';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminEmails from './pages/AdminEmails';
-import AdminGallery from './pages/AdminGallery';
-import AdminImages from './pages/AdminImages';
 import AdminInstructors from './pages/AdminInstructors';
 import AdminLessons from './pages/AdminLessons';
 import AdminLogin from './pages/AdminLogin';
@@ -26,7 +24,6 @@ import Cart from './pages/Cart';
 import ClientDashboard from './pages/ClientDashboard';
 import Contact from './pages/Contact';
 import DeveloperPanel from './pages/DeveloperPanel';
-import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
@@ -43,8 +40,6 @@ export const PAGES = {
     "AdminCoupons": AdminCoupons,
     "AdminDashboard": AdminDashboard,
     "AdminEmails": AdminEmails,
-    "AdminGallery": AdminGallery,
-    "AdminImages": AdminImages,
     "AdminInstructors": AdminInstructors,
     "AdminLessons": AdminLessons,
     "AdminLogin": AdminLogin,
@@ -65,7 +60,6 @@ export const PAGES = {
     "ClientDashboard": ClientDashboard,
     "Contact": Contact,
     "DeveloperPanel": DeveloperPanel,
-    "Gallery": Gallery,
     "Home": Home,
     "ProductDetail": ProductDetail,
     "Services": Services,

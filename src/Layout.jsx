@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
@@ -191,7 +191,6 @@ const LayoutContent = ({ children, currentPageName }) => {
   const navLinks = [
     { name: t('nav_home'), page: 'Home' },
     { name: t('nav_services'), page: 'Services' },
-    { name: t('nav_gallery'), page: 'Gallery' },
     { name: t('nav_shop'), page: 'Shop' },
     { name: t('nav_bookings'), page: 'Bookings' },
     { name: t('nav_contact'), page: 'Contact' },

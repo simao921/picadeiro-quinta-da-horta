@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   Code, Settings, AlertTriangle, Play, Database, 
-  FileCode, Eye, EyeOff, Lock, Unlock, Wrench, Users
+  FileCode, Lock, Unlock, Wrench, Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 

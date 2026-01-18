@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Save, Loader2, Upload } from 'lucide-react';
+import { FileText, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminContent() {
@@ -103,7 +103,6 @@ export default function AdminContent() {
             <TabsTrigger value="about">ℹ️ Sobre Nós</TabsTrigger>
             <TabsTrigger value="services">💼 Serviços</TabsTrigger>
             <TabsTrigger value="shop">🛒 Loja</TabsTrigger>
-            <TabsTrigger value="gallery">📸 Galeria</TabsTrigger>
             <TabsTrigger value="contact">📞 Contactos</TabsTrigger>
             <TabsTrigger value="footer">📄 Footer</TabsTrigger>
           </TabsList>
@@ -354,47 +353,6 @@ export default function AdminContent() {
                       page: 'Shop',
                       blockId: 'page_subtitle',
                       defaultValue: 'Equipamento e acessórios premium',
-                      isTextarea: true,
-                    },
-                  ]}
-                  getContent={getContent}
-                  handleSave={handleSave}
-                  saving={saving}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* GALLERY PAGE */}
-          <TabsContent value="gallery">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Página da Galeria
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ContentSection
-                  title="📸 Cabeçalho Galeria"
-                  fields={[
-                    {
-                      label: 'Badge',
-                      page: 'Gallery',
-                      blockId: 'page_badge',
-                      defaultValue: 'Nossa Galeria',
-                    },
-                    {
-                      label: 'Título',
-                      page: 'Gallery',
-                      blockId: 'page_title',
-                      defaultValue: 'Momentos Inesquecíveis',
-                    },
-                    {
-                      label: 'Subtítulo',
-                      page: 'Gallery',
-                      blockId: 'page_subtitle',
-                      defaultValue: 'Descubra os melhores momentos do nosso centro equestre',
                       isTextarea: true,
                     },
                   ]}

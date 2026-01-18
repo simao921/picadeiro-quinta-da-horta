@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Brain, CalendarDays, Users, UserCog,
-  Settings, ShoppingBag, Package, Tag, Image,
+  Settings, ShoppingBag, Package, Tag,
   MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3, UserCheck, Ban, Mail, Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ const menuItems = [
   { icon: Mail, label: 'Emails', page: 'AdminEmails' },
   { icon: Bell, label: 'Notificações', page: 'AdminNotifications' },
   { icon: FileText, label: 'Conteúdo', page: 'AdminContent' },
-  { icon: Image, label: 'Imagens do Site', page: 'AdminImages' },
   { icon: Users, label: 'Utilizadores', page: 'AdminUsers' },
   { icon: BarChart3, label: 'Relatórios', page: 'AdminReports' },
   { icon: CalendarDays, label: 'Aulas', page: 'AdminLessons' },
@@ -27,7 +26,6 @@ const menuItems = [
   { icon: ShoppingBag, label: 'Loja', page: 'AdminShop' },
   { icon: Package, label: 'Encomendas', page: 'AdminOrders' },
   { icon: Tag, label: 'Cupões', page: 'AdminCoupons' },
-  { icon: Image, label: 'Galeria', page: 'AdminGallery' },
   { icon: MessageSquare, label: 'Mensagens', page: 'AdminMessages' },
   { icon: Ban, label: 'Bloqueios', page: 'AdminBlockedSlots' },
   { icon: FileText, label: 'Regulamentos', page: 'AdminRegulations' },

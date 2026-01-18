@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -8,12 +8,10 @@ import StatCard from '@/components/admin/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Users, CalendarDays, Euro, ShoppingBag, 
-  TrendingUp, Clock, AlertCircle, CheckCircle, Bell, Package, MessageSquare, Eye
+import { CalendarDays, Euro, 
+  TrendingUp, Clock, CheckCircle, Bell, Package, MessageSquare, Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { pt } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 
 export default function AdminDashboard() {

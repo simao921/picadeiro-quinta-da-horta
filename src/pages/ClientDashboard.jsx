@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import FeedbackModal from '@/components/FeedbackModal';
 import {
   CalendarDays, Clock, CheckCircle, XCircle, 
-  AlertCircle, Euro, ShoppingBag, User, LogOut,
-  Calendar as CalendarIcon, FileText, Download, Eye, X, Star
+  AlertCircle, Euro, ShoppingBag, LogOut,
+  Calendar as CalendarIcon, FileText, Eye, X, Star
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
