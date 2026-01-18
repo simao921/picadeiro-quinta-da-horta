@@ -22,26 +22,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { 
   Plus, CalendarDays, Clock, Users, 
-  CheckCircle, XCircle, Loader2, AlertCircle, Search
+  CheckCircle, XCircle, Loader2, AlertCircle, Search,
+  UserCheck, UserX, Eye, EyeOff
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
-import { pt } from 'date-fns/locale';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import { toast } from 'sonner';
 
 export default function AdminLessons() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
+  const [showAllBookings, setShowAllBookings] = useState(false);
   const [newLesson, setNewLesson] = useState({
     service_id: '',
     instructor_id: '',
@@ -290,7 +284,7 @@ export default function AdminLessons() {
                           <div style="background: white; border-left: 4px solid #4CAF50; padding: 20px; border-radius: 8px; margin: 20px 0;">
                             <h3 style="margin: 0 0 15px 0; color: #2C3E1F; font-size: 18px;">📅 Detalhes da Aula:</h3>
                             <p style="margin: 8px 0; color: #555;"><strong>Serviço:</strong> ${service?.title || 'Aula de Equitação'}</p>
-                            <p style="margin: 8px 0; color: #555;"><strong>Data:</strong> ${format(new Date(lesson?.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}</p>
+                            <p style="margin: 8px 0; color: #555;"><strong>Data:</strong> ${format(new Date(lesson?.date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                             <p style="margin: 8px 0; color: #555;"><strong>Horário:</strong> ${lesson?.start_time}</p>
                             <p style="margin: 8px 0; color: #555;"><strong>Monitor:</strong> ${getInstructorName(lesson?.instructor_id)}</p>
                           </div>
@@ -353,7 +347,7 @@ export default function AdminLessons() {
                             Olá <strong>${booking.client_name}</strong>,
                           </p>
                           <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-                            Infelizmente não foi possível aprovar a sua reserva para o dia <strong>${format(new Date(lesson?.date), "d 'de' MMMM", { locale: pt })}</strong> às <strong>${lesson?.start_time}</strong>.
+                            Infelizmente não foi possível aprovar a sua reserva para o dia <strong>${format(new Date(lesson?.date), "d 'de' MMMM", { locale: ptBR })}</strong> às <strong>${lesson?.start_time}</strong>.
                           </p>
                           <p style="color: #666; font-size: 15px; line-height: 1.6;">
                             Isto pode dever-se a limitações de disponibilidade ou capacidade. 
@@ -401,6 +395,25 @@ export default function AdminLessons() {
     }
   });
 
+  const markAttendanceMutation = useMutation({
+    mutationFn: async ({ bookingId, attendance }) => {
+      await base44.entities.Booking.update(bookingId, { 
+        attendance_status: attendance,
+        attendance_marked_at: new Date().toISOString(),
+        attendance_marked_by: 'admin'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      toast.success('Presença marcada com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao marcar presença:', error);
+      toast.error('Erro ao marcar presença');
+    }
+  });
+
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   
   const getPendingBookingsWithLessons = () => {
@@ -423,6 +436,15 @@ export default function AdminLessons() {
   const getLessonBookings = (lessonId) => {
     if (!bookings || !Array.isArray(bookings)) return [];
     return bookings.filter(b => b.lesson_id === lessonId);
+  };
+
+  const getAttendanceStats = (lessonBookings) => {
+    const approvedBookings = lessonBookings.filter(b => b.status === 'approved');
+    const present = approvedBookings.filter(b => b.attendance_status === 'present').length;
+    const absent = approvedBookings.filter(b => b.attendance_status === 'absent').length;
+    const unmarked = approvedBookings.filter(b => !b.attendance_status).length;
+    
+    return { present, absent, unmarked, total: approvedBookings.length };
   };
 
   const filteredUsers = allUsers.filter(u => 
@@ -655,7 +677,7 @@ export default function AdminLessons() {
                             <div className="flex flex-wrap gap-3 text-sm text-stone-600">
                               <span className="flex items-center gap-1">
                                 <CalendarDays className="w-4 h-4 text-[#B8956A]" />
-                                {format(new Date(item.lesson.date), "d 'de' MMMM", { locale: pt })}
+                                {format(new Date(item.lesson.date), "d 'de' MMMM", { locale: ptBR })}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Clock className="w-4 h-4 text-[#B8956A]" />
@@ -712,7 +734,7 @@ export default function AdminLessons() {
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
-                locale={pt}
+                locale={ptBR}
                 className="rounded-md border-0 w-full"
                 classNames={{
                   months: "flex flex-col space-y-4",
@@ -757,15 +779,26 @@ export default function AdminLessons() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl font-bold mb-1">
-                    {format(selectedDate, "EEEE", { locale: pt })}
+                    {format(selectedDate, "EEEE", { locale: ptBR })}
                   </CardTitle>
                   <p className="text-white/80 text-sm">
-                    {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}
+                    {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </p>
                 </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                  <span className="text-2xl font-bold">{lessons.length}</span>
-                  <span className="text-sm ml-1 text-white/80">aulas</span>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAllBookings(!showAllBookings)}
+                    className="text-white hover:bg-white/20"
+                  >
+                    {showAllBookings ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                    {showAllBookings ? 'Ocultar' : 'Mostrar'} Reservas
+                  </Button>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                    <span className="text-2xl font-bold">{lessons.length}</span>
+                    <span className="text-sm ml-1 text-white/80">aulas</span>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -789,6 +822,7 @@ export default function AdminLessons() {
                     const hasPending = lessonBookings.some(b => b.status === 'pending');
                     const isFull = (lesson.booked_spots || 0) >= 6;
                     const isCompleted = isLessonCompleted(lesson);
+                    const attendanceStats = getAttendanceStats(lessonBookings);
                     return (
                       <Card key={lesson.id} className={`border-l-4 shadow-md hover:shadow-lg transition-all ${
                         isCompleted ? 'border-l-green-500 bg-green-50/30' :
@@ -810,6 +844,24 @@ export default function AdminLessons() {
                                     <span className="text-stone-300">•</span>
                                     <span>{lesson.end_time || '--:--'}</span>
                                   </div>
+                                  {attendanceStats.total > 0 && (
+                                    <div className="flex items-center gap-3 mt-2">
+                                      <div className="flex items-center gap-1 text-xs">
+                                        <UserCheck className="w-3 h-3 text-green-600" />
+                                        <span className="text-green-600 font-medium">{attendanceStats.present}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1 text-xs">
+                                        <UserX className="w-3 h-3 text-red-600" />
+                                        <span className="text-red-600 font-medium">{attendanceStats.absent}</span>
+                                      </div>
+                                      {attendanceStats.unmarked > 0 && (
+                                        <div className="flex items-center gap-1 text-xs">
+                                          <AlertCircle className="w-3 h-3 text-amber-600" />
+                                          <span className="text-amber-600 font-medium">{attendanceStats.unmarked} pendente</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -837,7 +889,7 @@ export default function AdminLessons() {
                             </div>
                           </div>
 
-                          {lessonBookings.length > 0 && (
+                          {(showAllBookings || lessonBookings.length > 0) && (
                             <div className="mt-4 pt-4 border-t border-stone-200">
                               <div className="flex items-center justify-between mb-3">
                                 <p className="text-sm font-bold text-[#2C3E1F] flex items-center gap-2">
@@ -885,14 +937,51 @@ export default function AdminLessons() {
                                           </Button>
                                         </>
                                       ) : (
-                                        <Badge className={`font-semibold px-3 py-1 ${
-                                          booking.status === 'approved' ? 'bg-[#4B6382] text-white' :
-                                          booking.status === 'rejected' ? 'bg-red-500 text-white' :
-                                          'bg-stone-400 text-white'
-                                        }`}>
-                                          {booking.status === 'approved' ? '✓ Aprovada' :
-                                           booking.status === 'rejected' ? '✗ Rejeitada' : 'Cancelada'}
-                                        </Badge>
+                                        <div className="flex items-center gap-2">
+                                          <Badge className={`font-semibold px-3 py-1 ${
+                                            booking.status === 'approved' ? 'bg-[#4B6382] text-white' :
+                                            booking.status === 'rejected' ? 'bg-red-500 text-white' :
+                                            'bg-stone-400 text-white'
+                                          }`}>
+                                            {booking.status === 'approved' ? '✓ Aprovada' :
+                                             booking.status === 'rejected' ? '✗ Rejeitada' : 'Cancelada'}
+                                          </Badge>
+                                          
+                                          {booking.status === 'approved' && (
+                                            <div className="flex items-center gap-1">
+                                              {booking.attendance_status === 'present' ? (
+                                                <Badge className="bg-green-600 text-white px-2 py-1 text-xs">
+                                                  <UserCheck className="w-3 h-3 mr-1" />
+                                                  Presente
+                                                </Badge>
+                                              ) : booking.attendance_status === 'absent' ? (
+                                                <Badge className="bg-red-500 text-white px-2 py-1 text-xs">
+                                                  <UserX className="w-3 h-3 mr-1" />
+                                                  Ausente
+                                                </Badge>
+                                              ) : (
+                                                <div className="flex gap-1">
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
+                                                    onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'present' })}
+                                                  >
+                                                    <UserCheck className="w-3 h-3" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-6 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
+                                                    onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'absent' })}
+                                                  >
+                                                    <UserX className="w-3 h-3" />
+                                                  </Button>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
                                   </div>

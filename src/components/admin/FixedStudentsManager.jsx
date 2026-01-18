@@ -230,145 +230,210 @@ export default function FixedStudentsManager() {
       return { userId, data, isPicadeiro, oldSchedules, studentEmail, studentName };
     },
     onSuccess: async (result) => {
-      // Construir aluno com dados atualizados
-      let updatedStudent;
-      if (result.isPicadeiro) {
-        // Re-fetch para obter dados mais recentes
-        await queryClient.invalidateQueries({ queryKey: ['picadeiro-students'] });
-        const students = await base44.entities.PicadeiroStudent.list();
-        const student = students.find(s => s.id === result.userId);
-        updatedStudent = {
-          id: result.userId,
-          email: student?.email || student?.phone || `picadeiro-${student?.name}`,
-          full_name: student?.name || '',
-          fixed_schedule: result.data.fixed_schedule || [],
-          ...result.data
-        };
-      } else {
-        await queryClient.invalidateQueries({ queryKey: ['all-users'] });
-        const users = await base44.entities.User.list('-created_date', 500);
-        const user = users.find(u => u.id === result.userId);
-        updatedStudent = {
-          id: result.userId,
-          email: user?.email || '',
-          full_name: user?.full_name || '',
-          fixed_schedule: result.data.fixed_schedule || [],
-          ...result.data
-        };
-      }
-      
-      // Garantir que tem email e nome (usar dados passados se necessário)
-      if (result.studentEmail && !updatedStudent.email) {
-        updatedStudent.email = result.studentEmail;
-      }
-      if (result.studentName && !updatedStudent.full_name) {
-        updatedStudent.full_name = result.studentName;
-      }
-      
-      // SEMPRE criar/atualizar aulas para todos os horários se tiver horários definidos
-      if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && updatedStudent.email) {
-        const nextYear = new Date().getFullYear() + 1;
-        toast.loading(`A criar aulas até fim de ${nextYear}...`);
-        console.log('Criando aulas para:', updatedStudent);
+      try {
+        // Construir aluno com dados atualizados
+        let updatedStudent;
+        if (result.isPicadeiro) {
+          // Re-fetch para obter dados mais recentes
+          const students = await base44.entities.PicadeiroStudent.list();
+          const student = students.find(s => s.id === result.userId);
+          updatedStudent = {
+            id: result.userId,
+            email: student?.email || result.studentEmail || '',
+            phone: student?.phone || '',
+            full_name: student?.name || result.studentName || '',
+            fixed_schedule: result.data.fixed_schedule || [],
+            ...result.data
+          };
+        } else {
+          const users = await base44.entities.User.list('-created_date', 500);
+          const user = users.find(u => u.id === result.userId);
+          updatedStudent = {
+            id: result.userId,
+            email: user?.email || result.studentEmail || '',
+            phone: '',
+            full_name: user?.full_name || result.studentName || '',
+            fixed_schedule: result.data.fixed_schedule || [],
+            ...result.data
+          };
+        }
         
-        // Se está editando, criar aulas para todos os horários novos (já removemos as antigas na mutationFn)
-        // Isso garante que todos os horários atuais têm aulas
-        const isEditing = !!result.oldSchedules && result.oldSchedules.length > 0;
-        // Criar aulas para TODOS os horários atuais (os antigos já foram removidos)
-        await createRecurringLessons(updatedStudent, false, []); // false = criar todas as aulas
+        // Usar dados passados como fallback
+        if (!updatedStudent.email && result.studentEmail) {
+          updatedStudent.email = result.studentEmail;
+        }
+        if (!updatedStudent.full_name && result.studentName) {
+          updatedStudent.full_name = result.studentName;
+        }
         
+        // Identificador estável para reservas
+        const hasIdentifier = updatedStudent.email || updatedStudent.phone;
+        
+        console.log('=== DEBUG: Aluno para criar aulas ===');
+        console.log('updatedStudent:', updatedStudent);
+        console.log('hasIdentifier:', hasIdentifier);
+        console.log('fixed_schedule:', updatedStudent.fixed_schedule);
+        
+        // SEMPRE criar/atualizar aulas para todos os horários se tiver horários definidos
+        if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && hasIdentifier) {
+          toast.loading('A criar aulas para 1 ano...', { id: 'saving-student' });
+          
+          // Criar aulas para TODOS os horários atuais
+          await createRecurringLessons(updatedStudent);
+          
+          toast.dismiss('saving-student');
+          toast.success('Aluno fixo guardado e horários criados!');
+        } else {
+          console.log('Não criou aulas porque:', {
+            hasSchedule: !!updatedStudent.fixed_schedule,
+            scheduleLength: updatedStudent.fixed_schedule?.length,
+            hasIdentifier
+          });
+          toast.success('Aluno fixo atualizado!');
+        }
+      } catch (error) {
+        console.error('Erro ao criar aulas:', error);
         toast.dismiss();
-        toast.success(`Aluno fixo guardado e horários atualizados até ${nextYear}!`);
-      } else {
-        toast.success('Aluno fixo atualizado!');
+        toast.error('Aluno guardado mas houve erro ao criar algumas aulas');
+      } finally {
+        // Invalidar todas as queries relacionadas para atualizar a seção de aulas do admin
+        await queryClient.invalidateQueries({ queryKey: ['all-users'] });
+        await queryClient.invalidateQueries({ queryKey: ['picadeiro-students'] });
+        await queryClient.invalidateQueries({ queryKey: ['lessons'] });
+        await queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+        await queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+        await queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
+        setDialogOpen(false);
+        setEditingStudent(null);
+        setStudentSearchQuery('');
+        setFormData({
+          user_id: '',
+          student_level: 'iniciante',
+          duration: 30,
+          weekly_frequency: 1,
+          schedules: []
+        });
       }
-      
-      // Invalidar todas as queries relacionadas para atualizar a seção de aulas do admin
-      await queryClient.invalidateQueries({ queryKey: ['all-users'] });
-      await queryClient.invalidateQueries({ queryKey: ['picadeiro-students'] });
-      await queryClient.invalidateQueries({ queryKey: ['lessons'] });
-      await queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
-      await queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
-      await queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
-      setDialogOpen(false);
-      setEditingStudent(null);
-      setStudentSearchQuery('');
-      setFormData({
-        user_id: '',
-        student_level: 'iniciante',
-        duration: 30,
-        weekly_frequency: 1,
-        schedules: []
-      });
     }
   });
 
-  const createRecurringLessons = async (student, onlyNewSchedules = false, oldSchedules = []) => {
+  const createRecurringLessons = async (student) => {
+    console.log('=== INICIANDO createRecurringLessons ===');
+    console.log('Student recebido:', student);
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const withRateLimitRetry = async (fn, { retries = 5, baseDelay = 600 } = {}) => {
+      let lastError;
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          return await fn();
+        } catch (error) {
+          lastError = error;
+          const message = String(error?.message || '').toLowerCase();
+          const isRateLimit = message.includes('rate limit') || error?.status === 429 || error?.response?.status === 429;
+          if (!isRateLimit || attempt === retries) {
+            throw error;
+          }
+          const delay = baseDelay * Math.pow(2, attempt);
+          await sleep(delay);
+        }
+      }
+      throw lastError;
+    };
+
+    const rateLimitState = {
+      lastRequest: 0,
+      minDelay: 140,
+      maxDelay: 1500,
+      active: 0,
+      maxConcurrency: 2
+    };
+
+    const rateLimitCall = async (fn) => {
+      while (rateLimitState.active >= rateLimitState.maxConcurrency) {
+        await sleep(30);
+      }
+      rateLimitState.active += 1;
+      try {
+        const now = Date.now();
+        const wait = Math.max(0, rateLimitState.minDelay - (now - rateLimitState.lastRequest));
+        if (wait > 0) {
+          await sleep(wait);
+        }
+        rateLimitState.lastRequest = Date.now();
+        const result = await withRateLimitRetry(fn);
+        rateLimitState.minDelay = Math.max(80, rateLimitState.minDelay * 0.95);
+        return result;
+      } catch (error) {
+        const message = String(error?.message || '').toLowerCase();
+        const isRateLimit = message.includes('rate limit') || error?.status === 429 || error?.response?.status === 429;
+        if (isRateLimit) {
+          rateLimitState.minDelay = Math.min(rateLimitState.minDelay * 1.6 + 100, rateLimitState.maxDelay);
+          await sleep(rateLimitState.minDelay);
+        }
+        throw error;
+      } finally {
+        rateLimitState.active -= 1;
+      }
+    };
+    
     if (!student.fixed_schedule || student.fixed_schedule.length === 0) {
-      console.log('Sem horários fixos definidos');
+      console.log('❌ Sem horários fixos definidos');
       return;
     }
     
-    if (!student.email) {
-      console.error('Aluno sem email:', student);
-      toast.error('Erro: aluno sem email');
+    const studentKey = student.email || student.phone || `student-${student.full_name || student.name}`;
+    const studentName = student.full_name || student.name || 'Aluno';
+    
+    console.log('StudentKey:', studentKey);
+    console.log('StudentName:', studentName);
+    
+    if (!studentKey) {
+      console.error('❌ Aluno sem identificador válido:', student);
+      toast.error('Erro: aluno sem identificador');
       return;
     }
     
-    const service = services.find(s => s.title === 'Aulas em Grupo');
+    const serviceList = await base44.entities.Service.list();
+    console.log('Serviços disponíveis:', serviceList.map(s => s.title));
+    
+    const service = serviceList.find(s => s.title === 'Aulas em Grupo');
     if (!service) {
-      console.error('Serviço "Aulas em Grupo" não encontrado');
+      console.error('❌ Serviço "Aulas em Grupo" não encontrado');
       toast.error('Serviço "Aulas em Grupo" não encontrado');
       return;
     }
+    
+    console.log('✅ Serviço encontrado:', service.id);
 
-    // Se estamos editando, criar apenas os novos horários
-    let schedulesToCreate = student.fixed_schedule;
-    if (onlyNewSchedules && oldSchedules.length > 0) {
-      schedulesToCreate = student.fixed_schedule.filter(ns => 
-        !oldSchedules.some(old => old.day === ns.day && old.time === ns.time)
-      );
-      console.log('Criando apenas novos horários:', schedulesToCreate);
-    } else {
-      console.log(`Criando todas as aulas para ${student.full_name} (${student.email})`);
-    }
-
-    if (schedulesToCreate.length === 0) {
-      console.log('Nenhum horário novo para criar');
-      return;
-    }
-
-    console.log('Horários a criar:', schedulesToCreate);
+    const schedulesToCreate = student.fixed_schedule;
+    console.log(`Criando aulas para ${studentName} (${studentKey})`);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const currentYear = today.getFullYear();
-    const endDate = new Date(currentYear + 1, 11, 31); // Fim do próximo ano
-    endDate.setHours(23, 59, 59, 999);
-    console.log(`Criando de ${format(today, 'yyyy-MM-dd')} até ${format(endDate, 'yyyy-MM-dd')}`);
+    
+    // 1 ANO COMPLETO
+    const endDate = new Date(today.getFullYear() + 1, 11, 31);
+    
     const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
     
     let created = 0;
     let bookingsCreated = 0;
-    let lessonsUpdated = 0;
     
-    // Calcular todas as datas de uma vez (otimização)
+    // Calcular todas as datas
     const allDates = [];
     for (const schedule of schedulesToCreate) {
       const targetDay = daysMap[schedule.day];
       const currentDate = new Date(today);
       
-      // Calcular primeira ocorrência
       const currentDay = currentDate.getDay();
       let daysUntilTarget = (targetDay - currentDay + 7) % 7;
       if (daysUntilTarget === 0) daysUntilTarget = 7;
       currentDate.setDate(currentDate.getDate() + daysUntilTarget);
       
-      // Adicionar todas as ocorrências semanais até a data final
       while (currentDate <= endDate) {
         allDates.push({
           date: format(currentDate, 'yyyy-MM-dd'),
-          dateObj: new Date(currentDate),
           schedule: schedule
         });
         currentDate.setDate(currentDate.getDate() + 7);
@@ -376,115 +441,133 @@ export default function FixedStudentsManager() {
     }
     
     console.log(`Total de aulas a processar: ${allDates.length}`);
-    
-    // Processar em batches para melhor performance
-    const BATCH_SIZE = 50;
-    for (let i = 0; i < allDates.length; i += BATCH_SIZE) {
-      const batch = allDates.slice(i, i + BATCH_SIZE);
-      const batchPromises = batch.map(async ({ date, schedule }) => {
-        try {
-          // Verificar se já existe aula neste horário
-          const existingLessons = await base44.entities.Lesson.filter({ 
-            date: date,
-            start_time: schedule.time,
-            service_id: service.id
-          });
 
-          let lesson;
-          let isNewLesson = false;
-          
-          if (existingLessons.length === 0) {
-            // Criar nova aula
-            const [hours, minutes] = schedule.time.split(':');
-            const endTime = new Date(2000, 0, 1, parseInt(hours), parseInt(minutes));
-            endTime.setMinutes(endTime.getMinutes() + (schedule.duration || 30));
-            
-            lesson = await base44.entities.Lesson.create({
+    const existingLessonsMap = new Map();
+    const uniqueTimes = [...new Set(schedulesToCreate.map(schedule => schedule.time))];
+
+    for (const time of uniqueTimes) {
+      const lessonsForTime = await rateLimitCall(() =>
+        base44.entities.Lesson.filter({
+          service_id: service.id,
+          start_time: time
+        })
+      );
+      lessonsForTime.forEach(lesson => {
+        const key = `${lesson.date}-${lesson.start_time}`;
+        existingLessonsMap.set(key, lesson);
+      });
+    }
+
+    const existingBookings = await rateLimitCall(() =>
+      base44.entities.Booking.filter({
+        client_email: studentKey,
+        is_fixed_student: true
+      })
+    );
+    const bookingLessonIds = new Set(existingBookings.map(booking => booking.lesson_id));
+
+    const MAX_CONCURRENCY = 3;
+    let active = 0;
+    let cursor = 0;
+
+    const processLesson = async ({ date, schedule }) => {
+      try {
+        const lessonKey = `${date}-${schedule.time}`;
+        let lesson = existingLessonsMap.get(lessonKey);
+
+        if (!lesson) {
+          const [hours, minutes] = schedule.time.split(':');
+          const endTime = new Date(2000, 0, 1, parseInt(hours), parseInt(minutes));
+          endTime.setMinutes(endTime.getMinutes() + (schedule.duration || 30));
+
+          lesson = await rateLimitCall(() =>
+            base44.entities.Lesson.create({
               service_id: service.id,
               date: date,
               start_time: schedule.time,
               end_time: `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`,
               max_spots: 6,
-              booked_spots: 0, // Será atualizado depois ao criar booking
-              fixed_students_count: 0, // Será atualizado depois ao criar booking
+              booked_spots: 1,
+              fixed_students_count: 1,
               is_auto_generated: true,
-              is_owner_service: false
-            });
-            isNewLesson = true;
-            created++;
-          } else {
-            lesson = existingLessons[0];
-          }
+              status: 'scheduled'
+            })
+          );
 
-          // SEMPRE verificar e criar reserva do aluno fixo se não existir
-          // Isso garante que mesmo se a aula foi alterada manualmente ou já existe, o aluno fixo sempre aparece
-          const existingBookings = await base44.entities.Booking.filter({
-            lesson_id: lesson.id,
-            client_email: student.email
-          });
+          existingLessonsMap.set(lessonKey, lesson);
 
-          if (existingBookings.length === 0) {
-            // Criar reserva automática do aluno fixo
-            await base44.entities.Booking.create({
+          await rateLimitCall(() =>
+            base44.entities.Booking.create({
               lesson_id: lesson.id,
-              client_email: student.email,
-              client_name: student.full_name,
+              client_email: studentKey,
+              client_name: studentName,
               status: 'approved',
               is_fixed_student: true,
-              is_owner_booking: false
-            });
-            bookingsCreated++;
+              approved_at: new Date().toISOString(),
+              approved_by: 'system'
+            })
+          );
 
-            // Atualizar contadores da aula - buscar TODAS as reservas após criar
-            const allLessonBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
-            const approvedBookings = allLessonBookings.filter(b => b.status === 'approved');
-            const fixedCount = approvedBookings.filter(b => b.is_fixed_student).length;
-            
-            await base44.entities.Lesson.update(lesson.id, {
-              booked_spots: approvedBookings.length,
-              fixed_students_count: fixedCount
-            });
-            
-            if (!isNewLesson) {
-              lessonsUpdated++;
-            }
-          } else {
-            // Se já existe reserva, garantir que está marcada como aluno fixo e aprovada
-            const studentBooking = existingBookings[0];
-            if (!studentBooking.is_fixed_student || studentBooking.status !== 'approved') {
-              await base44.entities.Booking.update(studentBooking.id, {
-                is_fixed_student: true,
-                status: 'approved'
-              });
-              // Atualizar contadores
-              const allLessonBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
-              const approvedBookings = allLessonBookings.filter(b => b.status === 'approved');
-              const fixedCount = approvedBookings.filter(b => b.is_fixed_student).length;
-              await base44.entities.Lesson.update(lesson.id, {
-                booked_spots: approvedBookings.length,
-                fixed_students_count: fixedCount
-              });
-              if (!isNewLesson) {
-                lessonsUpdated++;
-              }
-            }
-          }
-        } catch (e) {
-          console.error(`Erro ao criar aula ${date} ${schedule.time}:`, e);
+          bookingLessonIds.add(lesson.id);
+          created += 1;
+          bookingsCreated += 1;
+          return;
         }
-      });
-      
-      // Executar batch e aguardar
-      await Promise.all(batchPromises);
-      
-      // Atualizar progresso
-      if (i + BATCH_SIZE < allDates.length) {
-        const progress = Math.round(((i + BATCH_SIZE) / allDates.length) * 100);
-        toast.loading(`A criar aulas... ${progress}%`);
+
+        if (!bookingLessonIds.has(lesson.id)) {
+          await rateLimitCall(() =>
+            base44.entities.Booking.create({
+              lesson_id: lesson.id,
+              client_email: studentKey,
+              client_name: studentName,
+              status: 'approved',
+              is_fixed_student: true,
+              approved_at: new Date().toISOString(),
+              approved_by: 'system'
+            })
+          );
+
+          await rateLimitCall(() =>
+            base44.entities.Lesson.update(lesson.id, {
+              booked_spots: (lesson.booked_spots || 0) + 1,
+              fixed_students_count: (lesson.fixed_students_count || 0) + 1
+            })
+          );
+
+          bookingLessonIds.add(lesson.id);
+          bookingsCreated += 1;
+        }
+      } catch (e) {
+        console.error(`Erro ${date} ${schedule.time}:`, e);
       }
-    }
+    };
+
+    const runQueue = async () => {
+      while (cursor < allDates.length) {
+        if (active >= MAX_CONCURRENCY) {
+          await sleep(120);
+          continue;
+        }
+        const item = allDates[cursor++];
+        active += 1;
+        processLesson(item)
+          .catch((error) => console.error('Erro no processamento:', error))
+          .finally(() => {
+            active -= 1;
+          });
+      }
+      while (active > 0) {
+        await sleep(120);
+      }
+    };
+
+    await runQueue();
+
+    toast.loading(`A criar aulas... 100% (${created} aulas, ${bookingsCreated} reservas)`, { id: 'creating-lessons' });
     
-    console.log(`✅ Criadas ${created} novas aulas, ${bookingsCreated} reservas criadas, ${lessonsUpdated} aulas atualizadas`);
+    toast.dismiss('creating-lessons');
+    console.log(`✅ CONCLUÍDO: Criadas ${created} aulas, ${bookingsCreated} reservas`);
+    toast.success(`Criadas ${created} aulas para 1 ano!`);
   };
 
   const handleSave = async () => {
@@ -502,25 +585,41 @@ export default function FixedStudentsManager() {
     const isPicadeiro = formData.user_id.startsWith('picadeiro-');
     const actualId = formData.user_id.replace('user-', '').replace('picadeiro-', '');
     
-    // Obter dados do aluno para comparar horários
+    // Obter dados do aluno selecionado
+    const selectedStudent = allStudentsForSelection.find(s => s.id === formData.user_id);
+    
     let studentEmail = '';
     let studentName = '';
     let oldSchedules = [];
+    
     if (editingStudent) {
-      // Tentar obter email de diferentes fontes
-      studentEmail = editingStudent.email || 
-                     (editingStudent.source === 'picadeiro' ? editingStudent.phone : '') ||
-                     editingStudent.full_name || 
-                     editingStudent.name || '';
+      studentEmail = editingStudent.email || editingStudent.phone || '';
       studentName = editingStudent.full_name || editingStudent.name || '';
       oldSchedules = editingStudent.fixed_schedule || [];
-    } else {
-      // Se não está editando, obter dados do aluno selecionado
-      const selectedStudent = filteredStudentsForSelection.find(s => s.id === formData.user_id);
-      if (selectedStudent) {
-        studentEmail = selectedStudent.email || selectedStudent.phone || '';
-        studentName = selectedStudent.name || '';
-      }
+    }
+    
+    // Usar dados do aluno selecionado como fallback
+    if (!studentEmail && selectedStudent) {
+      studentEmail = selectedStudent.email || selectedStudent.phone || '';
+    }
+    if (!studentName && selectedStudent) {
+      studentName = selectedStudent.name || '';
+    }
+    
+    // Se não tem email/telefone, usar o nome como identificador único
+    if (!studentEmail && studentName) {
+      studentEmail = `aluno-${studentName.toLowerCase().replace(/\s+/g, '-')}`;
+    }
+    
+    console.log('=== handleSave DEBUG ===');
+    console.log('formData.user_id:', formData.user_id);
+    console.log('studentEmail (identificador):', studentEmail);
+    console.log('studentName:', studentName);
+    console.log('schedules:', formData.schedules);
+    
+    if (!studentEmail) {
+      toast.error('O aluno precisa ter nome, email ou telefone para criar aulas');
+      return;
     }
 
     await updateUserMutation.mutateAsync({
