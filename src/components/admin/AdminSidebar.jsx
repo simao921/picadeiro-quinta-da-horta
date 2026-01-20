@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Brain, CalendarDays, Users, UserCog,
   Settings, ShoppingBag, Package, Tag,
-  MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3, UserCheck, Ban, Mail, Bell
+  MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3, UserCheck, Ban, Mail, Bell, Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -29,6 +29,7 @@ const menuItems = [
   { icon: MessageSquare, label: 'Mensagens', page: 'AdminMessages' },
   { icon: Ban, label: 'Bloqueios', page: 'AdminBlockedSlots' },
   { icon: FileText, label: 'Regulamentos', page: 'AdminRegulations' },
+  { icon: Image, label: 'Galeria', page: 'AdminGallery' },
   { icon: Settings, label: 'Definições', page: 'AdminSettings' },
 ];
 
