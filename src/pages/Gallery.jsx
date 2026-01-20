@@ -53,21 +53,24 @@ export default function Gallery() {
       />
 
       {/* Hero Section */}
-      <div className="relative h-[40vh] min-h-[300px] bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
+      <div className="relative h-[50vh] min-h-[400px] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1600')] bg-cover bg-center"></div>
         </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-stone-900/50"></div>
         <div className="relative z-10 text-center px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <ImageIcon className="w-16 h-16 text-[#B8956A] mx-auto mb-4" />
-            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#B8956A] to-[#8B7355] rounded-full flex items-center justify-center mx-auto mb-6">
+              <ImageIcon className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6">
               Galeria
             </h1>
-            <p className="text-xl text-stone-300 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-stone-300 max-w-3xl mx-auto font-light">
               Momentos especiais capturados no Picadeiro Quinta da Horta
             </p>
           </motion.div>
@@ -76,21 +79,26 @@ export default function Gallery() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Category Filter */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Filter className="w-5 h-5 text-[#4A5D23]" />
-            <h2 className="text-lg font-semibold text-[#2D2D2D]">Filtrar por categoria</h2>
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#B8956A] to-[#8B7355] rounded-full flex items-center justify-center">
+              <Filter className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-serif font-bold text-[#2D2D2D]">Filtrar por Categoria</h2>
+              <p className="text-stone-600 text-sm">Explore os nossos melhores momentos</p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {categories.map(category => (
               <Button
                 key={category.value}
                 onClick={() => setSelectedCategory(category.value)}
                 variant={selectedCategory === category.value ? 'default' : 'outline'}
-                className={selectedCategory === category.value 
-                  ? 'bg-[#4A5D23] hover:bg-[#3A4A1B] text-white' 
-                  : 'border-[#4A5D23] text-[#4A5D23] hover:bg-[#4A5D23]/10'
-                }
+                className={`transition-all duration-300 ${selectedCategory === category.value 
+                  ? 'bg-gradient-to-r from-[#B8956A] to-[#8B7355] hover:from-[#A08560] hover:to-[#7B6545] text-white shadow-lg scale-105' 
+                  : 'border-[#B8956A] text-[#8B7355] hover:bg-[#B8956A]/10 hover:border-[#8B7355]'
+                }`}
               >
                 {category.label}
               </Button>
@@ -123,28 +131,28 @@ export default function Gallery() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="group relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                  className="group relative aspect-square rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border-2 border-transparent hover:border-[#B8956A]"
                   onClick={() => setSelectedImage(image)}
                 >
                   <LazyImage
                     src={image.image_url}
                     alt={image.title || 'Galeria'}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A]/90 via-[#1A1A1A]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
                       {image.title && (
-                        <h3 className="text-white font-semibold text-lg mb-1">
+                        <h3 className="text-white font-serif font-bold text-xl mb-2">
                           {image.title}
                         </h3>
                       )}
                       {image.description && (
-                        <p className="text-white/90 text-sm line-clamp-2">
+                        <p className="text-white/95 text-sm line-clamp-2 mb-3">
                           {image.description}
                         </p>
                       )}
                       {image.category && (
-                        <Badge className="mt-2 bg-[#B8956A]">
+                        <Badge className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] border-0 shadow-lg">
                           {categories.find(c => c.value === image.category)?.label || image.category}
                         </Badge>
                       )}

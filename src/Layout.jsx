@@ -192,6 +192,7 @@ const LayoutContent = ({ children, currentPageName }) => {
     { name: t('nav_home'), page: 'Home' },
     { name: t('nav_services'), page: 'Services' },
     { name: t('nav_shop'), page: 'Shop' },
+    { name: t('nav_gallery') || 'Galeria', page: 'Gallery' },
     { name: t('nav_bookings'), page: 'Bookings' },
     { name: t('nav_contact'), page: 'Contact' },
   ];
