@@ -30,6 +30,7 @@ import Services from './pages/Services';
 import Shop from './pages/Shop';
 import UserPreferences from './pages/UserPreferences';
 import Wishlist from './pages/Wishlist';
+import Gallery from './pages/Gallery';
 import __Layout from './Layout.jsx';
 
 
@@ -66,6 +67,7 @@ export const PAGES = {
     "Shop": Shop,
     "UserPreferences": UserPreferences,
     "Wishlist": Wishlist,
+    "Gallery": Gallery,
 }
 
 export const pagesConfig = {
