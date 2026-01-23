@@ -4,6 +4,7 @@ import AdminContent from './pages/AdminContent';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminEmails from './pages/AdminEmails';
+import AdminGallery from './pages/AdminGallery';
 import AdminInstructors from './pages/AdminInstructors';
 import AdminLessons from './pages/AdminLessons';
 import AdminLogin from './pages/AdminLogin';
@@ -24,14 +25,13 @@ import Cart from './pages/Cart';
 import ClientDashboard from './pages/ClientDashboard';
 import Contact from './pages/Contact';
 import DeveloperPanel from './pages/DeveloperPanel';
+import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import Shop from './pages/Shop';
 import UserPreferences from './pages/UserPreferences';
 import Wishlist from './pages/Wishlist';
-import Gallery from './pages/Gallery';
-import AdminGallery from './pages/AdminGallery';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +42,7 @@ export const PAGES = {
     "AdminCoupons": AdminCoupons,
     "AdminDashboard": AdminDashboard,
     "AdminEmails": AdminEmails,
+    "AdminGallery": AdminGallery,
     "AdminInstructors": AdminInstructors,
     "AdminLessons": AdminLessons,
     "AdminLogin": AdminLogin,
@@ -62,14 +63,13 @@ export const PAGES = {
     "ClientDashboard": ClientDashboard,
     "Contact": Contact,
     "DeveloperPanel": DeveloperPanel,
+    "Gallery": Gallery,
     "Home": Home,
     "ProductDetail": ProductDetail,
     "Services": Services,
     "Shop": Shop,
     "UserPreferences": UserPreferences,
     "Wishlist": Wishlist,
-    "Gallery": Gallery,
-    "AdminGallery": AdminGallery,
 }
 
 export const pagesConfig = {

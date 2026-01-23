@@ -395,23 +395,27 @@ export default function AdminLessons() {
     }
   });
 
+  const [selectedAbsentBooking, setSelectedAbsentBooking] = useState(null);
+  const [showCompensableDialog, setShowCompensableDialog] = useState(false);
+
   const markAttendanceMutation = useMutation({
-    mutationFn: async ({ bookingId, attendance }) => {
-      console.log('Marking attendance:', { bookingId, attendance });
-      // Try different field names in case attendance_status doesn't exist
+    mutationFn: async ({ bookingId, attendance, absenceCompensable }) => {
+      console.log('Marking attendance:', { bookingId, attendance, absenceCompensable });
+      
       const updateData = { 
         attendance_status: attendance,
+        attendance: attendance,
         attendance_marked_at: new Date().toISOString(),
         attendance_marked_by: 'admin'
       };
       
-      // If attendance_status doesn't work, try attendance
       if (attendance === 'present') {
-        updateData.attendance = 'present';
         updateData.notes = (updateData.notes || '') + ' [PRESENTE]';
       } else if (attendance === 'absent') {
-        updateData.attendance = 'absent';
         updateData.notes = (updateData.notes || '') + ' [AUSENTE]';
+        if (absenceCompensable !== undefined) {
+          updateData.absence_compensable = absenceCompensable;
+        }
       }
       
       await base44.entities.Booking.update(bookingId, updateData);
@@ -420,6 +424,8 @@ export default function AdminLessons() {
       console.log('Attendance marked successfully');
       queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      setShowCompensableDialog(false);
+      setSelectedAbsentBooking(null);
       toast.success('Presença marcada com sucesso!');
     },
     onError: (error) => {
@@ -969,29 +975,39 @@ export default function AdminLessons() {
                                                   Presente
                                                 </Badge>
                                               ) : (booking.attendance_status === 'absent' || booking.attendance === 'absent') ? (
-                                                <Badge className="bg-red-500 text-white px-2 py-1 text-xs">
-                                                  <UserX className="w-3 h-3 mr-1" />
-                                                  Ausente
-                                                </Badge>
+                                               <div className="flex flex-col gap-1">
+                                                 <Badge className="bg-red-500 text-white px-2 py-1 text-xs">
+                                                   <UserX className="w-3 h-3 mr-1" />
+                                                   Ausente
+                                                 </Badge>
+                                                 {booking.absence_compensable !== undefined && (
+                                                   <Badge className={`px-2 py-1 text-xs ${booking.absence_compensable ? 'bg-blue-500 text-white' : 'bg-stone-500 text-white'}`}>
+                                                     {booking.absence_compensable ? 'Compensável' : 'Não Compensável'}
+                                                   </Badge>
+                                                 )}
+                                               </div>
                                               ) : (
-                                                <div className="flex gap-1">
-                                                  <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
-                                                    onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'present' })}
-                                                  >
-                                                    <UserCheck className="w-3 h-3" />
-                                                  </Button>
-                                                  <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-6 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
-                                                    onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'absent' })}
-                                                  >
-                                                    <UserX className="w-3 h-3" />
-                                                  </Button>
-                                                </div>
+                                               <div className="flex gap-1">
+                                                 <Button
+                                                   size="sm"
+                                                   variant="outline"
+                                                   className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
+                                                   onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'present' })}
+                                                 >
+                                                   <UserCheck className="w-3 h-3" />
+                                                 </Button>
+                                                 <Button
+                                                   size="sm"
+                                                   variant="outline"
+                                                   className="h-6 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
+                                                   onClick={() => {
+                                                     setSelectedAbsentBooking(booking.id);
+                                                     setShowCompensableDialog(true);
+                                                   }}
+                                                 >
+                                                   <UserX className="w-3 h-3" />
+                                                 </Button>
+                                               </div>
                                               )}
                                             </div>
                                           )}
@@ -1012,6 +1028,44 @@ export default function AdminLessons() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Dialog para escolher se ausência é compensável */}
+        <Dialog open={showCompensableDialog} onOpenChange={setShowCompensableDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Marcar como Ausente</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-stone-600">A ausência deste aluno é compensável?</p>
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={() => markAttendanceMutation.mutate({ 
+                    bookingId: selectedAbsentBooking, 
+                    attendance: 'absent',
+                    absenceCompensable: true 
+                  })}
+                  disabled={markAttendanceMutation.isPending}
+                >
+                  {markAttendanceMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Sim, Compensável
+                </Button>
+                <Button
+                  className="flex-1 bg-stone-600 hover:bg-stone-700 text-white"
+                  onClick={() => markAttendanceMutation.mutate({ 
+                    bookingId: selectedAbsentBooking, 
+                    attendance: 'absent',
+                    absenceCompensable: false 
+                  })}
+                  disabled={markAttendanceMutation.isPending}
+                >
+                  {markAttendanceMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Não Compensável
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
