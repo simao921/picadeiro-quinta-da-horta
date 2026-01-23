@@ -16,7 +16,7 @@ export default function Gallery() {
 
   const { data: images = [], isLoading } = useQuery({
     queryKey: ['gallery-images'],
-    queryFn: () => base44.entities.GalleryImage.filter({ is_featured: true }),
+    queryFn: () => base44.entities.GalleryImage.list('-order', 500),
     initialData: []
   });
 
