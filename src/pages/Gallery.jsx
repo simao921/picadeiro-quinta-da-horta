@@ -21,13 +21,13 @@ export default function Gallery() {
   });
 
   const categories = [
-    { value: 'all', label: t('all') || 'Todas' },
-    { value: 'aulas', label: 'Aulas' },
-    { value: 'eventos', label: 'Eventos' },
-    { value: 'cavalos', label: 'Cavalos' },
-    { value: 'instalacoes', label: 'Instalações' },
-    { value: 'competicoes', label: 'Competições' },
-    { value: 'outros', label: 'Outros' }
+    { value: 'all', label: t('all_categories') },
+    { value: 'aulas', label: t('classes') },
+    { value: 'eventos', label: t('events') },
+    { value: 'cavalos', label: t('horses') },
+    { value: 'instalacoes', label: t('facilities') },
+    { value: 'competicoes', label: t('competitions') },
+    { value: 'outros', label: t('others') || 'Outros' }
   ];
 
   const filteredImages = selectedCategory === 'all' 
@@ -47,8 +47,8 @@ export default function Gallery() {
   return (
     <div className="min-h-screen bg-stone-50">
       <MetaTags 
-        title="Galeria - Picadeiro Quinta da Horta"
-        description="Veja momentos especiais das nossas aulas, eventos e competições. Conheça os nossos cavalos e instalações."
+        title={`${t('our_gallery')} - Picadeiro Quinta da Horta`}
+        description={t('gallery_subtitle')}
         keywords="galeria equitação, fotos cavalos, eventos hípicos, instalações picadeiro"
       />
 
@@ -68,10 +68,10 @@ export default function Gallery() {
               <ImageIcon className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6">
-              Galeria
+              {t('our_gallery')}
             </h1>
             <p className="text-xl md:text-2xl text-stone-300 max-w-3xl mx-auto font-light">
-              Momentos especiais capturados no Picadeiro Quinta da Horta
+              {t('gallery_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -85,8 +85,8 @@ export default function Gallery() {
               <Filter className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-serif font-bold text-[#2D2D2D]">Filtrar por Categoria</h2>
-              <p className="text-stone-600 text-sm">Explore os nossos melhores momentos</p>
+              <h2 className="text-2xl font-serif font-bold text-[#2D2D2D]">{t('filters')}</h2>
+              <p className="text-stone-600 text-sm">{t('gallery_subtitle')}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -111,10 +111,10 @@ export default function Gallery() {
           <div className="text-center py-16">
             <ImageIcon className="w-16 h-16 text-stone-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-stone-600 mb-2">
-              Nenhuma imagem disponível
+              {t('no_images')}
             </h3>
             <p className="text-stone-500">
-              Não há imagens nesta categoria ainda.
+              {t('no_images')}
             </p>
           </div>
         ) : (
@@ -136,7 +136,7 @@ export default function Gallery() {
                 >
                   <LazyImage
                     src={image.image_url}
-                    alt={image.title || 'Galeria'}
+                    alt={image.title || t('our_gallery')}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A]/90 via-[#1A1A1A]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
@@ -193,7 +193,7 @@ export default function Gallery() {
             >
               <img
                 src={selectedImage.image_url}
-                alt={selectedImage.title || 'Galeria'}
+                alt={selectedImage.title || t('our_gallery')}
                 className="max-w-full max-h-[80vh] object-contain rounded-lg"
               />
               {(selectedImage.title || selectedImage.description) && (

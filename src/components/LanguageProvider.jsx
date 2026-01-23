@@ -292,6 +292,7 @@ export const translations = {
     horses: 'Cavalos',
     facilities: 'Instalações',
     competitions: 'Competições',
+    others: 'Outros',
     no_images: 'Nenhuma imagem encontrada',
 
     // Footer
@@ -617,6 +618,7 @@ export const translations = {
     horses: 'Horses',
     facilities: 'Facilities',
     competitions: 'Competitions',
+    others: 'Others',
     no_images: 'No images found',
 
     // Footer
@@ -942,6 +944,7 @@ export const translations = {
     horses: 'Caballos',
     facilities: 'Instalaciones',
     competitions: 'Competiciones',
+    others: 'Otros',
     no_images: 'No se encontraron imágenes',
 
     // Footer
@@ -1267,6 +1270,7 @@ export const translations = {
     horses: 'Chevaux',
     facilities: 'Installations',
     competitions: 'Compétitions',
+    others: 'Autres',
     no_images: 'Aucune image trouvée',
 
     // Footer
