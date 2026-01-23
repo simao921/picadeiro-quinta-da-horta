@@ -43,37 +43,70 @@ export default function ClientDashboard() {
     checkAuth();
   }, []);
 
-  const { data: bookings, isLoading: bookingsLoading } = useQuery({
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ['my-bookings', user?.email],
-    queryFn: () => base44.entities.Booking.filter({ client_email: user?.email }),
-    enabled: !!user?.email,
-    initialData: []
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        return await base44.entities.Booking.filter({ client_email: user.email });
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email
   });
 
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ['my-payments', user?.email],
-    queryFn: () => base44.entities.Payment.filter({ client_email: user?.email }),
-    enabled: !!user?.email,
-    initialData: []
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        return await base44.entities.Payment.filter({ client_email: user.email });
+      } catch (error) {
+        console.error('Error loading payments:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email
   });
 
-  const { data: orders, isLoading: ordersLoading } = useQuery({
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['my-orders', user?.email],
-    queryFn: () => base44.entities.Order.filter({ client_email: user?.email }),
-    enabled: !!user?.email,
-    initialData: []
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        return await base44.entities.Order.filter({ client_email: user.email });
+      } catch (error) {
+        console.error('Error loading orders:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email
   });
 
-  const { data: lessons } = useQuery({
+  const { data: lessons = [] } = useQuery({
     queryKey: ['lessons'],
-    queryFn: () => base44.entities.Lesson.list(),
-    initialData: []
+    queryFn: async () => {
+      try {
+        return await base44.entities.Lesson.list();
+      } catch (error) {
+        console.error('Error loading lessons:', error);
+        return [];
+      }
+    }
   });
 
-  const { data: regulations } = useQuery({
+  const { data: regulations = [] } = useQuery({
     queryKey: ['regulations'],
-    queryFn: () => base44.entities.RegulationDocument.filter({ is_visible: true }),
-    initialData: []
+    queryFn: async () => {
+      try {
+        return await base44.entities.RegulationDocument.filter({ is_visible: true });
+      } catch (error) {
+        console.error('Error loading regulations:', error);
+        return [];
+      }
+    }
   });
 
   const updateAttendanceMutation = useMutation({
