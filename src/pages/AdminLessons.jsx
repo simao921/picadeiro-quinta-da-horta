@@ -463,7 +463,9 @@ export default function AdminLessons() {
 
   const getLessonBookings = (lessonId) => {
     if (!bookings || !Array.isArray(bookings)) return [];
-    return bookings.filter(b => b.lesson_id === lessonId);
+    const filtered = bookings.filter(b => b.lesson_id === lessonId);
+    console.log(`Reservas para aula ${lessonId}:`, filtered);
+    return filtered;
   };
 
   const getAttendanceStats = (lessonBookings) => {
@@ -917,7 +919,7 @@ export default function AdminLessons() {
                             </div>
                           </div>
 
-                          {(showAllBookings || lessonBookings.length > 0) && (
+                          {lessonBookings.length > 0 && (
                             <div className="mt-4 pt-4 border-t border-stone-200">
                               <div className="flex items-center justify-between mb-3">
                                 <p className="text-sm font-bold text-[#2C3E1F] flex items-center gap-2">
@@ -926,7 +928,7 @@ export default function AdminLessons() {
                                 </p>
                               </div>
                               <div className="space-y-2">
-                                {lessonBookings.map((booking) => (
+                                {lessonBookings.length > 0 ? lessonBookings.map((booking) => (
                                   <div key={booking.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                                     booking.status === 'pending' ? 'bg-amber-50 border-amber-200' :
                                     booking.status === 'approved' ? 'bg-[#4B6382]/10 border-[#4B6382]/30' :
@@ -1023,7 +1025,9 @@ export default function AdminLessons() {
                                       )}
                                     </div>
                                   </div>
-                                ))}
+                                )) : (
+                                  <p className="text-sm text-stone-500 text-center py-4">Sem reservas</p>
+                                )}
                               </div>
                             </div>
                           )}
