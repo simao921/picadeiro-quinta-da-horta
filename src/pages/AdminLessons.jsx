@@ -49,7 +49,15 @@ export default function AdminLessons() {
 
   const { data: lessons, isLoading } = useQuery({
     queryKey: ['admin-lessons', format(selectedDate, 'yyyy-MM-dd')],
-    queryFn: () => base44.entities.Lesson.filter({ date: format(selectedDate, 'yyyy-MM-dd') }),
+    queryFn: async () => {
+      const result = await base44.entities.Lesson.filter({ date: format(selectedDate, 'yyyy-MM-dd') });
+      // Ordenar por hora
+      return result.sort((a, b) => {
+        const timeA = a.start_time || '00:00';
+        const timeB = b.start_time || '00:00';
+        return timeA.localeCompare(timeB);
+      });
+    },
     initialData: []
   });
 

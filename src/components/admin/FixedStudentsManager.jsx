@@ -108,12 +108,14 @@ export default function FixedStudentsManager() {
 
   const updateUserMutation = useMutation({
     mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, studentName, oldSchedules }) => {
-      // Se está editando, remover todas as aulas dos horários que foram alterados
+      // Se está editando, remover todas as AULAS FUTURAS dos horários que foram alterados
       if (isEditing && studentEmail && oldSchedules && oldSchedules.length > 0) {
-        toast.loading('A remover aulas antigas e atualizar horários...');
+        toast.loading('A remover aulas futuras antigas e atualizar horários...');
         
         const newSchedules = data.fixed_schedule || [];
         const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         
         // Identificar horários removidos ou alterados (estavam nos antigos mas não estão nos novos)
         const removedSchedules = oldSchedules.filter(old => 
@@ -122,11 +124,8 @@ export default function FixedStudentsManager() {
         
         console.log('Horários removidos/alterados:', removedSchedules);
         
-        // Remover TODAS as aulas futuras dos horários antigos que foram alterados
+        // Remover TODAS as aulas FUTURAS dos horários antigos que foram alterados
         if (removedSchedules.length > 0) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
           // Buscar o serviço "Aulas em Grupo" - usar serviços do query
           const serviceList = await base44.entities.Service.list();
           const service = serviceList.find(s => s.title === 'Aulas em Grupo');
@@ -139,36 +138,34 @@ export default function FixedStudentsManager() {
           // Processar cada horário removido/alterado
           for (const oldSchedule of removedSchedules) {
             const targetDay = daysMap[oldSchedule.day];
-            console.log(`Removendo aulas do horário antigo: ${oldSchedule.day} ${oldSchedule.time}`);
+            console.log(`Removendo aulas futuras do horário: ${oldSchedule.day} ${oldSchedule.time}`);
             
-            // Buscar TODAS as aulas futuras com este dia e horário (não apenas as que têm reservas)
+            // Buscar TODAS as aulas com este horário
             try {
-              // Buscar todas as aulas futuras do serviço (se serviço encontrado)
-              let allFutureLessons = [];
+              let allLessonsAtTime = [];
               if (service) {
-                allFutureLessons = await base44.entities.Lesson.filter({
+                allLessonsAtTime = await base44.entities.Lesson.filter({
                   service_id: service.id,
                   start_time: oldSchedule.time
                 });
               } else {
-                // Se não encontrar serviço, buscar todas as aulas e filtrar por horário e auto-geradas
-                const allLessons = await base44.entities.Lesson.list('-created_date', 2000);
-                allFutureLessons = allLessons.filter(l => 
+                // Buscar todas as aulas e filtrar
+                const allLessons = await base44.entities.Lesson.list('-date', 2000);
+                allLessonsAtTime = allLessons.filter(l => 
                   l.start_time === oldSchedule.time && l.is_auto_generated === true
                 );
               }
               
-              console.log(`Encontradas ${allFutureLessons.length} aulas com horário ${oldSchedule.time}`);
+              console.log(`Encontradas ${allLessonsAtTime.length} aulas com horário ${oldSchedule.time}`);
               
-              // Filtrar apenas aulas futuras no dia correto e auto-geradas
-              const lessonsToProcess = allFutureLessons.filter(lesson => {
-                // Já filtrado por auto-geradas se serviço não encontrado, mas verificar novamente por segurança
+              // Filtrar apenas aulas futuras (hoje ou depois) no dia correto da semana
+              const futureLessons = allLessonsAtTime.filter(lesson => {
                 if (!lesson.is_auto_generated) return false;
                 
                 const lessonDate = new Date(lesson.date);
                 lessonDate.setHours(0, 0, 0, 0);
                 
-                // Verificar se é futura (hoje ou depois)
+                // Apenas futuras (hoje ou depois)
                 if (lessonDate < today) return false;
                 
                 const lessonDay = lessonDate.getDay();
@@ -177,39 +174,41 @@ export default function FixedStudentsManager() {
                 return lessonDay === targetDay;
               });
               
-              console.log(`Processando ${lessonsToProcess.length} aulas futuras no dia ${oldSchedule.day}`);
+              console.log(`Processando ${futureLessons.length} aulas futuras no dia ${oldSchedule.day} às ${oldSchedule.time}`);
               
-              // Para cada aula, remover a reserva do aluno se existir
-              for (const lesson of lessonsToProcess) {
+              // Para cada aula futura, remover a reserva do aluno
+              for (const lesson of futureLessons) {
                 try {
-                  // Buscar reserva do aluno nesta aula
+                  // Buscar reservas do aluno nesta aula
                   const studentBookings = await base44.entities.Booking.filter({
                     lesson_id: lesson.id,
                     client_email: studentEmail,
                     is_fixed_student: true
                   });
                   
+                  console.log(`Aula ${lesson.id} (${lesson.date}): encontradas ${studentBookings.length} reservas do aluno`);
+                  
                   // Remover todas as reservas do aluno nesta aula
                   for (const booking of studentBookings) {
-                    console.log(`Removendo reserva ${booking.id} da aula ${lesson.id} (${lesson.date} ${lesson.start_time})`);
+                    console.log(`  → Removendo reserva ${booking.id}`);
                     await base44.entities.Booking.delete(booking.id);
                   }
                   
-                  // Verificar se ainda há outras reservas nesta aula
+                  // Buscar reservas restantes da aula
                   const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
                   
-                  if (remainingBookings.length === 0) {
-                    // Aula vazia = apagar (apenas se for auto-gerada)
+                  if (remainingBookings.length === 0 && lesson.is_auto_generated) {
+                    // Aula vazia e auto-gerada = apagar
                     await base44.entities.Lesson.delete(lesson.id);
-                    console.log(`Aula ${lesson.id} apagada (estava vazia após remoção)`);
-                  } else {
-                    // Atualizar contadores da aula
+                    console.log(`  → Aula ${lesson.id} apagada (vazia)`);
+                  } else if (remainingBookings.length > 0) {
+                    // Atualizar contadores
                     const fixedCount = remainingBookings.filter(b => b.is_fixed_student).length;
                     await base44.entities.Lesson.update(lesson.id, {
                       booked_spots: remainingBookings.length,
                       fixed_students_count: fixedCount
                     });
-                    console.log(`Aula ${lesson.id} atualizada: ${remainingBookings.length}/6 (${fixedCount} fixos)`);
+                    console.log(`  → Aula ${lesson.id} atualizada: ${remainingBookings.length}/6 (${fixedCount} fixos)`);
                   }
                 } catch (e) {
                   console.error(`Erro ao processar aula ${lesson.id}:`, e);
