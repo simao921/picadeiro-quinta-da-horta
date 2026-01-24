@@ -1056,10 +1056,13 @@ export default function FixedStudentsManager() {
 
   const removeStudentMutation = useMutation({
     mutationFn: async ({ userId, isPicadeiro, studentEmail }) => {
-      toast.loading('A remover aluno fixo e aulas associadas...');
+      toast.loading('A remover aluno fixo e aulas futuras associadas...');
 
-      // Apagar todas as reservas fixas do aluno
+      // Apagar todas as reservas fixas FUTURAS do aluno
       if (studentEmail) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         const bookings = await base44.entities.Booking.filter({
           client_email: studentEmail,
           is_fixed_student: true
@@ -1067,34 +1070,48 @@ export default function FixedStudentsManager() {
 
         console.log(`Encontradas ${bookings.length} reservas fixas para ${studentEmail}`);
 
+        // Buscar todas as aulas para filtrar apenas as futuras
+        const allLessons = await base44.entities.Lesson.list('-date', 2000);
+        const lessonsMap = new Map(allLessons.map(l => [l.id, l]));
+
+        // Filtrar apenas reservas de aulas futuras
+        const futureBookings = bookings.filter(booking => {
+          const lesson = lessonsMap.get(booking.lesson_id);
+          if (!lesson) return false;
+          const lessonDate = new Date(lesson.date);
+          lessonDate.setHours(0, 0, 0, 0);
+          return lessonDate >= today; // Hoje ou futuro
+        });
+
+        console.log(`Removendo ${futureBookings.length} reservas futuras (de ${bookings.length} totais)`);
+
         // Agrupar por lesson_id para processar
-        const lessonIds = [...new Set(bookings.map(b => b.lesson_id))];
+        const lessonIds = [...new Set(futureBookings.map(b => b.lesson_id))];
         
-        // Apagar todas as reservas primeiro
-        for (const booking of bookings) {
+        // Apagar todas as reservas futuras primeiro
+        for (const booking of futureBookings) {
           try {
             await base44.entities.Booking.delete(booking.id);
+            console.log(`Reserva ${booking.id} removida`);
           } catch (e) {
             console.error('Erro ao apagar reserva:', e);
           }
         }
 
-        // Agora processar cada aula
+        // Agora processar cada aula futura
         for (const lessonId of lessonIds) {
           try {
-            const lessons = await base44.entities.Lesson.filter({ id: lessonId });
-            if (lessons.length === 0) continue;
-            
-            const lesson = lessons[0];
+            const lesson = lessonsMap.get(lessonId);
+            if (!lesson) continue;
             
             // Verificar se ainda há outras reservas nesta aula
             const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lessonId });
 
-            if (remainingBookings.length === 0) {
-              // Aula vazia = apagar (auto-gerada ou não)
+            if (remainingBookings.length === 0 && lesson.is_auto_generated) {
+              // Aula vazia e auto-gerada = apagar
               await base44.entities.Lesson.delete(lesson.id);
-              console.log(`Aula ${lessonId} apagada (estava vazia)`);
-            } else {
+              console.log(`Aula ${lessonId} (${lesson.date} ${lesson.start_time}) apagada (estava vazia)`);
+            } else if (remainingBookings.length > 0) {
               // Atualizar contadores
               await base44.entities.Lesson.update(lesson.id, {
                 booked_spots: remainingBookings.length,
@@ -1124,7 +1141,7 @@ export default function FixedStudentsManager() {
       await queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
       await queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
       toast.dismiss();
-      toast.success('Aluno fixo e aulas associadas removidos com sucesso!');
+      toast.success('Aluno fixo removido! Todas as aulas futuras foram canceladas.');
     },
     onError: (error) => {
       toast.dismiss();
