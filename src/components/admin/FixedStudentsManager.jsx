@@ -108,21 +108,29 @@ export default function FixedStudentsManager() {
 
   const updateUserMutation = useMutation({
     mutationFn: async ({ userId, data, isPicadeiro, isEditing, studentEmail, studentName, oldSchedules }) => {
-      // Se está editando, remover todas as AULAS FUTURAS dos horários que foram alterados
+      console.log('=== INICIANDO ATUALIZAÇÃO DE ALUNO ===');
+      console.log('User ID:', userId);
+      console.log('Email:', studentEmail);
+      console.log('Is Editing:', isEditing);
+      
+      // Se está editando, remover AULAS FUTURAS dos horários que foram alterados
       if (isEditing && studentEmail && oldSchedules && oldSchedules.length > 0) {
-        toast.loading('A remover aulas futuras antigas e atualizar horários...');
+        console.log('Horários antigos:', oldSchedules);
+        console.log('Horários novos:', data.fixed_schedule);
+        
+        toast.loading('A atualizar horários...');
         
         const newSchedules = data.fixed_schedule || [];
         const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        // Identificar horários removidos ou alterados (estavam nos antigos mas não estão nos novos)
+        // Identificar horários removidos ou alterados
         const removedSchedules = oldSchedules.filter(old => 
           !newSchedules.some(ns => ns.day === old.day && ns.time === old.time)
         );
         
-        console.log('Horários removidos/alterados:', removedSchedules);
+        console.log(`Horários a remover: ${removedSchedules.length}`, removedSchedules);
         
         // Remover TODAS as aulas FUTURAS dos horários antigos que foram alterados
         if (removedSchedules.length > 0) {
