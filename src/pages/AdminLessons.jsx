@@ -413,8 +413,8 @@ export default function AdminLessons() {
       const updateData = { 
         attendance_status: attendance,
         attendance: attendance,
-        attendance_marked_at: new Date().toISOString(),
-        attendance_marked_by: 'admin'
+        attendance_marked_at: attendance ? new Date().toISOString() : null,
+        attendance_marked_by: attendance ? 'admin' : null
       };
       
       if (attendance === 'present') {
@@ -424,6 +424,9 @@ export default function AdminLessons() {
         if (absenceCompensable !== undefined) {
           updateData.absence_compensable = absenceCompensable;
         }
+      } else if (attendance === null) {
+        // Limpar presença/ausência
+        updateData.absence_compensable = null;
       }
       
       await base44.entities.Booking.update(bookingId, updateData);
@@ -979,61 +982,107 @@ export default function AdminLessons() {
                                           
                                           {booking.status === 'approved' && (
                                            <div className="flex items-center gap-1">
-                                             {(booking.attendance_status === 'present' || booking.attendance === 'present') ? (
-                                               <Badge className="bg-green-600 text-white px-2 py-1 text-xs">
-                                                 <UserCheck className="w-3 h-3 mr-1" />
-                                                 Presente
-                                               </Badge>
-                                             ) : (booking.attendance_status === 'absent' || booking.attendance === 'absent') ? (
-                                              <div className="flex flex-col gap-1">
-                                                <Badge className="bg-red-500 text-white px-2 py-1 text-xs">
-                                                  <UserX className="w-3 h-3 mr-1" />
-                                                  Ausente
-                                                </Badge>
-                                                {booking.absence_compensable !== undefined && (
-                                                  <Badge className={`px-2 py-1 text-xs ${booking.absence_compensable ? 'bg-blue-500 text-white' : 'bg-stone-500 text-white'}`}>
-                                                    {booking.absence_compensable ? 'Compensável' : 'Não Compensável'}
-                                                  </Badge>
-                                                )}
-                                              </div>
-                                             ) : (
-                                              (() => {
-                                                // Verificar se pode alterar presença (até 20:00 do mesmo dia)
-                                                const lessonDate = new Date(lesson.date);
-                                                const now = new Date();
-                                                const cutoffTime = new Date(lessonDate);
-                                                cutoffTime.setHours(20, 0, 0, 0);
-                                                const canEditAttendance = now <= cutoffTime;
+                                             {(() => {
+                                               // Verificar se pode alterar presença (até 20:00 do mesmo dia)
+                                               const lessonDate = new Date(lesson.date);
+                                               const now = new Date();
+                                               const cutoffTime = new Date(lessonDate);
+                                               cutoffTime.setHours(20, 0, 0, 0);
+                                               const canEditAttendance = now <= cutoffTime;
 
-                                                return canEditAttendance ? (
-                                                  <div className="flex gap-1">
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
-                                                      onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'present' })}
-                                                    >
-                                                      <UserCheck className="w-3 h-3" />
-                                                    </Button>
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      className="h-6 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
-                                                      onClick={() => {
-                                                        setSelectedAbsentBooking(booking.id);
-                                                        setShowCompensableDialog(true);
-                                                      }}
-                                                    >
-                                                      <UserX className="w-3 h-3" />
-                                                    </Button>
-                                                  </div>
-                                                ) : (
-                                                  <Badge className="bg-stone-400 text-white px-2 py-1 text-xs">
-                                                    Prazo expirado
-                                                  </Badge>
-                                                );
-                                              })()
-                                             )}
+                                               const hasMarkedAttendance = booking.attendance_status || booking.attendance;
+
+                                               if (hasMarkedAttendance === 'present') {
+                                                 return (
+                                                   <div className="flex items-center gap-1">
+                                                     <Badge className="bg-green-600 text-white px-2 py-1 text-xs">
+                                                       <UserCheck className="w-3 h-3 mr-1" />
+                                                       Presente
+                                                     </Badge>
+                                                     {canEditAttendance && (
+                                                       <Button
+                                                         size="sm"
+                                                         variant="ghost"
+                                                         className="h-5 px-1 text-xs text-stone-400 hover:text-stone-600"
+                                                         onClick={() => {
+                                                           if (confirm('Alterar presença?')) {
+                                                             markAttendanceMutation.mutate({ 
+                                                               bookingId: booking.id, 
+                                                               attendance: null 
+                                                             });
+                                                           }
+                                                         }}
+                                                         title="Limpar presença"
+                                                       >
+                                                         ✕
+                                                       </Button>
+                                                     )}
+                                                   </div>
+                                                 );
+                                               } else if (hasMarkedAttendance === 'absent') {
+                                                 return (
+                                                   <div className="flex flex-col gap-1">
+                                                     <div className="flex items-center gap-1">
+                                                       <Badge className="bg-red-500 text-white px-2 py-1 text-xs">
+                                                         <UserX className="w-3 h-3 mr-1" />
+                                                         Ausente
+                                                       </Badge>
+                                                       {canEditAttendance && (
+                                                         <Button
+                                                           size="sm"
+                                                           variant="ghost"
+                                                           className="h-5 px-1 text-xs text-stone-400 hover:text-stone-600"
+                                                           onClick={() => {
+                                                             if (confirm('Alterar ausência?')) {
+                                                               markAttendanceMutation.mutate({ 
+                                                                 bookingId: booking.id, 
+                                                                 attendance: null 
+                                                               });
+                                                             }
+                                                           }}
+                                                           title="Limpar ausência"
+                                                         >
+                                                           ✕
+                                                         </Button>
+                                                       )}
+                                                     </div>
+                                                     {booking.absence_compensable !== undefined && (
+                                                       <Badge className={`px-2 py-1 text-xs ${booking.absence_compensable ? 'bg-blue-500 text-white' : 'bg-stone-500 text-white'}`}>
+                                                         {booking.absence_compensable ? 'Compensável' : 'Não Compensável'}
+                                                       </Badge>
+                                                     )}
+                                                   </div>
+                                                 );
+                                               } else {
+                                                 return canEditAttendance ? (
+                                                   <div className="flex gap-1">
+                                                     <Button
+                                                       size="sm"
+                                                       variant="outline"
+                                                       className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
+                                                       onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'present' })}
+                                                     >
+                                                       <UserCheck className="w-3 h-3" />
+                                                     </Button>
+                                                     <Button
+                                                       size="sm"
+                                                       variant="outline"
+                                                       className="h-6 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
+                                                       onClick={() => {
+                                                         setSelectedAbsentBooking(booking.id);
+                                                         setShowCompensableDialog(true);
+                                                       }}
+                                                     >
+                                                       <UserX className="w-3 h-3" />
+                                                     </Button>
+                                                   </div>
+                                                 ) : (
+                                                   <Badge className="bg-stone-400 text-white px-2 py-1 text-xs">
+                                                     Prazo expirado
+                                                   </Badge>
+                                                 );
+                                               }
+                                             })()}
                                            </div>
                                           )}
                                         </div>

@@ -1077,9 +1077,15 @@ export default function FixedStudentsManager() {
   };
 
   const addScheduleSlot = () => {
+    const newSchedule = {
+      day: 'monday',
+      time: '09:00',
+      duration: formData.duration || 30
+    };
+    console.log('Adicionando novo horário:', newSchedule);
     setFormData({
       ...formData,
-      schedules: [...formData.schedules, { day: 'monday', time: '09:00', duration: formData.duration }]
+      schedules: [...formData.schedules, newSchedule]
     });
   };
 
@@ -1234,23 +1240,44 @@ export default function FixedStudentsManager() {
   };
 
   const editFixedStudent = (student) => {
+    console.log('=== EDITANDO ALUNO ===');
+    console.log('Student:', student);
+    
     // Garantir que temos todos os dados do aluno
     const studentData = {
       ...student,
       email: student.email || student.phone || '',
       full_name: student.full_name || student.name || '',
-      name: student.name || student.full_name || ''
+      name: student.name || student.full_name || '',
+      fixed_schedule: student.fixed_schedule || []
     };
+    
+    console.log('Student Data preparado:', studentData);
+    console.log('Fixed schedule:', studentData.fixed_schedule);
+    
     setEditingStudent(studentData);
     const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
+    
+    // Garantir que os schedules têm a propriedade duration
+    const schedulesWithDuration = (studentData.fixed_schedule || []).map(s => ({
+      ...s,
+      duration: s.duration || 30
+    }));
+    
     setFormData({
       user_id: `${isPicadeiro ? 'picadeiro' : 'user'}-${student.id}`,
       student_level: student.student_level || 'iniciante',
-      duration: student.fixed_schedule?.[0]?.duration || 30,
-      weekly_frequency: student.fixed_schedule?.length || 1,
-      schedules: student.fixed_schedule || []
+      duration: schedulesWithDuration[0]?.duration || 30,
+      weekly_frequency: schedulesWithDuration.length || 1,
+      schedules: schedulesWithDuration
     });
-    setStudentSearchQuery(''); // Limpar pesquisa ao editar
+    
+    console.log('FormData após edição:', {
+      user_id: `${isPicadeiro ? 'picadeiro' : 'user'}-${student.id}`,
+      schedules: schedulesWithDuration
+    });
+    
+    setStudentSearchQuery('');
     setDialogOpen(true);
   };
 
@@ -1454,7 +1481,11 @@ export default function FixedStudentsManager() {
                             value={schedule.day}
                             onValueChange={(v) => {
                               const newSchedules = [...formData.schedules];
-                              newSchedules[index].day = v;
+                              newSchedules[index] = {
+                                ...newSchedules[index],
+                                day: v,
+                                duration: formData.duration
+                              };
                               setFormData({ ...formData, schedules: newSchedules });
                             }}
                           >
@@ -1469,15 +1500,19 @@ export default function FixedStudentsManager() {
                           </Select>
                         </div>
                         <div className="flex-1">
-                          <Input
-                            type="time"
-                            value={schedule.time}
-                            onChange={(e) => {
-                              const newSchedules = [...formData.schedules];
-                              newSchedules[index].time = e.target.value;
-                              setFormData({ ...formData, schedules: newSchedules });
-                            }}
-                          />
+                         <Input
+                           type="time"
+                           value={schedule.time}
+                           onChange={(e) => {
+                             const newSchedules = [...formData.schedules];
+                             newSchedules[index] = {
+                               ...newSchedules[index],
+                               time: e.target.value,
+                               duration: formData.duration
+                             };
+                             setFormData({ ...formData, schedules: newSchedules });
+                           }}
+                         />
                         </div>
                         <Button
                           type="button"
