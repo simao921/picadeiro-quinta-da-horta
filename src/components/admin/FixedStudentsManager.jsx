@@ -229,12 +229,16 @@ export default function FixedStudentsManager() {
         }
       }
       
+      // Atualizar dados do aluno
+      console.log('Atualizando dados do aluno...');
       if (isPicadeiro) {
         await base44.entities.PicadeiroStudent.update(userId, data);
       } else {
         await base44.entities.User.update(userId, data);
       }
-      return { userId, data, isPicadeiro, oldSchedules, studentEmail, studentName };
+      
+      console.log('=== ATUALIZAÇÃO CONCLUÍDA ===');
+      return { userId, data, isPicadeiro, oldSchedules, studentEmail, studentName, isEditing };
     },
     onSuccess: async (result) => {
       try {
@@ -280,16 +284,39 @@ export default function FixedStudentsManager() {
         console.log('updatedStudent:', updatedStudent);
         console.log('hasIdentifier:', hasIdentifier);
         console.log('fixed_schedule:', updatedStudent.fixed_schedule);
+        console.log('isEditing:', result.isEditing);
         
-        // SEMPRE criar/atualizar aulas para todos os horários se tiver horários definidos
+        // Se NÃO está editando OU se está editando mas adicionou novos horários
         if (updatedStudent.fixed_schedule && updatedStudent.fixed_schedule.length > 0 && hasIdentifier) {
-          toast.loading('A criar aulas para 3 meses...', { id: 'saving-student' });
-          
-          // Criar aulas para TODOS os horários atuais
-          await createRecurringLessons(updatedStudent);
-          
-          toast.dismiss('saving-student');
-          toast.success('Aluno fixo guardado e horários criados!');
+          if (!result.isEditing) {
+            // Aluno novo: criar todas as aulas
+            toast.loading('A criar aulas para 3 meses...', { id: 'saving-student' });
+            await createRecurringLessons(updatedStudent);
+            toast.dismiss('saving-student');
+            toast.success('Aluno fixo guardado e horários criados!');
+          } else {
+            // Aluno existente: criar aulas apenas para horários NOVOS que foram adicionados
+            const oldSchedules = result.oldSchedules || [];
+            const newSchedules = updatedStudent.fixed_schedule || [];
+            
+            // Identificar horários NOVOS (que não existiam antes)
+            const addedSchedules = newSchedules.filter(ns => 
+              !oldSchedules.some(old => old.day === ns.day && old.time === ns.time)
+            );
+            
+            console.log(`Horários novos adicionados: ${addedSchedules.length}`, addedSchedules);
+            
+            if (addedSchedules.length > 0) {
+              // Criar aulas apenas para os horários novos
+              toast.loading('A criar aulas para novos horários...', { id: 'saving-student' });
+              const tempStudent = { ...updatedStudent, fixed_schedule: addedSchedules };
+              await createRecurringLessons(tempStudent);
+              toast.dismiss('saving-student');
+              toast.success('Aluno atualizado e aulas criadas para novos horários!');
+            } else {
+              toast.success('Aluno fixo atualizado!');
+            }
+          }
         } else {
           console.log('Não criou aulas porque:', {
             hasSchedule: !!updatedStudent.fixed_schedule,
@@ -1063,80 +1090,112 @@ export default function FixedStudentsManager() {
 
   const removeStudentMutation = useMutation({
     mutationFn: async ({ userId, isPicadeiro, studentEmail }) => {
-      toast.loading('A remover aluno fixo e aulas futuras associadas...');
+      console.log('=== INICIANDO REMOÇÃO ===');
+      console.log('userId:', userId);
+      console.log('studentEmail:', studentEmail);
+      console.log('isPicadeiro:', isPicadeiro);
+      
+      toast.loading('A remover aluno fixo e aulas futuras...');
 
-      // Apagar todas as reservas fixas FUTURAS do aluno
       if (studentEmail) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const bookings = await base44.entities.Booking.filter({
+        // Buscar TODAS as reservas do aluno (fixas)
+        let allBookings = await base44.entities.Booking.filter({
           client_email: studentEmail,
           is_fixed_student: true
         });
-
-        console.log(`Encontradas ${bookings.length} reservas fixas para ${studentEmail}`);
-
-        // Buscar todas as aulas para filtrar apenas as futuras
-        const allLessons = await base44.entities.Lesson.list('-date', 2000);
-        const lessonsMap = new Map(allLessons.map(l => [l.id, l]));
-
-        // Filtrar apenas reservas de aulas futuras
-        const futureBookings = bookings.filter(booking => {
-          const lesson = lessonsMap.get(booking.lesson_id);
-          if (!lesson) return false;
-          const lessonDate = new Date(lesson.date);
-          lessonDate.setHours(0, 0, 0, 0);
-          return lessonDate >= today; // Hoje ou futuro
-        });
-
-        console.log(`Removendo ${futureBookings.length} reservas futuras (de ${bookings.length} totais)`);
-
-        // Agrupar por lesson_id para processar
-        const lessonIds = [...new Set(futureBookings.map(b => b.lesson_id))];
         
-        // Apagar todas as reservas futuras primeiro
-        for (const booking of futureBookings) {
-          try {
-            await base44.entities.Booking.delete(booking.id);
-            console.log(`Reserva ${booking.id} removida`);
-          } catch (e) {
-            console.error('Erro ao apagar reserva:', e);
-          }
+        console.log(`Total reservas fixas encontradas: ${allBookings.length}`);
+        
+        // Se não encontrou por email e tem nome, tentar buscar por nome
+        if (allBookings.length === 0) {
+          console.log('Tentando buscar por client_email alternativo...');
+          const allBookingsList = await base44.entities.Booking.list('-created_date', 1000);
+          allBookings = allBookingsList.filter(b => 
+            b.client_email === studentEmail && b.is_fixed_student === true
+          );
+          console.log(`Reservas encontradas por busca alternativa: ${allBookings.length}`);
         }
 
-        // Agora processar cada aula futura
-        for (const lessonId of lessonIds) {
-          try {
-            const lesson = lessonsMap.get(lessonId);
-            if (!lesson) continue;
-            
-            // Verificar se ainda há outras reservas nesta aula
-            const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lessonId });
-
-            if (remainingBookings.length === 0 && lesson.is_auto_generated) {
-              // Aula vazia e auto-gerada = apagar
-              await base44.entities.Lesson.delete(lesson.id);
-              console.log(`Aula ${lessonId} (${lesson.date} ${lesson.start_time}) apagada (estava vazia)`);
-            } else if (remainingBookings.length > 0) {
-              // Atualizar contadores
-              await base44.entities.Lesson.update(lesson.id, {
-                booked_spots: remainingBookings.length,
-                fixed_students_count: remainingBookings.filter(b => b.is_fixed_student).length
-              });
-              console.log(`Aula ${lessonId} atualizada (${remainingBookings.length} alunos restantes)`);
+        if (allBookings.length === 0) {
+          console.log('⚠️ Nenhuma reserva encontrada para remover');
+          toast.warning('Nenhuma reserva encontrada para este aluno');
+        } else {
+          // Separar por data
+          const futureBookings = [];
+          const processedLessons = new Set();
+          
+          for (const booking of allBookings) {
+            try {
+              // Buscar aula da reserva
+              const lesson = await base44.entities.Lesson.filter({ id: booking.lesson_id });
+              if (!lesson || lesson.length === 0) {
+                console.log(`Aula ${booking.lesson_id} não encontrada, removendo reserva órfã`);
+                await base44.entities.Booking.delete(booking.id);
+                continue;
+              }
+              
+              const lessonData = lesson[0];
+              const lessonDate = new Date(lessonData.date);
+              lessonDate.setHours(0, 0, 0, 0);
+              
+              // Apenas futuras (hoje ou depois)
+              if (lessonDate >= today) {
+                futureBookings.push({ booking, lesson: lessonData });
+              }
+            } catch (e) {
+              console.error(`Erro ao processar booking ${booking.id}:`, e);
             }
-          } catch (e) {
-            console.error('Erro ao processar aula:', e);
+          }
+          
+          console.log(`Reservas futuras a remover: ${futureBookings.length}`);
+          
+          // Remover reservas futuras e atualizar aulas
+          for (const { booking, lesson } of futureBookings) {
+            try {
+              console.log(`Removendo reserva ${booking.id} da aula ${lesson.id} (${lesson.date})`);
+              
+              // Apagar reserva
+              await base44.entities.Booking.delete(booking.id);
+              
+              // Evitar processar a mesma aula múltiplas vezes
+              if (processedLessons.has(lesson.id)) continue;
+              processedLessons.add(lesson.id);
+              
+              // Verificar reservas restantes
+              const remainingBookings = await base44.entities.Booking.filter({ lesson_id: lesson.id });
+              
+              if (remainingBookings.length === 0 && lesson.is_auto_generated) {
+                // Aula vazia e auto-gerada = apagar
+                console.log(`  → Apagando aula ${lesson.id} (vazia)`);
+                await base44.entities.Lesson.delete(lesson.id);
+              } else if (remainingBookings.length > 0) {
+                // Atualizar contadores
+                const fixedCount = remainingBookings.filter(b => b.is_fixed_student).length;
+                console.log(`  → Atualizando aula ${lesson.id}: ${remainingBookings.length}/6 (${fixedCount} fixos)`);
+                await base44.entities.Lesson.update(lesson.id, {
+                  booked_spots: remainingBookings.length,
+                  fixed_students_count: fixedCount
+                });
+              }
+            } catch (e) {
+              console.error(`Erro ao processar reserva ${booking.id}:`, e);
+            }
           }
         }
       }
 
+      // Remover aluno
+      console.log('Removendo aluno da base de dados...');
       if (isPicadeiro) {
         await base44.entities.PicadeiroStudent.delete(userId);
       } else {
         await base44.entities.User.update(userId, { student_type: 'avulso', fixed_schedule: [], monthly_fee: 0 });
       }
+      
+      console.log('=== REMOÇÃO CONCLUÍDA ===');
       return { userId, isPicadeiro };
     },
     onSuccess: async () => {
@@ -1159,9 +1218,12 @@ export default function FixedStudentsManager() {
 
 
   const removeFixedStudent = (student) => {
-    if (confirm('Remover aluno fixo do sistema? Todas as aulas automáticas associadas e reservas também serão removidas.')) {
+    if (confirm('Remover aluno fixo do sistema? Todas as aulas futuras automáticas e reservas serão canceladas.')) {
       const isPicadeiro = picadeiroStudents.some(s => s.id === student.id);
-      const studentEmail = student.email || student.full_name;
+      const studentEmail = student.email || student.phone || `aluno-${(student.full_name || student.name || '').toLowerCase().replace(/\s+/g, '-')}`;
+      
+      console.log('Removendo aluno:', student);
+      console.log('Email identificador:', studentEmail);
 
       removeStudentMutation.mutate({
         userId: student.id,
