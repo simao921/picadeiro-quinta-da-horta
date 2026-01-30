@@ -752,9 +752,9 @@ export default function AdminLessons() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Calendar */}
-          <Card className="lg:col-span-1 border-2 border-stone-200/50 shadow-xl bg-white overflow-hidden rounded-2xl">
+          <Card className="lg:col-span-2 border-2 border-stone-200/50 shadow-xl bg-white overflow-hidden rounded-2xl">
             <CardHeader className="bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white pb-5">
               <CardTitle className="text-lg flex items-center gap-2 font-semibold">
                 <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -809,7 +809,7 @@ export default function AdminLessons() {
           </Card>
 
           {/* Lessons List */}
-          <Card className="lg:col-span-3 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden">
+          <Card className="lg:col-span-3 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden max-h-[800px]">
             <CardHeader className="bg-gradient-to-r from-[#4B6382] to-[#5B7392] text-white">
               <div className="flex items-center justify-between">
                 <div>
