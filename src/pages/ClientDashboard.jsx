@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import FeedbackModal from '@/components/FeedbackModal';
 import {
   CalendarDays, Clock, CheckCircle, XCircle, 
-  AlertCircle, Euro, ShoppingBag, LogOut,
+  AlertCircle, Euro, LogOut,
   Calendar as CalendarIcon, FileText, Eye, X, Star
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -71,19 +71,7 @@ export default function ClientDashboard() {
     enabled: !!user?.email
   });
 
-  const { data: orders = [], isLoading: ordersLoading } = useQuery({
-    queryKey: ['my-orders', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      try {
-        return await base44.entities.Order.filter({ client_email: user.email });
-      } catch (error) {
-        console.error('Error loading orders:', error);
-        return [];
-      }
-    },
-    enabled: !!user?.email
-  });
+
 
   const { data: lessons = [] } = useQuery({
     queryKey: ['lessons'],
@@ -216,7 +204,7 @@ export default function ClientDashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -265,19 +253,7 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <ShoppingBag className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-stone-500">Encomendas</p>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">{orders.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
 
         {/* Regulations Section */}
@@ -330,9 +306,6 @@ export default function ClientDashboard() {
             </TabsTrigger>
             <TabsTrigger value="payments" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
               Pagamentos
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
-              Encomendas
             </TabsTrigger>
           </TabsList>
 
@@ -494,75 +467,7 @@ export default function ClientDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Orders Tab */}
-          <TabsContent value="orders">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Minhas Encomendas</CardTitle>
-                <Link to={createPageUrl('Shop')}>
-                  <Button variant="outline">
-                    <ShoppingBag className="w-4 h-4 mr-2" />
-                    Ir à Loja
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {ordersLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2].map(i => (
-                      <Skeleton key={i} className="h-24 w-full" />
-                    ))}
-                  </div>
-                ) : orders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ShoppingBag className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-                    <p className="text-stone-500">Ainda não fez nenhuma encomenda.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="p-4 bg-stone-50 rounded-lg"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-                          <div>
-                            <p className="font-semibold text-[#2C3E1F]">
-                              Encomenda #{order.id?.slice(-8)}
-                            </p>
-                            <p className="text-sm text-stone-500">
-                              {format(new Date(order.created_date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <p className="font-bold text-lg text-[#B8956A]">
-                              {order.total.toFixed(2)}€
-                            </p>
-                            <Badge className={
-                              order.status === 'entregue' ? 'bg-green-100 text-green-800' :
-                              order.status === 'enviada' ? 'bg-blue-100 text-blue-800' :
-                              order.status === 'cancelada' ? 'bg-red-100 text-red-800' :
-                              order.status === 'processamento' ? 'bg-purple-100 text-purple-800' :
-                              'bg-amber-100 text-amber-800'
-                            }>
-                              {order.status === 'pendente' ? 'Pendente' :
-                               order.status === 'processamento' ? 'Processamento' :
-                               order.status === 'enviada' ? 'Enviada' :
-                               order.status === 'entregue' ? 'Entregue' :
-                               'Cancelada'}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="text-sm text-stone-600">
-                          {order.items?.length || 0} produto(s)
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+
         </Tabs>
 
         {/* Regulation Viewer Dialog */}
