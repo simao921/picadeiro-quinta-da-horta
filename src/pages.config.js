@@ -73,6 +73,7 @@ import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import UserPreferences from './pages/UserPreferences';
+import AdminImages from './pages/AdminImages';
 import __Layout from './Layout.jsx';
 
 
@@ -103,6 +104,7 @@ export const PAGES = {
     "ProductDetail": ProductDetail,
     "Services": Services,
     "UserPreferences": UserPreferences,
+    "AdminImages": AdminImages,
 }
 
 export const pagesConfig = {

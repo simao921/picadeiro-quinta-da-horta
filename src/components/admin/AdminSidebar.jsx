@@ -25,6 +25,7 @@ const menuItems = [
   { icon: Ban, label: 'Bloqueios', page: 'AdminBlockedSlots' },
   { icon: FileText, label: 'Regulamentos', page: 'AdminRegulations' },
   { icon: Image, label: 'Galeria', page: 'AdminGallery' },
+  { icon: Image, label: 'Imagens do Site', page: 'AdminImages' },
   { icon: Settings, label: 'Definições', page: 'AdminSettings' },
 ];
 
