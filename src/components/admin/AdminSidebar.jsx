@@ -32,12 +32,12 @@ const menuItems = [
 export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
   return (
     <aside className={cn(
-      "fixed left-0 top-0 h-screen bg-[#1A1A1A] text-white transition-all duration-300 z-40",
+      "fixed left-0 top-0 h-screen bg-gradient-to-b from-[#1A1A1A] to-[#0F0F0F] text-white transition-all duration-300 z-40 shadow-2xl",
       collapsed ? "w-16" : "w-64"
     )}>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between backdrop-blur-sm">
           {!collapsed && (
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#B8956A] rounded-lg flex items-center justify-center">
@@ -60,23 +60,40 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
           {menuItems.map((item) => (
             <Link
               key={item.page}
               to={createPageUrl(item.page)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                 currentPage === item.page
-                  ? "bg-[#B8956A] text-white"
-                  : "text-stone-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-gradient-to-r from-[#B8956A] to-[#C9A961] text-white shadow-lg scale-105"
+                  : "text-stone-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm">{item.label}</span>}
+              {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
             </Link>
           ))}
         </nav>
+        
+        <style>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(184, 149, 106, 0.5);
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(184, 149, 106, 0.7);
+          }
+        `}</style>
 
         {/* Footer */}
         <div className="p-3 border-t border-white/10 space-y-2">
