@@ -17,6 +17,13 @@ export default function InstructorLayout({ children, currentPage }) {
           return;
         }
         const userData = await base44.auth.me();
+        
+        // APENAS ADMINS PODEM ACEDER
+        if (userData.role !== 'admin') {
+          window.location.href = createPageUrl('Home');
+          return;
+        }
+        
         setUser(userData);
       } catch (error) {
         console.error('Auth error:', error);
