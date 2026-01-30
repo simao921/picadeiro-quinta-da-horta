@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImageIcon, Upload, Trash2, Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { getSiteImage, updateSiteImage, DEFAULT_IMAGES } from '@/components/siteImagesUtil';
+import { getSiteImage, updateSiteImage, DEFAULT_IMAGES } from '@/components/utils/siteImages.js';
 
 export default function AdminImages() {
   const queryClient = useQueryClient();
