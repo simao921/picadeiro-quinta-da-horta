@@ -754,15 +754,15 @@ export default function AdminLessons() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Calendar */}
-          <Card className="lg:col-span-1 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden animate-fadeIn">
-            <CardHeader className="bg-gradient-to-br from-[#B8956A] via-[#A08859] to-[#8B7355] text-white pb-6">
+          <Card className="lg:col-span-1 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white pb-6">
               <CardTitle className="text-lg flex items-center gap-2">
                 <CalendarDays className="w-5 h-5" />
                 Calendário
               </CardTitle>
-              <p className="text-sm text-white/90 mt-1">Selecione uma data</p>
+              <p className="text-sm text-white/80 mt-1">Selecione uma data</p>
             </CardHeader>
-            <CardContent className="p-5">
+            <CardContent className="p-4">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -775,31 +775,31 @@ export default function AdminLessons() {
                   caption: "flex justify-center pt-1 relative items-center mb-4",
                   caption_label: "text-base font-bold text-[#2C3E1F]",
                   nav: "space-x-1 flex items-center",
-                  nav_button: "h-9 w-9 bg-white hover:bg-[#B8956A] hover:text-white rounded-lg transition-all duration-200 border border-stone-200 hover:border-[#B8956A] hover:scale-105 shadow-sm hover:shadow-md",
+                  nav_button: "h-8 w-8 bg-transparent hover:bg-[#B8956A]/10 rounded-full transition-colors border border-stone-200",
                   nav_button_previous: "absolute left-1",
                   nav_button_next: "absolute right-1",
                   table: "w-full border-collapse space-y-1",
-                  head_row: "flex justify-between mb-3",
-                  head_cell: "text-stone-500 rounded-md w-10 font-bold text-xs uppercase",
+                  head_row: "flex justify-between mb-2",
+                  head_cell: "text-stone-600 rounded-md w-10 font-semibold text-sm uppercase",
                   row: "flex w-full mt-2 justify-between",
-                  cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-[#B8956A]/10 rounded-lg",
-                  day: "h-10 w-10 p-0 font-semibold hover:bg-gradient-to-br hover:from-[#B8956A]/20 hover:to-[#B8956A]/30 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md cursor-pointer relative",
-                  day_selected: "bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white hover:from-[#C9A961] hover:to-[#A08859] shadow-lg scale-110 ring-2 ring-[#B8956A] ring-offset-2 font-bold",
-                  day_today: "bg-gradient-to-br from-blue-50 to-blue-100 text-blue-900 font-bold ring-2 ring-blue-400 ring-offset-2 shadow-sm",
-                  day_outside: "text-stone-300 opacity-40 hover:opacity-60",
-                  day_disabled: "text-stone-200 opacity-20 hover:bg-transparent cursor-not-allowed hover:scale-100",
+                  cell: "text-center text-sm p-0 relative",
+                  day: "h-10 w-10 p-0 font-medium hover:bg-[#B8956A]/20 rounded-xl transition-all hover:scale-105",
+                  day_selected: "bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white hover:from-[#8B7355] hover:to-[#6B5845] shadow-lg scale-105",
+                  day_today: "bg-blue-50 text-blue-900 font-bold ring-2 ring-blue-400 ring-offset-2",
+                  day_outside: "text-stone-300 opacity-50",
+                  day_disabled: "text-stone-200 opacity-30 hover:bg-transparent cursor-not-allowed",
                   day_hidden: "invisible",
                 }}
               />
-              <div className="mt-5 pt-4 border-t border-stone-200">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-4 h-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-md ring-2 ring-blue-400"></div>
-                    <span className="text-stone-600 font-medium">Hoje</span>
+              <div className="mt-4 pt-4 border-t border-stone-200">
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                    <span className="text-stone-600">Hoje</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-4 h-4 bg-gradient-to-br from-[#B8956A] to-[#8B7355] rounded-md ring-2 ring-[#B8956A]"></div>
-                    <span className="text-stone-600 font-medium">Selecionado</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-[#B8956A] rounded-full"></div>
+                    <span className="text-stone-600">Selecionado</span>
                   </div>
                 </div>
               </div>
