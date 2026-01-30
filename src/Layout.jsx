@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { 
   Menu, X, Phone, Mail, MapPin, Facebook, Instagram, 
-  ChevronUp, User, LogOut, ShoppingCart, Heart 
+  ChevronUp, User, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,7 @@ const LayoutContent = ({ children, currentPageName }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [wishlistCount, setWishlistCount] = useState(0);
+
   const [logoUrl, setLogoUrl] = useState('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG');
 
   const isAdminPage = currentPageName?.startsWith('Admin');
@@ -71,15 +71,6 @@ const LayoutContent = ({ children, currentPageName }) => {
   }, []);
 
   useEffect(() => {
-    // Update cart count immediately
-    const updateCartCount = () => {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-      const countEl = document.getElementById('cart-count');
-      if (countEl) countEl.textContent = count;
-    };
-    updateCartCount();
-    
     // Check auth asynchronously without blocking
     base44.auth.isAuthenticated().then(isAuth => {
       if (isAuth) {
@@ -88,9 +79,6 @@ const LayoutContent = ({ children, currentPageName }) => {
         setUser(null);
       }
     }).catch(() => setUser(null));
-
-    window.addEventListener('storage', updateCartCount);
-    return () => window.removeEventListener('storage', updateCartCount);
   }, []);
 
   useEffect(() => {
@@ -128,16 +116,7 @@ const LayoutContent = ({ children, currentPageName }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    // Load wishlist count only if user is logged in
-    if (user?.email) {
-      base44.entities.Wishlist.filter({ client_email: user.email })
-        .then(wishlist => setWishlistCount(wishlist.length))
-        .catch(() => setWishlistCount(0));
-    } else {
-      setWishlistCount(0);
-    }
-  }, [user?.email]);
+
 
   useEffect(() => {
     // Load logo image
@@ -191,10 +170,8 @@ const LayoutContent = ({ children, currentPageName }) => {
   const navLinks = [
     { name: t('nav_home'), page: 'Home' },
     { name: t('nav_services'), page: 'Services' },
-    { name: t('nav_shop'), page: 'Shop' },
     { name: t('nav_gallery') || 'Galeria', page: 'Gallery' },
     { name: t('nav_bookings'), page: 'Bookings' },
-    { name: t('nav_contact'), page: 'Contact' },
   ];
 
   return (
@@ -309,38 +286,7 @@ const LayoutContent = ({ children, currentPageName }) => {
             <div className="flex items-center gap-2">
               <LanguageSelector />
 
-              {user && (
-                <Link 
-                to={createPageUrl('Wishlist')} 
-                className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group"
-                aria-label={`Lista de desejos${wishlistCount > 0 ? ` (${wishlistCount} itens)` : ''}`}
-              >
-                  <Heart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
-                  {wishlistCount > 0 && (
-                    <span 
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold"
-                      aria-hidden="true"
-                    >
-                      {wishlistCount}
-                    </span>
-                  )}
-                </Link>
-              )}
-              <Link 
-                to={createPageUrl('Cart')} 
-                className="relative p-2 hover:bg-stone-100 rounded-full transition-colors group"
-                aria-label="Carrinho de compras"
-              >
-                <ShoppingCart className="w-5 h-5 text-[#2C3E1F] group-hover:text-[#B8956A] transition-colors" />
-                <span 
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-[#B8956A] text-white text-xs rounded-full flex items-center justify-center font-semibold" 
-                  id="cart-count"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  0
-                </span>
-              </Link>
+
 
               {user ? (
                 <DropdownMenu>

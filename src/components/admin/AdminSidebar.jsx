@@ -4,8 +4,7 @@ import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Brain, CalendarDays, Users, UserCog,
-  Settings, ShoppingBag, Package, Tag,
-  MessageSquare, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3, UserCheck, Ban, Mail, Bell, Image
+  Settings, Euro, LogOut, ChevronLeft, Menu, Home, FileText, BarChart3, UserCheck, Ban, Mail, Bell, Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -23,10 +22,6 @@ const menuItems = [
   { icon: UserCheck, label: 'Alunos Fixos', page: 'AdminStudentSchedules' },
   { icon: UserCog, label: 'Monitores', page: 'AdminInstructors' },
   { icon: Euro, label: 'Pagamentos', page: 'AdminPayments' },
-  { icon: ShoppingBag, label: 'Loja', page: 'AdminShop' },
-  { icon: Package, label: 'Encomendas', page: 'AdminOrders' },
-  { icon: Tag, label: 'Cupões', page: 'AdminCoupons' },
-  { icon: MessageSquare, label: 'Mensagens', page: 'AdminMessages' },
   { icon: Ban, label: 'Bloqueios', page: 'AdminBlockedSlots' },
   { icon: FileText, label: 'Regulamentos', page: 'AdminRegulations' },
   { icon: Image, label: 'Galeria', page: 'AdminGallery' },
