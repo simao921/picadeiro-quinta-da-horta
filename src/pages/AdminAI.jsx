@@ -203,44 +203,44 @@ export default function AdminAI() {
 
   return (
     <AdminLayout currentPage="AdminAI">
-      <div className="p-6 space-y-6 animate-fadeIn">
+      <div className="space-y-8 animate-fadeIn">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#2C3E1F] flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gradient-to-br from-[#4A5D23] to-[#3A4A1B] rounded-lg">
-              <Brain className="w-7 h-7 text-white" />
+        <div className="bg-gradient-to-r from-white to-stone-50 rounded-2xl p-8 shadow-sm border border-stone-200/50">
+          <h1 className="text-4xl font-serif font-bold text-[#2C3E1F] flex items-center gap-4 mb-3">
+            <div className="p-3 bg-gradient-to-br from-[#4A5D23] to-[#3A4A1B] rounded-2xl shadow-lg">
+              <Brain className="w-8 h-8 text-white" />
             </div>
             Assistente Inteligente
           </h1>
-          <p className="text-stone-600 text-lg">Análises e sugestões com IA para otimizar o negócio</p>
+          <p className="text-stone-600 text-lg ml-20">Análises e sugestões com IA para otimizar o negócio</p>
         </div>
 
-        <Tabs defaultValue="alerts" className="space-y-6">
-          <TabsList className="bg-white border shadow-sm p-1 rounded-lg">
-            <TabsTrigger value="alerts" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white transition-all duration-200">
-              <AlertTriangle className="w-4 h-4 mr-2" />
-              Alertas Proativos
+        <Tabs defaultValue="alerts" className="space-y-8">
+          <TabsList className="bg-white border-2 border-stone-200 shadow-md p-1.5 rounded-xl h-auto">
+            <TabsTrigger value="alerts" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg px-5 py-3">
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              <span className="font-medium">Alertas Proativos</span>
             </TabsTrigger>
-            <TabsTrigger value="schedule" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white transition-all duration-200">
-              <Calendar className="w-4 h-4 mr-2" />
-              Otimização de Horários
+            <TabsTrigger value="schedule" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg px-5 py-3">
+              <Calendar className="w-5 h-5 mr-2" />
+              <span className="font-medium">Otimização de Horários</span>
             </TabsTrigger>
-            <TabsTrigger value="sales" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white transition-all duration-200">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Análise de Vendas
+            <TabsTrigger value="sales" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg px-5 py-3">
+              <TrendingUp className="w-5 h-5 mr-2" />
+              <span className="font-medium">Análise de Vendas</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Proactive Alerts */}
-          <TabsContent value="alerts" className="space-y-4 animate-fadeIn">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
-              <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-orange-50">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+          <TabsContent value="alerts" className="space-y-6 animate-fadeIn">
+            <Card className="border-2 border-stone-200/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="border-b-2 border-stone-100 bg-gradient-to-r from-amber-50 to-orange-50 py-5">
+                <CardTitle className="text-xl font-semibold flex items-center gap-3">
+                  <AlertTriangle className="w-6 h-6 text-amber-600" />
                   Alertas de Pagamentos
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4 p-6">
                 {alerts.criticalAccounts.length > 0 ? (
                   <div className="space-y-2">
                     {alerts.criticalAccounts.map((account, i) => (
