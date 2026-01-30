@@ -38,8 +38,12 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
         {/* Header */}
         <div className="p-5 border-b border-stone-700/30 bg-stone-900/30">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B8956A] to-[#8B7355] flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">PH</span>
+            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg p-1.5">
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/ca1c58c7c_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                alt="Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <Button
               variant="ghost"
