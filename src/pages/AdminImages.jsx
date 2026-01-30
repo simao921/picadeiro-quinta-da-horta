@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Image as ImageIcon, Upload, Trash2, Edit } from 'lucide-react';
+import { Image as ImageIcon, Upload, Trash2, Edit, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { getSiteImage, clearImageCache, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 
 const imageKeys = [
   { key: 'hero_home', section: 'Home', description: 'Imagem de fundo do Hero da página inicial' },
@@ -27,6 +28,7 @@ export default function AdminImages() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [currentImages, setCurrentImages] = useState({});
   const [formData, setFormData] = useState({
     image_key: '',
     image_url: '',
@@ -34,11 +36,23 @@ export default function AdminImages() {
     section: ''
   });
 
-  const { data: siteImages = [] } = useQuery({
+  const { data: siteImages = [], refetch } = useQuery({
     queryKey: ['site-images'],
     queryFn: () => base44.entities.SiteImage.list(),
     initialData: []
   });
+
+  // Carregar imagens atuais na inicialização
+  useEffect(() => {
+    const loadCurrentImages = async () => {
+      const images = {};
+      for (const item of imageKeys) {
+        images[item.key] = await getSiteImage(item.key, DEFAULT_IMAGES[item.key]);
+      }
+      setCurrentImages(images);
+    };
+    loadCurrentImages();
+  }, [siteImages]);
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -49,9 +63,16 @@ export default function AdminImages() {
         await base44.entities.SiteImage.create(data);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['site-images'] });
-      toast.success('Imagem guardada com sucesso!');
+    onSuccess: async (_, data) => {
+      clearImageCache();
+      await queryClient.invalidateQueries({ queryKey: ['site-images'] });
+      await refetch();
+      
+      // Atualizar imagem no estado local
+      const newUrl = await getSiteImage(data.image_key, DEFAULT_IMAGES[data.image_key]);
+      setCurrentImages(prev => ({ ...prev, [data.image_key]: newUrl }));
+      
+      toast.success('✅ Imagem atualizada! Recarregue a página do site para ver as alterações.');
       setDialogOpen(false);
       setSelectedImage(null);
       setFormData({ image_key: '', image_url: '', description: '', section: '' });
@@ -62,9 +83,11 @@ export default function AdminImages() {
     mutationFn: async (id) => {
       await base44.entities.SiteImage.delete(id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['site-images'] });
-      toast.success('Imagem removida!');
+    onSuccess: async () => {
+      clearImageCache();
+      await queryClient.invalidateQueries({ queryKey: ['site-images'] });
+      await refetch();
+      toast.success('Imagem removida! Voltará à imagem padrão.');
     }
   });
 
@@ -120,84 +143,61 @@ export default function AdminImages() {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="p-6 space-y-6 animate-fadeIn">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Gestão de Imagens do Site</h1>
-            <p className="text-stone-600 mt-1">Configure todas as imagens do seu website</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#B8956A] to-[#8B7355] bg-clip-text text-transparent flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-[#B8956A] to-[#8B7355] rounded-lg">
+                <ImageIcon className="w-7 h-7 text-white" />
+              </div>
+              Gestão de Imagens do Site
+            </h1>
+            <p className="text-stone-600 mt-2 text-lg">Configure todas as imagens do seu website</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {imageKeys.map((item) => {
             const existingImage = siteImages.find(img => img.image_key === item.key);
+            const currentImageUrl = currentImages[item.key] || DEFAULT_IMAGES[item.key];
             
             return (
-              <Card key={item.key} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-[#4A5D23]" />
+              <Card key={item.key} className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white">
+                <CardHeader className="pb-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#8B7355]">
+                    <ImageIcon className="w-5 h-5 text-[#B8956A]" />
                     {item.section}
                   </CardTitle>
-                  <p className="text-xs text-stone-500">{item.description}</p>
+                  <p className="text-xs text-stone-600">{item.description}</p>
                 </CardHeader>
-                <CardContent>
-                  {existingImage ? (
-                    <div className="space-y-3">
-                      <div className="relative aspect-video bg-stone-100 rounded-lg overflow-hidden">
-                        <img
-                          src={existingImage.image_url}
-                          alt={item.description}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <label className="flex-1">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, item.key)}
-                            disabled={uploading}
+                <CardContent className="pt-4">
+                  <div className="space-y-3">
+                    <div className="relative aspect-video bg-gradient-to-br from-stone-100 to-stone-200 rounded-lg overflow-hidden border-2 border-[#B8956A]/20">
+                      {currentImageUrl ? (
+                        <>
+                          <img
+                            src={currentImageUrl}
+                            alt={item.description}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = DEFAULT_IMAGES[item.key];
+                            }}
                           />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={(e) => e.currentTarget.previousElementSibling.click()}
-                            disabled={uploading}
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            Substituir
-                          </Button>
-                        </label>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleEdit(item.key)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => {
-                            if (confirm('Remover esta imagem?')) {
-                              deleteMutation.mutate(existingImage.id);
-                            }
-                          }}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                          {existingImage && (
+                            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow-md">
+                              <CheckCircle className="w-3 h-3" />
+                              Ativa
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="w-12 h-12 text-stone-300" />
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="aspect-video bg-stone-100 rounded-lg flex items-center justify-center">
-                        <ImageIcon className="w-12 h-12 text-stone-300" />
-                      </div>
-                      <label>
+                    <div className="flex gap-2">
+                      <label className="flex-1">
                         <input
                           type="file"
                           accept="image/*"
@@ -207,24 +207,38 @@ export default function AdminImages() {
                         />
                         <Button
                           type="button"
-                          className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                          className="w-full bg-gradient-to-r from-[#B8956A] to-[#8B7355] hover:from-[#8B7355] hover:to-[#6B5845] text-white shadow-md hover:shadow-lg transition-all duration-200"
                           onClick={(e) => e.currentTarget.previousElementSibling.click()}
                           disabled={uploading}
                         >
                           <Upload className="w-4 h-4 mr-2" />
-                          Carregar Imagem
+                          {existingImage ? 'Substituir' : 'Carregar'}
                         </Button>
                       </label>
                       <Button
                         variant="outline"
-                        className="w-full"
+                        size="icon"
                         onClick={() => handleEdit(item.key)}
+                        className="border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A] hover:text-white"
                       >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Usar URL
+                        <Edit className="w-4 h-4" />
                       </Button>
+                      {existingImage && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            if (confirm('Remover esta imagem? Voltará à imagem padrão.')) {
+                              deleteMutation.mutate(existingImage.id);
+                            }
+                          }}
+                          className="text-red-600 hover:bg-red-600 hover:text-white border-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -232,42 +246,50 @@ export default function AdminImages() {
         </div>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Configurar Imagem via URL</DialogTitle>
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <ImageIcon className="w-6 h-6 text-[#B8956A]" />
+                Configurar Imagem via URL
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Secção</Label>
-                <Input value={formData.section} disabled />
+                <Label className="text-[#8B7355] font-semibold">Secção</Label>
+                <Input value={formData.section} disabled className="bg-stone-50" />
               </div>
               <div>
-                <Label>Descrição</Label>
-                <Textarea value={formData.description} disabled rows={2} />
+                <Label className="text-[#8B7355] font-semibold">Descrição</Label>
+                <Textarea value={formData.description} disabled rows={2} className="bg-stone-50" />
               </div>
               <div>
-                <Label>URL da Imagem *</Label>
+                <Label className="text-[#8B7355] font-semibold">URL da Imagem *</Label>
                 <Input
                   placeholder="https://..."
                   value={formData.image_url}
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  className="border-[#B8956A]/30 focus:border-[#B8956A]"
                 />
               </div>
               {formData.image_url && (
-                <div className="aspect-video bg-stone-100 rounded-lg overflow-hidden">
+                <div className="aspect-video bg-gradient-to-br from-stone-100 to-stone-200 rounded-lg overflow-hidden border-2 border-[#B8956A]/30">
                   <img
                     src={formData.image_url}
                     alt="Preview"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      toast.error('Erro ao carregar imagem. Verifique o URL.');
+                    }}
                   />
                 </div>
               )}
               <Button
                 onClick={handleSaveUrl}
-                className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
+                className="w-full bg-gradient-to-r from-[#B8956A] to-[#8B7355] hover:from-[#8B7355] hover:to-[#6B5845] text-white shadow-md hover:shadow-lg transition-all duration-200"
                 disabled={saveMutation.isPending}
               >
-                Guardar
+                {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
               </Button>
             </div>
           </DialogContent>

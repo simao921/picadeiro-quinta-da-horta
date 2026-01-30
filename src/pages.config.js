@@ -54,7 +54,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminEmails from './pages/AdminEmails';
 import AdminGallery from './pages/AdminGallery';
 import AdminInstructors from './pages/AdminInstructors';
-import AdminLessons from './pages/AdminLessons';
 import AdminLogin from './pages/AdminLogin';
 import AdminNotifications from './pages/AdminNotifications';
 import AdminPayments from './pages/AdminPayments';
@@ -74,6 +73,7 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import UserPreferences from './pages/UserPreferences';
 import AdminImages from './pages/AdminImages';
+import AdminLessons from './pages/AdminLessons';
 import __Layout from './Layout.jsx';
 
 
@@ -85,7 +85,6 @@ export const PAGES = {
     "AdminEmails": AdminEmails,
     "AdminGallery": AdminGallery,
     "AdminInstructors": AdminInstructors,
-    "AdminLessons": AdminLessons,
     "AdminLogin": AdminLogin,
     "AdminNotifications": AdminNotifications,
     "AdminPayments": AdminPayments,
@@ -105,6 +104,7 @@ export const PAGES = {
     "Services": Services,
     "UserPreferences": UserPreferences,
     "AdminImages": AdminImages,
+    "AdminLessons": AdminLessons,
 }
 
 export const pagesConfig = {
