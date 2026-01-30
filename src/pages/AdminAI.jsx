@@ -203,27 +203,38 @@ export default function AdminAI() {
 
   return (
     <AdminLayout currentPage="AdminAI">
-      <div className="space-y-6">
+      <div className="p-6 space-y-6 animate-fadeIn">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-[#2C3E1F] flex items-center gap-2">
-            <Brain className="w-7 h-7 text-[#4A5D23]" />
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#2C3E1F] flex items-center gap-3 mb-2">
+            <div className="p-2 bg-gradient-to-br from-[#4A5D23] to-[#3A4A1B] rounded-lg">
+              <Brain className="w-7 h-7 text-white" />
+            </div>
             Assistente Inteligente
           </h1>
-          <p className="text-stone-500">Análises e sugestões com IA para otimizar o negócio</p>
+          <p className="text-stone-600 text-lg">Análises e sugestões com IA para otimizar o negócio</p>
         </div>
 
         <Tabs defaultValue="alerts" className="space-y-6">
-          <TabsList className="bg-white border">
-            <TabsTrigger value="alerts">Alertas Proativos</TabsTrigger>
-            <TabsTrigger value="schedule">Otimização de Horários</TabsTrigger>
-            <TabsTrigger value="sales">Análise de Vendas</TabsTrigger>
+          <TabsList className="bg-white border shadow-sm p-1 rounded-lg">
+            <TabsTrigger value="alerts" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white transition-all duration-200">
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              Alertas Proativos
+            </TabsTrigger>
+            <TabsTrigger value="schedule" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white transition-all duration-200">
+              <Calendar className="w-4 h-4 mr-2" />
+              Otimização de Horários
+            </TabsTrigger>
+            <TabsTrigger value="sales" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white transition-all duration-200">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Análise de Vendas
+            </TabsTrigger>
           </TabsList>
 
           {/* Proactive Alerts */}
-          <TabsContent value="alerts" className="space-y-4">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
+          <TabsContent value="alerts" className="space-y-4 animate-fadeIn">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+              <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-orange-50">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-600" />
                   Alertas de Pagamentos
@@ -265,8 +276,8 @@ export default function AdminAI() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md">
-              <CardHeader>
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+              <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-blue-600" />
                   Conflitos de Agendamento
@@ -292,17 +303,20 @@ export default function AdminAI() {
           </TabsContent>
 
           {/* Schedule Optimization */}
-          <TabsContent value="schedule" className="space-y-4">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle className="text-lg">Otimização de Horários com IA</CardTitle>
+          <TabsContent value="schedule" className="space-y-4 animate-fadeIn">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+              <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-green-600" />
+                  Otimização de Horários com IA
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <Button
                     onClick={analyzeScheduleOptimization}
                     disabled={analyzing}
-                    className="bg-[#4A5D23] hover:bg-[#3A4A1B] w-full"
+                    className="bg-gradient-to-r from-[#4A5D23] to-[#3A4A1B] hover:from-[#3A4A1B] hover:to-[#2A3A0B] text-white w-full shadow-md hover:shadow-lg transition-all duration-200"
                     size="lg"
                   >
                     {analyzing ? (
@@ -388,16 +402,19 @@ export default function AdminAI() {
           </TabsContent>
 
           {/* Sales Analysis */}
-          <TabsContent value="sales" className="space-y-4">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle className="text-lg">Análise de Vendas com IA</CardTitle>
+          <TabsContent value="sales" className="space-y-4 animate-fadeIn">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+              <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-purple-600" />
+                  Análise de Vendas com IA
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <Button
                   onClick={analyzeProductPerformance}
                   disabled={analyzing}
-                  className="bg-[#4A5D23] hover:bg-[#3A4A1B] mb-4"
+                  className="bg-gradient-to-r from-[#4A5D23] to-[#3A4A1B] hover:from-[#3A4A1B] hover:to-[#2A3A0B] text-white mb-4 shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   {analyzing ? (
                     <>
