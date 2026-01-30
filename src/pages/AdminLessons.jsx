@@ -754,52 +754,54 @@ export default function AdminLessons() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Calendar */}
-          <Card className="lg:col-span-1 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white pb-6">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CalendarDays className="w-5 h-5" />
+          <Card className="lg:col-span-1 border-2 border-stone-200/50 shadow-xl bg-white overflow-hidden rounded-2xl">
+            <CardHeader className="bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white pb-5">
+              <CardTitle className="text-xl flex items-center gap-3 font-semibold">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <CalendarDays className="w-6 h-6" />
+                </div>
                 Calendário
               </CardTitle>
-              <p className="text-sm text-white/80 mt-1">Selecione uma data</p>
+              <p className="text-sm text-white/90 mt-1 ml-1">Selecione uma data para ver as aulas</p>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-5">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
                 locale={ptBR}
-                className="rounded-md border-0 w-full"
+                className="rounded-xl border-0 w-full"
                 classNames={{
-                  months: "flex flex-col space-y-4",
+                  months: "flex flex-col",
                   month: "space-y-4",
-                  caption: "flex justify-center pt-1 relative items-center mb-4",
-                  caption_label: "text-base font-bold text-[#2C3E1F]",
+                  caption: "flex justify-center pt-1 relative items-center mb-5",
+                  caption_label: "text-lg font-bold text-[#2C3E1F]",
                   nav: "space-x-1 flex items-center",
-                  nav_button: "h-8 w-8 bg-transparent hover:bg-[#B8956A]/10 rounded-full transition-colors border border-stone-200",
-                  nav_button_previous: "absolute left-1",
-                  nav_button_next: "absolute right-1",
-                  table: "w-full border-collapse space-y-1",
-                  head_row: "flex justify-between mb-2",
-                  head_cell: "text-stone-600 rounded-md w-10 font-semibold text-sm uppercase",
-                  row: "flex w-full mt-2 justify-between",
-                  cell: "text-center text-sm p-0 relative",
-                  day: "h-10 w-10 p-0 font-medium hover:bg-[#B8956A]/20 rounded-xl transition-all hover:scale-105",
-                  day_selected: "bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white hover:from-[#8B7355] hover:to-[#6B5845] shadow-lg scale-105",
-                  day_today: "bg-blue-50 text-blue-900 font-bold ring-2 ring-blue-400 ring-offset-2",
-                  day_outside: "text-stone-300 opacity-50",
-                  day_disabled: "text-stone-200 opacity-30 hover:bg-transparent cursor-not-allowed",
+                  nav_button: "h-9 w-9 bg-stone-100 hover:bg-[#B8956A] hover:text-white rounded-xl transition-all duration-300 border-0 shadow-sm hover:shadow-md",
+                  nav_button_previous: "absolute left-0",
+                  nav_button_next: "absolute right-0",
+                  table: "w-full border-collapse mt-2",
+                  head_row: "flex justify-between mb-3",
+                  head_cell: "text-stone-500 rounded-lg w-11 font-bold text-xs uppercase tracking-wide",
+                  row: "flex w-full mt-1.5 justify-between",
+                  cell: "text-center text-sm p-0.5 relative",
+                  day: "h-11 w-11 p-0 font-semibold hover:bg-[#B8956A]/15 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md",
+                  day_selected: "bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white hover:from-[#8B7355] hover:to-[#6B5845] shadow-lg scale-110 font-bold",
+                  day_today: "bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold ring-2 ring-blue-400 ring-offset-2 shadow-lg",
+                  day_outside: "text-stone-300 opacity-40",
+                  day_disabled: "text-stone-200 opacity-25 hover:bg-transparent cursor-not-allowed hover:scale-100",
                   day_hidden: "invisible",
                 }}
               />
-              <div className="mt-4 pt-4 border-t border-stone-200">
-                <div className="flex items-center justify-center gap-2 text-sm">
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                    <span className="text-stone-600">Hoje</span>
+              <div className="mt-5 pt-5 border-t-2 border-stone-100">
+                <div className="flex flex-col gap-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm"></div>
+                    <span className="text-stone-700 font-medium">Hoje</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-[#B8956A] rounded-full"></div>
-                    <span className="text-stone-600">Selecionado</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-br from-[#B8956A] to-[#8B7355] rounded-lg shadow-sm"></div>
+                    <span className="text-stone-700 font-medium">Selecionado</span>
                   </div>
                 </div>
               </div>
