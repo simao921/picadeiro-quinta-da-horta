@@ -47,17 +47,17 @@ export default function AdminLayout({ children, currentPage }) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-stone-100">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
       <AdminSidebar 
         currentPage={currentPage} 
         collapsed={collapsed} 
         setCollapsed={setCollapsed} 
       />
       <main className={cn(
-        "transition-all duration-300",
+        "transition-all duration-500",
         collapsed ? "ml-16" : "ml-64"
       )}>
-        <div className="p-6">
+        <div className="p-6 max-w-[1800px] mx-auto">
           {children}
         </div>
       </main>
