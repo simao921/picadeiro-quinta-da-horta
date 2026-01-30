@@ -8,9 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', page: 'InstructorPanel' },
-  { icon: CalendarDays, label: 'Aulas', page: 'InstructorLessons' },
-  { icon: Users, label: 'Alunos Fixos', page: 'InstructorStudents' },
+  { icon: LayoutDashboard, label: 'Painel', page: 'InstructorPanel' },
 ];
 
 export default function InstructorSidebar({ currentPage, collapsed, setCollapsed }) {

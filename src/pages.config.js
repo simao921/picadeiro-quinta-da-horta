@@ -75,8 +75,6 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import UserPreferences from './pages/UserPreferences';
 import InstructorPanel from './pages/InstructorPanel';
-import InstructorLessons from './pages/InstructorLessons';
-import InstructorStudents from './pages/InstructorStudents';
 import __Layout from './Layout.jsx';
 
 
@@ -109,8 +107,6 @@ export const PAGES = {
     "Services": Services,
     "UserPreferences": UserPreferences,
     "InstructorPanel": InstructorPanel,
-    "InstructorLessons": InstructorLessons,
-    "InstructorStudents": InstructorStudents,
 }
 
 export const pagesConfig = {
