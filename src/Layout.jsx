@@ -30,7 +30,6 @@ const LayoutContent = ({ children, currentPageName }) => {
 
   const isAdminPage = currentPageName?.startsWith('Admin');
   const isDeveloperPage = currentPageName === 'DeveloperPanel';
-  const isInstructorPage = currentPageName?.startsWith('Instructor');
   const [maintenanceMode, setMaintenanceMode] = React.useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = React.useState('');
   const [maintenanceChecked, setMaintenanceChecked] = React.useState(false);
@@ -107,11 +106,6 @@ const LayoutContent = ({ children, currentPageName }) => {
         sessionStorage.setItem('admin_keyboard_access', 'true');
         window.location.href = createPageUrl('AdminLogin');
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit8' || e.key === '8')) {
-        e.preventDefault();
-        sessionStorage.setItem('instructor_keyboard_access', 'true');
-        window.location.href = createPageUrl('InstructorPanel');
-      }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit9' || e.key === '9')) {
         e.preventDefault();
         sessionStorage.setItem('dev_keyboard_access', 'true');
@@ -137,7 +131,7 @@ const LayoutContent = ({ children, currentPageName }) => {
     base44.auth.logout();
   }, []);
 
-  if (isAdminPage || isDeveloperPage || isInstructorPage) {
+  if (isAdminPage || isDeveloperPage) {
     return <>{children}</>;
   }
 
