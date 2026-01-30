@@ -90,7 +90,7 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
               )}
             >
               <item.icon className="w-4 h-4 flex-shrink-0" />
-              {!collapsed && <span className="text-xs font-medium">{item.label}</span>}
+              {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
               {collapsed && (
                 <div className="absolute left-full ml-2 px-2 py-1 bg-stone-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
                   {item.label}
@@ -126,7 +126,7 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
                        hover:bg-stone-800/40 hover:text-white transition-all duration-200 group relative"
           >
             <Home className="w-4 h-4" />
-            {!collapsed && <span className="text-xs font-medium">Ver Site</span>}
+            {!collapsed && <span className="text-sm font-medium">Ver Site</span>}
             {collapsed && (
               <div className="absolute left-full ml-2 px-2 py-1 bg-stone-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
                 Ver Site
@@ -143,7 +143,7 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
                        hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 group w-full relative"
           >
             <LogOut className="w-4 h-4" />
-            {!collapsed && <span className="text-xs font-medium">Terminar Sessão</span>}
+            {!collapsed && <span className="text-sm font-medium">Terminar Sessão</span>}
             {collapsed && (
               <div className="absolute left-full ml-2 px-2 py-1 bg-stone-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
                 Terminar Sessão
