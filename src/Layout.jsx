@@ -16,7 +16,7 @@ import {
 import { LanguageProvider, useLanguage } from '@/components/LanguageProvider';
 import LanguageSelector from '@/components/LanguageSelector';
 import LazyImage from '@/components/ui/LazyImage';
-import { getSiteImage, DEFAULT_IMAGES } from '@/lib/siteImages';
+import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 
 
 const LayoutContent = ({ children, currentPageName }) => {
