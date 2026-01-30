@@ -13,25 +13,22 @@ export const DEFAULT_IMAGES = {
 
 let imageCache = null;
 let cacheTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+const CACHE_DURATION = 30 * 1000; // 30 segundos apenas
 
 export async function getSiteImage(imageKey, fallbackUrl) {
   try {
-    // Usar cache se disponível e não expirado
-    const now = Date.now();
-    if (imageCache && (now - cacheTime) < CACHE_DURATION) {
-      const cached = imageCache.find(img => img.image_key === imageKey);
-      if (cached) return cached.image_url;
+    // Buscar sempre do banco de dados - sem cache pesado
+    const images = await base44.entities.SiteImage.list();
+    const image = images.find(img => img.image_key === imageKey);
+    
+    const url = image?.image_url || fallbackUrl || DEFAULT_IMAGES[imageKey] || '';
+    
+    // Adicionar timestamp para forçar atualização
+    if (url && url.includes('supabase.co')) {
+      return `${url}?t=${Date.now()}`;
     }
-
-    // Buscar do banco de dados
-    if (!imageCache || (now - cacheTime) >= CACHE_DURATION) {
-      imageCache = await base44.entities.SiteImage.list();
-      cacheTime = now;
-    }
-
-    const image = imageCache.find(img => img.image_key === imageKey);
-    return image?.image_url || fallbackUrl || DEFAULT_IMAGES[imageKey] || '';
+    
+    return url;
   } catch (error) {
     console.error('Erro ao carregar imagem:', error);
     return fallbackUrl || DEFAULT_IMAGES[imageKey] || '';
@@ -41,4 +38,8 @@ export async function getSiteImage(imageKey, fallbackUrl) {
 export function clearImageCache() {
   imageCache = null;
   cacheTime = 0;
+  // Forçar reload de todas as imagens
+  if (typeof window !== 'undefined') {
+    window.location.reload();
+  }
 }
