@@ -13,7 +13,11 @@ export default function HeroSection() {
   const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero_home);
 
   useEffect(() => {
-    getSiteImage('hero_home', DEFAULT_IMAGES.hero_home).then(setHeroImage);
+    const loadImage = async () => {
+      const url = await getSiteImage('hero_home', DEFAULT_IMAGES.hero_home);
+      setHeroImage(url);
+    };
+    loadImage();
   }, []);
   
   return (

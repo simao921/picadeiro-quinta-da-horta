@@ -46,8 +46,11 @@ export default function AdminImages() {
   useEffect(() => {
     const loadCurrentImages = async () => {
       const images = {};
+      const dbImages = await base44.entities.SiteImage.list();
+      
       for (const item of imageKeys) {
-        images[item.key] = await getSiteImage(item.key, DEFAULT_IMAGES[item.key]);
+        const dbImage = dbImages.find(img => img.image_key === item.key);
+        images[item.key] = dbImage?.image_url || DEFAULT_IMAGES[item.key];
       }
       setCurrentImages(images);
     };
@@ -58,21 +61,20 @@ export default function AdminImages() {
     mutationFn: async (data) => {
       const existing = siteImages.find(img => img.image_key === data.image_key);
       if (existing) {
-        await base44.entities.SiteImage.update(existing.id, data);
+        return await base44.entities.SiteImage.update(existing.id, data);
       } else {
-        await base44.entities.SiteImage.create(data);
+        return await base44.entities.SiteImage.create(data);
       }
     },
-    onSuccess: async (_, data) => {
+    onSuccess: async (result, data) => {
       await queryClient.invalidateQueries({ queryKey: ['site-images'] });
       await refetch();
       
-      // Atualizar imagem no estado local forçando novo URL
-      const newUrl = `${data.image_url}?t=${Date.now()}`;
-      setCurrentImages(prev => ({ ...prev, [data.image_key]: newUrl }));
+      // Atualizar imagem localmente
+      setCurrentImages(prev => ({ ...prev, [data.image_key]: data.image_url }));
       
-      toast.success('✅ Imagem atualizada com sucesso!', {
-        description: 'Recarregue qualquer página do site (F5) para ver a nova imagem.'
+      toast.success('✅ Imagem guardada!', {
+        description: 'A imagem foi atualizada. Recarregue o site para ver.'
       });
       setDialogOpen(false);
       setSelectedImage(null);
