@@ -32,7 +32,7 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
   return (
     <aside className={cn(
       "fixed left-0 top-0 h-screen bg-gradient-to-br from-[#1a1614] via-[#22201d] to-[#1a1614] text-white transition-all duration-500 z-40 shadow-2xl border-r border-stone-700/30",
-      collapsed ? "w-16" : "w-64"
+      collapsed ? "w-16" : "w-56"
     )}>
       <div className="flex flex-col h-full">
         {/* Header */}

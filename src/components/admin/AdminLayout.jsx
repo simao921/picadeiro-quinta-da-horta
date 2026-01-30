@@ -55,7 +55,7 @@ export default function AdminLayout({ children, currentPage }) {
       />
       <main className={cn(
         "transition-all duration-500",
-        collapsed ? "ml-16" : "ml-64"
+        collapsed ? "ml-16" : "ml-56"
       )}>
         <div className="p-6 max-w-[1800px] mx-auto">
           {children}
