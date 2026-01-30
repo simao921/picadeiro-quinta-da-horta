@@ -6,14 +6,14 @@ import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';
 import LazyImage from '@/components/ui/LazyImage';
-import { getSiteImage, DEFAULT_IMAGES } from '@/lib/siteImages';
+import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 
 export default function HeroSection() {
   const { t } = useLanguage();
-  const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero);
+  const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero_home);
 
   useEffect(() => {
-    getSiteImage('hero', DEFAULT_IMAGES.hero).then(setHeroImage);
+    getSiteImage('hero_home', DEFAULT_IMAGES.hero_home).then(setHeroImage);
   }, []);
   
   return (

@@ -64,15 +64,16 @@ export default function AdminImages() {
       }
     },
     onSuccess: async (_, data) => {
-      clearImageCache();
       await queryClient.invalidateQueries({ queryKey: ['site-images'] });
       await refetch();
       
-      // Atualizar imagem no estado local
-      const newUrl = await getSiteImage(data.image_key, DEFAULT_IMAGES[data.image_key]);
+      // Atualizar imagem no estado local forçando novo URL
+      const newUrl = `${data.image_url}?t=${Date.now()}`;
       setCurrentImages(prev => ({ ...prev, [data.image_key]: newUrl }));
       
-      toast.success('✅ Imagem atualizada! Recarregue a página do site para ver as alterações.');
+      toast.success('✅ Imagem atualizada com sucesso!', {
+        description: 'Recarregue qualquer página do site (F5) para ver a nova imagem.'
+      });
       setDialogOpen(false);
       setSelectedImage(null);
       setFormData({ image_key: '', image_url: '', description: '', section: '' });
