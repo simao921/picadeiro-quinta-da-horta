@@ -256,7 +256,7 @@ const LayoutContent = ({ children, currentPageName }) => {
               <LazyImage
                 src={logoUrl}
                 alt="Picadeiro Quinta da Horta"
-                className="h-14 w-14 object-cover rounded-full"
+                className="h-16 w-16 object-contain"
                 priority={true}
               />
               <div className="hidden md:block">
@@ -371,11 +371,11 @@ const LayoutContent = ({ children, currentPageName }) => {
             {/* About */}
             <div>
               <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
-                <div className="w-20 h-20 rounded-full bg-white p-2 flex items-center justify-center">
+                <div className="w-20 h-20 flex items-center justify-center">
                   <LazyImage
                     src={logoUrl}
                     alt="Picadeiro Quinta da Horta"
-                    className="w-full h-full object-cover rounded-full"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </Link>
