@@ -30,11 +30,11 @@ const CookieBanner = React.memo(() => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex-1">
             <h3 className="font-serif font-semibold text-lg text-[#1A1A1A] mb-2">
-              🍪 Utilizamos Cookies
+              🍪 Cookies e Privacidade
             </h3>
             <p className="text-sm text-stone-600 leading-relaxed">
-              Este site utiliza cookies para melhorar a sua experiência de navegação e para análise de tráfego. 
-              Ao continuar a navegar, está a consentir a utilização de cookies.
+              Utilizamos cookies essenciais para garantir o funcionamento do site e melhorar a sua experiência. 
+              Os seus dados são tratados com confidencialidade e não são partilhados com terceiros.
             </p>
           </div>
           <div className="flex items-center gap-3">
