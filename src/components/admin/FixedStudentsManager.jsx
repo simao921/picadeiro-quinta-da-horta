@@ -60,8 +60,8 @@ export default function FixedStudentsManager() {
     staleTime: 0
   });
 
-  const fixedStudentsFromUsers = allUsers.filter(u => u.student_type === 'fixo');
-  const fixedStudentsFromPicadeiro = picadeiroStudents.filter(s => s.student_type === 'fixo').map(s => ({
+  const fixedStudentsFromUsers = allUsers.filter(u => u.student_type === 'fixo' || u.student_type === 'flexivel');
+  const fixedStudentsFromPicadeiro = picadeiroStudents.filter(s => s.student_type === 'fixo' || s.student_type === 'flexivel').map(s => ({
     ...s,
     full_name: s.name,
     email: s.email || s.phone || ''
@@ -75,16 +75,18 @@ export default function FixedStudentsManager() {
     return name.includes(query) || email.includes(query);
   });
 
+  const [studentTypeMode, setStudentTypeMode] = useState('fixo'); // fixo ou flexivel
+
   // Lista combinada de todos os alunos (users + picadeiro) para seleção
   const allStudentsForSelection = [
-    ...allUsers.filter(u => u.student_type !== 'fixo' || u.id === editingStudent?.id).map(u => ({
+    ...allUsers.filter(u => (u.student_type !== 'fixo' && u.student_type !== 'flexivel') || u.id === editingStudent?.id).map(u => ({
       id: `user-${u.id}`,
       name: u.full_name || '',
       email: u.email || '',
       phone: '',
       source: 'user'
     })),
-    ...picadeiroStudents.filter(s => s.student_type !== 'fixo' || s.id === editingStudent?.id).map(s => ({
+    ...picadeiroStudents.filter(s => (s.student_type !== 'fixo' && s.student_type !== 'flexivel') || s.id === editingStudent?.id).map(s => ({
       id: `picadeiro-${s.id}`,
       name: s.name || '',
       email: s.email || '',
@@ -1002,10 +1004,10 @@ export default function FixedStudentsManager() {
       studentName,
       oldSchedules,
       data: {
-        student_type: 'fixo',
+        student_type: studentTypeMode,
         student_level: formData.student_level,
-        fixed_schedule: formData.schedules,
-        monthly_fee: monthlyFee
+        fixed_schedule: studentTypeMode === 'fixo' ? formData.schedules : [],
+        monthly_fee: studentTypeMode === 'fixo' ? monthlyFee : 0
       }
     });
   };
@@ -1247,9 +1249,30 @@ export default function FixedStudentsManager() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingStudent ? 'Editar Aluno Fixo' : 'Registar Aluno Fixo'}</DialogTitle>
+                <DialogTitle>{editingStudent ? 'Editar Aluno' : 'Registar Aluno'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
+                {!editingStudent && (
+                  <div className="space-y-2">
+                    <Label>Tipo de Aluno *</Label>
+                    <Select value={studentTypeMode} onValueChange={setStudentTypeMode}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixo">Fixo - Horário semanal fixo</SelectItem>
+                        <SelectItem value="flexivel">Flexível - Horário variável (pais c/ turnos)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {studentTypeMode === 'flexivel' && (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-800">
+                          ℹ️ Alunos flexíveis não têm horário fixo. Marque as aulas manualmente conforme disponibilidade.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Selecionar Aluno *</Label>
                   <div className="space-y-2">
@@ -1315,6 +1338,7 @@ export default function FixedStudentsManager() {
                   </div>
                 </div>
 
+                {studentTypeMode === 'fixo' && (
                 <div className="space-y-2">
                   <Label>Nível</Label>
                   <Select
@@ -1331,7 +1355,9 @@ export default function FixedStudentsManager() {
                     </SelectContent>
                   </Select>
                 </div>
+                )}
 
+                {studentTypeMode === 'fixo' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Duração da Aula</Label>
@@ -1384,8 +1410,9 @@ export default function FixedStudentsManager() {
                     </Select>
                   </div>
                 </div>
+                )}
 
-                {formData.duration && formData.weekly_frequency && (
+                {studentTypeMode === 'fixo' && formData.duration && formData.weekly_frequency && (
                   <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-green-800 font-medium">
                       Mensalidade: {monthlyFees[formData.duration][formData.weekly_frequency]}€/mês
@@ -1393,6 +1420,7 @@ export default function FixedStudentsManager() {
                   </div>
                 )}
 
+                {studentTypeMode === 'fixo' && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Horários Fixos *</Label>
@@ -1460,13 +1488,14 @@ export default function FixedStudentsManager() {
                     ))}
                   </div>
                 </div>
+                )}
 
                 <Button 
                   onClick={handleSave} 
                   className="w-full bg-[#4A5D23] hover:bg-[#3A4A1B]"
                   disabled={updateUserMutation.isPending}
                 >
-                  {updateUserMutation.isPending ? 'A guardar...' : 'Guardar Aluno Fixo'}
+                  {updateUserMutation.isPending ? 'A guardar...' : (studentTypeMode === 'flexivel' ? 'Guardar Aluno Flexível' : 'Guardar Aluno Fixo')}
                 </Button>
               </div>
             </DialogContent>
@@ -1494,14 +1523,20 @@ export default function FixedStudentsManager() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold">{student.full_name || student.name || 'Sem nome'}</h3>
-                      <Badge className="bg-[#4A5D23]">{student.student_level || 'N/A'}</Badge>
+                      {student.student_type === 'flexivel' ? (
+                        <Badge className="bg-blue-600">Flexível</Badge>
+                      ) : (
+                        <Badge className="bg-[#4A5D23]">{student.student_level || 'N/A'}</Badge>
+                      )}
                     </div>
                     {student.email && (
                       <p className="text-xs text-stone-500 mb-2">{student.email}</p>
                     )}
-                    <p className="text-sm text-stone-600">
-                      💰 Mensalidade: <strong>{student.monthly_fee}€</strong>
-                    </p>
+                    {student.student_type !== 'flexivel' && (
+                      <p className="text-sm text-stone-600">
+                        💰 Mensalidade: <strong>{student.monthly_fee}€</strong>
+                      </p>
+                    )}
                     {student.fixed_schedule && student.fixed_schedule.length > 0 && (
                       <div className="mt-2">
                         <p className="text-xs text-stone-500 mb-1">Horários:</p>
@@ -1516,15 +1551,17 @@ export default function FixedStudentsManager() {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => extendLessons(student)}
-                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      title="Estender aulas +3 meses"
-                    >
-                      <Clock className="w-4 h-4" />
-                    </Button>
+                    {student.student_type !== 'flexivel' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => extendLessons(student)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        title="Estender aulas +3 meses"
+                      >
+                        <Clock className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"

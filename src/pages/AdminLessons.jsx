@@ -25,11 +25,12 @@ import {
 import { 
   Plus, CalendarDays, Clock, Users, 
   CheckCircle, XCircle, Loader2, AlertCircle, Search,
-  UserCheck, UserX, Eye, EyeOff
+  UserCheck, UserX, Eye, EyeOff, Edit2
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { toast } from 'sonner';
+import QuickScheduleEditor from '@/components/admin/QuickScheduleEditor';
 
 export default function AdminLessons() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -405,6 +406,8 @@ export default function AdminLessons() {
 
   const [selectedAbsentBooking, setSelectedAbsentBooking] = useState(null);
   const [showCompensableDialog, setShowCompensableDialog] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [showScheduleEditor, setShowScheduleEditor] = useState(false);
 
   const markAttendanceMutation = useMutation({
     mutationFn: async ({ bookingId, attendance, absenceCompensable }) => {
@@ -978,9 +981,24 @@ export default function AdminLessons() {
                                             {booking.status === 'approved' ? '✓ Aprovada' :
                                              booking.status === 'rejected' ? '✗ Rejeitada' : 'Cancelada'}
                                           </Badge>
-                                          
+
+                                          {booking.status === 'approved' && booking.is_fixed_student && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-8 px-2 text-xs text-[#B8956A] hover:text-[#8B7355] hover:bg-[#B8956A]/10"
+                                              onClick={() => {
+                                                setEditingSchedule({ booking, lesson });
+                                                setShowScheduleEditor(true);
+                                              }}
+                                              title="Alterar horário"
+                                            >
+                                              <Edit2 className="w-4 h-4" />
+                                            </Button>
+                                          )}
+
                                           {booking.status === 'approved' && (
-                                           <div className="flex items-center gap-1">
+                                          <div className="flex items-center gap-1">
                                              {(() => {
                                                // Verificar se pode alterar presença (até 20:00 do mesmo dia)
                                                const lessonDate = new Date(lesson.date);
@@ -1105,6 +1123,19 @@ export default function AdminLessons() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Dialog para editar horário */}
+        {editingSchedule && (
+          <QuickScheduleEditor
+            booking={editingSchedule.booking}
+            lesson={editingSchedule.lesson}
+            open={showScheduleEditor}
+            onClose={() => {
+              setShowScheduleEditor(false);
+              setEditingSchedule(null);
+            }}
+          />
+        )}
 
         {/* Dialog para escolher se ausência é compensável */}
         <Dialog open={showCompensableDialog} onOpenChange={setShowCompensableDialog}>
