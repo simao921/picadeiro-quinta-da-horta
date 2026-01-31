@@ -52,7 +52,10 @@ export default function FixedStudentsManager() {
 
   const { data: picadeiroStudents = [], refetch: refetchStudents } = useQuery({
     queryKey: ['picadeiro-students'],
-    queryFn: () => base44.entities.PicadeiroStudent.list('-created_date'),
+    queryFn: async () => {
+      const data = await base44.entities.PicadeiroStudent.list('-created_date');
+      return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    },
     initialData: [],
     staleTime: 0
   });
@@ -88,7 +91,7 @@ export default function FixedStudentsManager() {
       phone: s.phone || '',
       source: 'picadeiro'
     }))
-  ];
+  ].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   // Filtrar alunos baseado na pesquisa
   const filteredStudentsForSelection = allStudentsForSelection.filter(student => {

@@ -33,7 +33,10 @@ export default function AdminPicadeiroStudents() {
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ['picadeiro-students'],
-    queryFn: () => base44.entities.PicadeiroStudent.list('-created_date'),
+    queryFn: async () => {
+      const data = await base44.entities.PicadeiroStudent.list('-created_date');
+      return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    },
     initialData: []
   });
 
