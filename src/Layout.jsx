@@ -116,6 +116,21 @@ const LayoutContent = ({ children, currentPageName }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Atalho para tablets/mobile: tocar 5 vezes no logo em 2 segundos
+  const [logoTaps, setLogoTaps] = React.useState([]);
+  
+  const handleLogoTap = () => {
+    const now = Date.now();
+    const recentTaps = [...logoTaps, now].filter(t => now - t < 2000);
+    setLogoTaps(recentTaps);
+    
+    if (recentTaps.length >= 5) {
+      sessionStorage.setItem('admin_keyboard_access', 'true');
+      window.location.href = createPageUrl('AdminLogin');
+      setLogoTaps([]);
+    }
+  };
+
 
 
   useEffect(() => {
@@ -252,6 +267,9 @@ const LayoutContent = ({ children, currentPageName }) => {
               to={createPageUrl('Home')} 
               className="flex items-center gap-3 transition-opacity hover:opacity-80"
               aria-label="Ir para página inicial"
+              onClick={(e) => {
+                handleLogoTap();
+              }}
             >
               <LazyImage
                 src={logoUrl}
