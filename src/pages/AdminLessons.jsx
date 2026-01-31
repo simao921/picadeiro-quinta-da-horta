@@ -198,13 +198,22 @@ export default function AdminLessons() {
       
       // Se cliente selecionado, criar reserva
       if (data.client_email && data.client_name) {
+        console.log('Criando reserva com:', {
+          lesson_id: lesson.id,
+          client_email: data.client_email,
+          client_name: data.client_name
+        });
+        
         await base44.entities.Booking.create({
           lesson_id: lesson.id,
           client_email: data.client_email,
           client_name: data.client_name,
           status: 'approved',
-          approved_at: new Date().toISOString()
+          approved_at: new Date().toISOString(),
+          approved_by: 'admin'
         });
+        
+        console.log('Reserva criada com sucesso');
       }
       
       return lesson;
@@ -538,11 +547,19 @@ export default function AdminLessons() {
                     <Select 
                       value={newLesson.client_email || undefined}
                       onValueChange={(v) => {
-                        const student = allUsers.find(u => (u.email && u.email === v) || (u.phone && u.phone === v));
+                        const student = allUsers.find(u => 
+                          (u.email && u.email === v) || 
+                          (u.phone && u.phone === v) || 
+                          u.id === v
+                        );
+                        
+                        // Usar identificador único que funciona para buscar o aluno depois
+                        const identifier = student?.email || student?.phone || student?.id || v;
+                        
                         setNewLesson({
                           ...newLesson, 
-                          client_email: student?.email || student?.phone || v,
-                          client_name: student?.name || ''
+                          client_email: identifier,
+                          client_name: student?.name || 'Nome não encontrado'
                         });
                         setClientSearch('');
                       }}
