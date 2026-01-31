@@ -26,7 +26,7 @@ const LayoutContent = ({ children, currentPageName }) => {
   const [user, setUser] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/cf6d978da_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG';
+  const [logoUrl, setLogoUrl] = useState('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG');
 
   const isAdminPage = currentPageName?.startsWith('Admin');
   const isDeveloperPage = currentPageName === 'DeveloperPanel';
@@ -118,7 +118,10 @@ const LayoutContent = ({ children, currentPageName }) => {
 
 
 
-
+  useEffect(() => {
+    // Load logo image
+    getSiteImage('logo', DEFAULT_IMAGES.logo).then(setLogoUrl);
+  }, []);
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -250,14 +253,12 @@ const LayoutContent = ({ children, currentPageName }) => {
               className="flex items-center gap-3 transition-opacity hover:opacity-80"
               aria-label="Ir para página inicial"
             >
-              <div className="h-16 w-16 bg-white rounded-full p-2 shadow-sm">
-                <img
-                  src={logoUrl}
-                  alt="Picadeiro Quinta da Horta"
-                  className="w-full h-full object-contain"
-                  loading="eager"
-                />
-              </div>
+              <LazyImage
+                src={logoUrl}
+                alt="Picadeiro Quinta da Horta"
+                className="h-14 w-14 object-cover rounded-full"
+                priority={true}
+              />
               <div className="hidden md:block">
                 <h1 className="text-lg font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
                 <p className="text-xs text-[#8B7355] tracking-wider">QUINTA DA HORTA</p>
@@ -370,12 +371,11 @@ const LayoutContent = ({ children, currentPageName }) => {
             {/* About */}
             <div>
               <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
-                <div className="w-20 h-20 bg-white rounded-full p-2 flex items-center justify-center">
-                  <img
+                <div className="w-20 h-20 rounded-full bg-white p-2 flex items-center justify-center">
+                  <LazyImage
                     src={logoUrl}
                     alt="Picadeiro Quinta da Horta"
-                    className="w-full h-full object-contain"
-                    loading="lazy"
+                    className="w-full h-full object-cover rounded-full"
                   />
                 </div>
               </Link>

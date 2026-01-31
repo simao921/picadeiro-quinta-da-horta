@@ -10,13 +10,25 @@ import { getSiteImage, DEFAULT_IMAGES } from '@/lib/siteImages';
 
 export default function AboutSection() {
   const { t } = useLanguage();
-  const aboutImages = {
-    decorative: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&w=1920&q=80',
-    grid1: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/e9ebbbbb9_WhatsAppImage2025-01-01at140908.jpeg',
-    grid2: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-    grid3: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&w=800&q=80',
-    grid4: 'https://images.unsplash.com/photo-1598662779094-d8de6b04f1c5?auto=format&fit=crop&w=800&q=80'
-  };
+  const [aboutImages, setAboutImages] = useState({
+    decorative: DEFAULT_IMAGES.about_decorative,
+    grid1: DEFAULT_IMAGES.about_grid_1,
+    grid2: DEFAULT_IMAGES.about_grid_2,
+    grid3: DEFAULT_IMAGES.about_grid_3,
+    grid4: DEFAULT_IMAGES.about_grid_4,
+  });
+
+  useEffect(() => {
+    Promise.all([
+      getSiteImage('about_decorative', DEFAULT_IMAGES.about_decorative),
+      getSiteImage('about_grid_1', DEFAULT_IMAGES.about_grid_1),
+      getSiteImage('about_grid_2', DEFAULT_IMAGES.about_grid_2),
+      getSiteImage('about_grid_3', DEFAULT_IMAGES.about_grid_3),
+      getSiteImage('about_grid_4', DEFAULT_IMAGES.about_grid_4),
+    ]).then(([decorative, grid1, grid2, grid3, grid4]) => {
+      setAboutImages({ decorative, grid1, grid2, grid3, grid4 });
+    });
+  }, []);
   
   const features = [
     {
