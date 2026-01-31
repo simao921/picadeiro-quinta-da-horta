@@ -22,9 +22,18 @@ const weekDays = [
 
 export default function QuickScheduleEditor({ booking, lesson, open, onClose }) {
   const queryClient = useQueryClient();
-  const [newDate, setNewDate] = useState(lesson?.date || '');
+  const [newDate, setNewDate] = useState('');
   const [newDay, setNewDay] = useState('');
-  const [newTime, setNewTime] = useState(lesson?.start_time || '09:00');
+  const [newTime, setNewTime] = useState('09:00');
+
+  // Reset valores quando o modal abre
+  React.useEffect(() => {
+    if (open && lesson) {
+      setNewDate(lesson.date || '');
+      setNewTime(lesson.start_time || '09:00');
+      setNewDay('');
+    }
+  }, [open, lesson]);
 
   const { data: allStudents = [] } = useQuery({
     queryKey: ['all-picadeiro-students'],
