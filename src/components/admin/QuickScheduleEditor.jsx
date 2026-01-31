@@ -380,12 +380,12 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
             Alterar Horário - {booking?.client_name}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
-          {/* Opção 1: Apenas esta semana */}
+        <div className="space-y-4">
+          {/* Apenas esta semana */}
           <div className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
             <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              Apenas Esta Semana
+              Mover Esta Aula
             </h4>
             <p className="text-sm text-blue-700 mb-3">Move esta aula específica para outra data/horário</p>
             <div className="space-y-2">
@@ -407,43 +407,7 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {updateScheduleMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Mover Apenas Esta Aula
-              </Button>
-            </div>
-          </div>
-
-          {/* Opção 2: Permanente */}
-          <div className="p-4 border-2 border-amber-200 rounded-lg bg-amber-50">
-            <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Alterar Permanentemente
-            </h4>
-            <p className="text-sm text-amber-700 mb-3">Altera o horário fixo do aluno e recria todas as aulas futuras</p>
-            <div className="space-y-2">
-              <Label>Novo Dia da Semana</Label>
-              <Select value={newDay} onValueChange={setNewDay}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha o dia" />
-                </SelectTrigger>
-                <SelectContent>
-                  {weekDays.map(d => (
-                    <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Label>Nova Hora</Label>
-              <Input
-                type="time"
-                value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-              />
-              <Button
-                onClick={handleChangePermanent}
-                disabled={updateScheduleMutation.isPending}
-                className="w-full bg-amber-600 hover:bg-amber-700"
-              >
-                {updateScheduleMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Alterar Horário Fixo
+                Mover Aula
               </Button>
             </div>
           </div>
