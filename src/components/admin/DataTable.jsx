@@ -99,11 +99,14 @@ export default function DataTable({
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-stone-50">
+            <TableRow className="bg-stone-50 hover:bg-stone-50">
               {columns.map((col) => (
                 <TableHead 
                   key={col.key}
-                  className={sortable && col.sortable !== false ? 'cursor-pointer hover:bg-stone-100' : ''}
+                  className={cn(
+                    "font-semibold text-stone-700",
+                    sortable && col.sortable !== false ? 'cursor-pointer hover:bg-stone-100 transition-colors' : ''
+                  )}
                   onClick={() => col.sortable !== false && handleSort(col)}
                 >
                   <div className="flex items-center gap-2">
@@ -129,7 +132,7 @@ export default function DataTable({
               paginatedData.map((row, idx) => (
                 <TableRow 
                   key={row.id || idx}
-                  className={onRowClick ? 'cursor-pointer hover:bg-stone-50' : ''}
+                  className={onRowClick ? 'cursor-pointer hover:bg-stone-50 transition-colors' : 'hover:bg-stone-50/50 transition-colors'}
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((col) => (

@@ -1,4 +1,3 @@
-css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,33 +36,35 @@ css
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  /* Improve text rendering */
+  /* Improve text rendering for long sessions */
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
+    letter-spacing: -0.025em;
   }
   
   p {
     text-wrap: pretty;
+    line-height: 1.65;
   }
   
-  /* Enhanced buttons */
+  /* Enhanced buttons with better feedback */
   button, .btn {
-    @apply transition-all duration-300;
+    @apply transition-all duration-200;
   }
   
   button:hover:not(:disabled), .btn:hover:not(:disabled) {
-    @apply shadow-lg transform -translate-y-0.5;
+    @apply shadow-md transform -translate-y-0.5;
   }
   
   button:active:not(:disabled), .btn:active:not(:disabled) {
-    @apply transform translate-y-0;
+    @apply transform translate-y-0 shadow-sm;
   }
   
   button:disabled, .btn:disabled {
     @apply opacity-50 cursor-not-allowed;
   }
   
-  /* Focus styles for accessibility */
+  /* Enhanced focus styles for better accessibility */
   button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
     @apply outline-none ring-2 ring-[#B8956A] ring-offset-2;
   }
@@ -80,7 +81,7 @@ css
     }
   }
   
-  /* Smooth scrolling with fallback */
+  /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
   }
@@ -92,30 +93,30 @@ css
   }
 }
 
-/* Custom scrollbar - mais confortável */
+/* Enhanced scrollbar - mais confortável para longas sessões */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(245, 245, 245, 0.5);
-  border-radius: 6px;
+  background: rgba(245, 245, 245, 0.6);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, rgba(184, 149, 106, 0.6), rgba(139, 115, 85, 0.6));
-  border-radius: 6px;
-  border: 3px solid rgba(245, 245, 245, 0.5);
+  background: linear-gradient(135deg, rgba(184, 149, 106, 0.5), rgba(139, 115, 85, 0.5));
+  border-radius: 5px;
+  border: 2px solid rgba(245, 245, 245, 0.6);
   transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, rgba(184, 149, 106, 0.8), rgba(139, 115, 85, 0.8));
-  border: 2px solid rgba(245, 245, 245, 0.5);
+  background: linear-gradient(135deg, rgba(184, 149, 106, 0.7), rgba(139, 115, 85, 0.7));
+  border: 2px solid rgba(245, 245, 245, 0.4);
 }
 
-/* Animações suaves */
+/* Animações suaves e confortáveis */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -128,14 +129,19 @@ css
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.4s ease-out;
 }
 
-/* Melhorias para inputs */
+/* Melhorias para inputs - menos strain visual */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.1);
+  box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.15);
   border-color: #B8956A;
+  transition: all 0.2s ease;
+}
+
+input, textarea, select {
+  transition: all 0.2s ease;
 }
 
 /* Melhor feedback visual em botões */
@@ -143,15 +149,15 @@ button:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-/* Reduzir strain visual */
+/* Reduzir strain visual - melhor renderização de fontes */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Espaçamento confortável para leitura */
+/* Espaçamento confortável para leitura prolongada */
 p, li, td {
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -177,9 +183,34 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Better transitions */
+/* Better transitions with comfortable timing */
 @media (prefers-reduced-motion: no-preference) {
   * {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
+
+/* Cards com melhor sombra e espaçamento */
+.card {
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* Tabelas mais confortáveis */
+table {
+  border-spacing: 0 0.25rem;
+}
+
+td, th {
+  padding: 0.875rem 1rem;
+}
+
+/* Melhor contraste para badges */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.025em;
 }
