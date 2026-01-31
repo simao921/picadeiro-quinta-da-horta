@@ -253,12 +253,14 @@ const LayoutContent = ({ children, currentPageName }) => {
               className="flex items-center gap-3 transition-opacity hover:opacity-80"
               aria-label="Ir para página inicial"
             >
-              <LazyImage
-                src={logoUrl}
-                alt="Picadeiro Quinta da Horta"
-                className="h-16 w-16 object-contain"
-                priority={true}
-              />
+              <div className="h-16 w-16 bg-white rounded-lg p-2 shadow-sm">
+                <img
+                  src={logoUrl}
+                  alt="Picadeiro Quinta da Horta"
+                  className="w-full h-full object-contain"
+                  loading="eager"
+                />
+              </div>
               <div className="hidden md:block">
                 <h1 className="text-lg font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
                 <p className="text-xs text-[#8B7355] tracking-wider">QUINTA DA HORTA</p>
@@ -371,11 +373,12 @@ const LayoutContent = ({ children, currentPageName }) => {
             {/* About */}
             <div>
               <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
-                <div className="w-20 h-20 flex items-center justify-center">
-                  <LazyImage
+                <div className="w-20 h-20 bg-white rounded-lg p-2 flex items-center justify-center">
+                  <img
                     src={logoUrl}
                     alt="Picadeiro Quinta da Horta"
                     className="w-full h-full object-contain"
+                    loading="lazy"
                   />
                 </div>
               </Link>
