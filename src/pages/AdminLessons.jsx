@@ -417,6 +417,9 @@ export default function AdminLessons() {
   const [showCompensableDialog, setShowCompensableDialog] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [showScheduleEditor, setShowScheduleEditor] = useState(false);
+  const [editingLesson, setEditingLesson] = useState(null);
+  const [showLessonEditor, setShowLessonEditor] = useState(false);
+  const [lessonEditData, setLessonEditData] = useState({ date: '', time: '' });
 
   const markAttendanceMutation = useMutation({
     mutationFn: async ({ bookingId, attendance, absenceCompensable }) => {
@@ -503,6 +506,43 @@ export default function AdminLessons() {
     const lessonDateTime = new Date(`${lesson.date}T${lesson.end_time}:00`);
     return lessonDateTime < new Date();
   };
+
+  const moveLessonMutation = useMutation({
+    mutationFn: async ({ lessonId, newDate, newTime }) => {
+      console.log('Movendo aula:', { lessonId, newDate, newTime });
+      
+      const lesson = lessons.find(l => l.id === lessonId);
+      if (!lesson) throw new Error('Aula não encontrada');
+      
+      // Calcular nova hora de fim
+      const duration = lesson.end_time && lesson.start_time 
+        ? (new Date(`2000-01-01T${lesson.end_time}:00`).getTime() - new Date(`2000-01-01T${lesson.start_time}:00`).getTime()) / 60000
+        : 30;
+      
+      const newStartTime = new Date(`2000-01-01T${newTime}:00`);
+      const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+      
+      // Atualizar a aula
+      await base44.entities.Lesson.update(lessonId, {
+        date: newDate,
+        start_time: newTime,
+        end_time: format(newEndTime, 'HH:mm')
+      });
+      
+      console.log('Aula movida com sucesso');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
+      setShowLessonEditor(false);
+      setEditingLesson(null);
+      toast.success('Aula movida com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao mover aula:', error);
+      toast.error('Erro ao mover aula');
+    }
+  });
 
   return (
     <AdminLayout currentPage="AdminLessons">
@@ -887,7 +927,25 @@ export default function AdminLessons() {
                                   {lesson.start_time}
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-bold text-[#2C3E1F] text-xl mb-1">{getServiceName(lesson.service_id)}</p>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="font-bold text-[#2C3E1F] text-xl">{getServiceName(lesson.service_id)}</p>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 px-2 text-[#B8956A] hover:text-[#8B7355] hover:bg-[#B8956A]/10"
+                                      onClick={() => {
+                                        setEditingLesson(lesson);
+                                        setLessonEditData({ 
+                                          date: lesson.date, 
+                                          time: lesson.start_time 
+                                        });
+                                        setShowLessonEditor(true);
+                                      }}
+                                      title="Mover aula"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
                                   <div className="flex items-center gap-3 text-base text-stone-600">
                                     <span className="font-medium">Monitor: {getInstructorName(lesson.instructor_id)}</span>
                                     <span className="text-stone-300">•</span>
@@ -1141,7 +1199,7 @@ export default function AdminLessons() {
           </Card>
         </div>
 
-        {/* Dialog para editar horário */}
+        {/* Dialog para editar horário de aluno fixo */}
         {editingSchedule && (
           <QuickScheduleEditor
             booking={editingSchedule.booking}
@@ -1153,6 +1211,59 @@ export default function AdminLessons() {
             }}
           />
         )}
+
+        {/* Dialog para mover aula */}
+        <Dialog open={showLessonEditor} onOpenChange={setShowLessonEditor}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Mover Aula</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Nova Data</Label>
+                <Input
+                  type="date"
+                  value={lessonEditData.date}
+                  onChange={(e) => setLessonEditData({...lessonEditData, date: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Nova Hora</Label>
+                <Select
+                  value={lessonEditData.time}
+                  onValueChange={(v) => setLessonEditData({...lessonEditData, time: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'].map(time => (
+                      <SelectItem key={time} value={time}>{time}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="w-full bg-[#B8956A] hover:bg-[#8B7355]"
+                onClick={() => {
+                  if (!lessonEditData.date || !lessonEditData.time) {
+                    toast.error('Preencha data e hora');
+                    return;
+                  }
+                  moveLessonMutation.mutate({
+                    lessonId: editingLesson.id,
+                    newDate: lessonEditData.date,
+                    newTime: lessonEditData.time
+                  });
+                }}
+                disabled={moveLessonMutation.isPending}
+              >
+                {moveLessonMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Mover Aula
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog para escolher se ausência é compensável */}
         <Dialog open={showCompensableDialog} onOpenChange={setShowCompensableDialog}>
