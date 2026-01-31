@@ -46,7 +46,13 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
 
   const updateScheduleMutation = useMutation({
     mutationFn: async ({ mode, date, day, time }) => {
+      console.log('=== INICIANDO updateScheduleMutation ===');
+      console.log('Mode:', mode);
+      console.log('Booking:', booking);
+      console.log('Lesson:', lesson);
+      
       const studentKey = booking.client_email;
+      console.log('StudentKey:', studentKey);
       
       // Encontrar o aluno
       let student = allStudents.find(s => s.email === studentKey || s.phone === studentKey);
@@ -56,19 +62,33 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
         student = allUsers.find(u => u.email === studentKey);
       }
 
+      console.log('Student encontrado:', student);
+      console.log('isPicadeiro:', isPicadeiro);
+
       if (!student) {
+        toast.error('Aluno não encontrado');
         throw new Error('Aluno não encontrado');
       }
 
       const service = services.find(s => s.title === 'Aulas em Grupo');
       if (!service) {
+        toast.error('Serviço "Aulas em Grupo" não encontrado');
         throw new Error('Serviço "Aulas em Grupo" não encontrado');
       }
+      
+      console.log('Service encontrado:', service.id);
 
       if (mode === 'this_week') {
+        console.log('>>> MODE: this_week');
+        console.log('Nova data:', date);
+        console.log('Nova hora:', time);
+        
+        toast.loading('A mover aula...');
+        
         // Mudar apenas esta semana - mover a reserva para nova data/horário
         
         // Remover da aula antiga
+        console.log('Removendo reserva antiga:', booking.id);
         await base44.entities.Booking.delete(booking.id);
         const oldLesson = lesson;
         const remainingBookings = await base44.entities.Booking.filter({ lesson_id: oldLesson.id });
@@ -83,14 +103,19 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
         }
 
         // Criar ou encontrar aula na nova data/horário
-        let newLesson = await base44.entities.Lesson.filter({
+        console.log('Procurando aula em:', date, time);
+        let newLessonArray = await base44.entities.Lesson.filter({
           service_id: service.id,
           date: date,
           start_time: time
         });
+        
+        console.log('Aulas encontradas:', newLessonArray.length);
 
-        if (newLesson.length === 0) {
+        let newLesson;
+        if (newLessonArray.length === 0) {
           // Criar nova aula
+          console.log('Criando nova aula...');
           const [hours, minutes] = time.split(':');
           const endTime = new Date(2000, 0, 1, parseInt(hours), parseInt(minutes));
           endTime.setMinutes(endTime.getMinutes() + 30);
@@ -106,8 +131,10 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
             is_auto_generated: true,
             status: 'scheduled'
           });
+          console.log('Nova aula criada:', newLesson.id);
         } else {
-          newLesson = newLesson[0];
+          console.log('Usando aula existente:', newLessonArray[0].id);
+          newLesson = newLessonArray[0];
           await base44.entities.Lesson.update(newLesson.id, {
             booked_spots: (newLesson.booked_spots || 0) + 1,
             fixed_students_count: (newLesson.fixed_students_count || 0) + 1
@@ -115,36 +142,57 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
         }
 
         // Criar nova reserva
+        console.log('Criando nova reserva na aula:', newLesson.id);
         await base44.entities.Booking.create({
           lesson_id: newLesson.id,
           client_email: booking.client_email,
           client_name: booking.client_name,
           status: 'approved',
-          is_fixed_student: true,
+          is_fixed_student: booking.is_fixed_student || false,
           approved_at: new Date().toISOString(),
           approved_by: 'admin'
         });
 
+        console.log('✅ Aula movida com sucesso!');
+        toast.dismiss();
         toast.success('Horário desta semana alterado!');
 
       } else if (mode === 'permanent') {
+        console.log('>>> MODE: permanent');
+        console.log('Novo dia:', day);
+        console.log('Nova hora:', time);
+        
+        toast.loading('A alterar horário fixo...');
+        
         // Alterar horário fixo do aluno permanentemente
         
         if (!student.fixed_schedule || student.fixed_schedule.length === 0) {
+          toast.dismiss();
+          toast.error('Aluno não tem horários fixos definidos');
           throw new Error('Aluno não tem horários fixos definidos');
         }
+
+        console.log('Fixed schedule atual:', student.fixed_schedule);
+        console.log('Procurando horário:', lesson.start_time);
 
         // Encontrar o horário antigo mais próximo do atual
         const currentSchedule = student.fixed_schedule.find(s => s.time === lesson.start_time);
         
+        console.log('Schedule encontrado:', currentSchedule);
+        
         if (!currentSchedule) {
+          toast.dismiss();
+          toast.error('Horário fixo não encontrado para este aluno');
           throw new Error('Horário fixo não encontrado para este aluno');
         }
 
         // Atualizar horário fixo do aluno
         const newSchedules = student.fixed_schedule.map(s => 
-          s === currentSchedule ? { ...s, day: day, time: time } : s
+          s.time === currentSchedule.time ? { ...s, day: day, time: time, duration: s.duration || 30 } : s
         );
+
+        console.log('Novos schedules:', newSchedules);
+        console.log('Atualizando aluno...');
 
         if (isPicadeiro) {
           await base44.entities.PicadeiroStudent.update(student.id, {
@@ -155,17 +203,24 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
             fixed_schedule: newSchedules
           });
         }
+        
+        console.log('Aluno atualizado');
 
         // Remover todas as aulas futuras antigas deste horário específico
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        console.log('Buscando reservas do aluno...');
         const allBookings = await base44.entities.Booking.filter({
           client_email: studentKey,
           is_fixed_student: true
         });
+        
+        console.log('Reservas encontradas:', allBookings.length);
 
+        console.log('Buscando todas as aulas...');
         const allLessons = await base44.entities.Lesson.list('-date', 1000);
+        console.log('Aulas encontradas:', allLessons.length);
 
         for (const b of allBookings) {
           const l = allLessons.find(lesson => lesson.id === b.lesson_id);
@@ -176,12 +231,15 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
 
           // Remover apenas aulas futuras com o horário antigo
           if (lessonDate >= today && l.start_time === currentSchedule.time) {
+            console.log('Removendo reserva futura:', b.id, 'da aula', l.id, l.date);
             await base44.entities.Booking.delete(b.id);
             
             const remaining = await base44.entities.Booking.filter({ lesson_id: l.id });
             if (remaining.length === 0 && l.is_auto_generated) {
+              console.log('  → Apagando aula vazia:', l.id);
               await base44.entities.Lesson.delete(l.id);
-            } else {
+            } else if (remaining.length > 0) {
+              console.log('  → Atualizando contadores da aula:', l.id);
               await base44.entities.Lesson.update(l.id, {
                 booked_spots: remaining.length,
                 fixed_students_count: remaining.filter(r => r.is_fixed_student).length
@@ -189,18 +247,25 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
             }
           }
         }
+        
+        console.log('Aulas antigas removidas');
 
         // Criar aulas futuras com novo horário (3 meses)
+        console.log('Criando aulas futuras...');
         const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
         const targetDay = daysMap[day];
         const endDate = new Date(today);
         endDate.setMonth(endDate.getMonth() + 3);
+        
+        console.log('Período:', today.toISOString().split('T')[0], 'até', endDate.toISOString().split('T')[0]);
 
         const currentDate = new Date(today);
         const currentDay = currentDate.getDay();
         let daysUntilTarget = (targetDay - currentDay + 7) % 7;
         if (daysUntilTarget === 0) daysUntilTarget = 7;
         currentDate.setDate(currentDate.getDate() + daysUntilTarget);
+        
+        console.log('Primeira data:', currentDate.toISOString().split('T')[0]);
 
         while (currentDate <= endDate) {
           const dateStr = format(currentDate, 'yyyy-MM-dd');
@@ -256,6 +321,8 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
           currentDate.setDate(currentDate.getDate() + 7);
         }
 
+        console.log('✅ Horário fixo alterado com sucesso!');
+        toast.dismiss();
         toast.success('Horário fixo atualizado permanentemente!');
       }
     },
