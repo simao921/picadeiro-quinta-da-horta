@@ -809,35 +809,29 @@ export default function AdminLessons() {
           </Card>
 
           {/* Lessons List */}
-          <Card className="lg:col-span-3 border-0 shadow-xl bg-gradient-to-br from-white to-stone-50 overflow-hidden max-h-[800px]">
-            <CardHeader className="bg-gradient-to-r from-[#4B6382] to-[#5B7392] text-white">
+          <Card className="lg:col-span-3 border-0 shadow-xl bg-white overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#C9A961] text-white sticky top-0 z-10 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl font-bold mb-1">
+                  <CardTitle className="text-2xl font-bold mb-1">
                     {format(selectedDate, "EEEE", { locale: ptBR })}
                   </CardTitle>
-                  <p className="text-white/80 text-sm">
+                  <p className="text-white/90 text-base">
                     {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowAllBookings(!showAllBookings)}
-                    className="text-white hover:bg-white/20"
-                  >
-                    {showAllBookings ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                    {showAllBookings ? 'Ocultar' : 'Mostrar'} Reservas
-                  </Button>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                    <span className="text-2xl font-bold">{lessons.length}</span>
-                    <span className="text-sm ml-1 text-white/80">aulas</span>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl px-5 py-2.5">
+                    <span className="text-3xl font-bold">{lessons.length}</span>
+                    <span className="text-base ml-1.5 text-white/90">aulas</span>
                   </div>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 max-h-[700px] overflow-y-auto" style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#B8956A #f5f5f5'
+            }}>
               {isLoading ? (
                 <div className="text-center py-8">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#B8956A]" />
@@ -851,7 +845,7 @@ export default function AdminLessons() {
                   <p className="text-sm text-stone-400 mt-1">Clique em "Nova Aula" para adicionar</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {lessons.map((lesson) => {
                     const lessonBookings = getLessonBookings(lesson.id);
                     const hasPending = lessonBookings.some(b => b.status === 'pending');
@@ -859,98 +853,101 @@ export default function AdminLessons() {
                     const isCompleted = isLessonCompleted(lesson);
                     const attendanceStats = getAttendanceStats(lessonBookings);
                     return (
-                      <Card key={lesson.id} className={`border-l-4 shadow-md hover:shadow-lg transition-all ${
-                        isCompleted ? 'border-l-green-500 bg-green-50/30' :
-                        hasPending ? 'border-l-amber-500 bg-amber-50/50' : 
-                        isFull ? 'border-l-red-500 bg-red-50/30' : 
-                        'border-l-[#4B6382] bg-gradient-to-br from-[#4B6382]/5 to-[#4B6382]/15 hover:from-[#4B6382]/10 hover:to-[#4B6382]/20'
+                      <Card key={lesson.id} className={`border-l-[6px] shadow-lg hover:shadow-xl transition-all duration-300 ${
+                        isCompleted ? 'border-l-green-500 bg-gradient-to-r from-green-50/50 to-white' :
+                        hasPending ? 'border-l-amber-500 bg-gradient-to-r from-amber-50/70 to-white' : 
+                        isFull ? 'border-l-red-500 bg-gradient-to-r from-red-50/50 to-white' : 
+                        'border-l-[#B8956A] bg-gradient-to-r from-[#B8956A]/8 to-white hover:from-[#B8956A]/15'
                       }`}>
-                        <CardContent className="p-5">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <CardContent className="p-6">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="bg-gradient-to-br from-[#B8956A] to-[#8B7355] text-white rounded-lg px-3 py-2 font-bold text-lg shadow-md">
+                              <div className="flex items-center gap-4 mb-4">
+                                <div className="bg-gradient-to-br from-[#B8956A] to-[#C9A961] text-white rounded-2xl px-5 py-3 font-bold text-2xl shadow-lg min-w-[90px] text-center">
                                   {lesson.start_time}
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-bold text-[#2C3E1F] text-lg">{getServiceName(lesson.service_id)}</p>
-                                  <div className="flex items-center gap-2 text-sm text-stone-500 mt-1">
-                                    <span>Monitor: {getInstructorName(lesson.instructor_id)}</span>
+                                  <p className="font-bold text-[#2C3E1F] text-xl mb-1">{getServiceName(lesson.service_id)}</p>
+                                  <div className="flex items-center gap-3 text-base text-stone-600">
+                                    <span className="font-medium">Monitor: {getInstructorName(lesson.instructor_id)}</span>
                                     <span className="text-stone-300">•</span>
-                                    <span>{lesson.end_time || '--:--'}</span>
+                                    <span className="font-medium">{lesson.end_time || '--:--'}</span>
                                   </div>
-                                  {attendanceStats.total > 0 && (
-                                    <div className="flex items-center gap-3 mt-2">
-                                      <div className="flex items-center gap-1 text-xs">
-                                        <UserCheck className="w-3 h-3 text-green-600" />
-                                        <span className="text-green-600 font-medium">{attendanceStats.present}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1 text-xs">
-                                        <UserX className="w-3 h-3 text-red-600" />
-                                        <span className="text-red-600 font-medium">{attendanceStats.absent}</span>
-                                      </div>
-                                      {attendanceStats.unmarked > 0 && (
-                                        <div className="flex items-center gap-1 text-xs">
-                                          <AlertCircle className="w-3 h-3 text-amber-600" />
-                                          <span className="text-amber-600 font-medium">{attendanceStats.unmarked} pendente</span>
-                                        </div>
-                                      )}
+                                </div>
+                              </div>
+                              {attendanceStats.total > 0 && (
+                                <div className="flex items-center gap-4 mt-3 bg-stone-50 rounded-lg px-4 py-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <UserCheck className="w-5 h-5 text-green-600" />
+                                    <span className="text-green-700 font-bold text-base">{attendanceStats.present}</span>
+                                    <span className="text-stone-500 text-sm">presentes</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <UserX className="w-5 h-5 text-red-600" />
+                                    <span className="text-red-700 font-bold text-base">{attendanceStats.absent}</span>
+                                    <span className="text-stone-500 text-sm">ausentes</span>
+                                  </div>
+                                  {attendanceStats.unmarked > 0 && (
+                                    <div className="flex items-center gap-2">
+                                      <AlertCircle className="w-5 h-5 text-amber-600" />
+                                      <span className="text-amber-700 font-bold text-base">{attendanceStats.unmarked}</span>
+                                      <span className="text-stone-500 text-sm">por marcar</span>
                                     </div>
                                   )}
                                 </div>
-                              </div>
+                              )}
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-end gap-2.5">
                               {isCompleted && (
-                                <Badge className="bg-green-600 text-white shadow-lg">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                <Badge className="bg-green-600 text-white shadow-lg text-sm px-3 py-1.5">
+                                  <CheckCircle className="w-4 h-4 mr-1.5" />
                                   Efetuada
                                 </Badge>
                               )}
                               {hasPending && !isCompleted && (
-                                <Badge className="bg-amber-500 text-white animate-pulse shadow-lg">
-                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                <Badge className="bg-amber-500 text-white animate-pulse shadow-lg text-sm px-3 py-1.5">
+                                  <AlertCircle className="w-4 h-4 mr-1.5" />
                                   Pendente
                                 </Badge>
                               )}
-                              <Badge className={`text-base px-4 py-2 font-bold shadow-md ${
+                              <Badge className={`text-lg px-6 py-2.5 font-bold shadow-lg ${
                                 isFull ? 'bg-red-500 text-white' : 
                                 (lesson.booked_spots || 0) > 3 ? 'bg-amber-500 text-white' :
-                                'bg-[#4B6382] text-white'
+                                'bg-[#B8956A] text-white'
                               }`}>
-                                <Users className="w-4 h-4 mr-2" />
+                                <Users className="w-5 h-5 mr-2" />
                                 {lesson.booked_spots || 0}/6
                               </Badge>
                             </div>
                           </div>
 
                           {lessonBookings.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-stone-200">
-                              <div className="flex items-center justify-between mb-3">
-                                <p className="text-sm font-bold text-[#2C3E1F] flex items-center gap-2">
-                                  <Users className="w-4 h-4 text-[#B8956A]" />
+                            <div className="mt-5 pt-5 border-t-2 border-stone-200">
+                              <div className="flex items-center justify-between mb-4">
+                                <p className="text-base font-bold text-[#2C3E1F] flex items-center gap-2">
+                                  <Users className="w-5 h-5 text-[#B8956A]" />
                                   Reservas ({lessonBookings.length})
                                 </p>
                               </div>
-                              <div className="space-y-2">
+                              <div className="space-y-3">
                                 {lessonBookings.length > 0 ? lessonBookings.map((booking) => (
-                                  <div key={booking.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
-                                    booking.status === 'pending' ? 'bg-amber-50 border-amber-200' :
-                                    booking.status === 'approved' ? 'bg-[#4B6382]/10 border-[#4B6382]/30' :
+                                  <div key={booking.id} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all shadow-sm hover:shadow-md ${
+                                    booking.status === 'pending' ? 'bg-amber-50 border-amber-300' :
+                                    booking.status === 'approved' ? 'bg-[#B8956A]/10 border-[#B8956A]/30' :
                                     'bg-stone-50 border-stone-200'
                                   }`}>
-                                    <div className="flex items-center gap-3">
-                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                                    <div className="flex items-center gap-4">
+                                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg shadow-md ${
                                         booking.status === 'pending' ? 'bg-amber-500' :
-                                        booking.status === 'approved' ? 'bg-[#4B6382]' :
+                                        booking.status === 'approved' ? 'bg-[#B8956A]' :
                                         booking.status === 'rejected' ? 'bg-red-500' :
                                         'bg-stone-400'
                                       }`}>
                                         {booking.client_name?.charAt(0) || '?'}
                                       </div>
                                       <div>
-                                        <p className="font-semibold text-sm text-[#2C3E1F]">{booking.client_name}</p>
-                                        <p className="text-xs text-stone-500">{booking.client_email}</p>
+                                        <p className="font-bold text-base text-[#2C3E1F]">{booking.client_name}</p>
+                                        <p className="text-sm text-stone-600">{booking.client_email}</p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -972,9 +969,9 @@ export default function AdminLessons() {
                                           </Button>
                                         </>
                                       ) : (
-                                        <div className="flex items-center gap-2">
-                                          <Badge className={`font-semibold px-3 py-1 ${
-                                            booking.status === 'approved' ? 'bg-[#4B6382] text-white' :
+                                        <div className="flex items-center gap-2.5">
+                                          <Badge className={`font-bold px-4 py-1.5 text-sm shadow-sm ${
+                                            booking.status === 'approved' ? 'bg-[#B8956A] text-white' :
                                             booking.status === 'rejected' ? 'bg-red-500 text-white' :
                                             'bg-stone-400 text-white'
                                           }`}>
@@ -996,9 +993,9 @@ export default function AdminLessons() {
 
                                                if (hasMarkedAttendance === 'present') {
                                                  return (
-                                                   <div className="flex items-center gap-1">
-                                                     <Badge className="bg-green-600 text-white px-2 py-1 text-xs">
-                                                       <UserCheck className="w-3 h-3 mr-1" />
+                                                   <div className="flex items-center gap-1.5">
+                                                     <Badge className="bg-green-600 text-white px-3 py-1.5 text-sm font-bold shadow-sm">
+                                                       <UserCheck className="w-4 h-4 mr-1.5" />
                                                        Presente
                                                      </Badge>
                                                      {canEditAttendance && (
@@ -1023,10 +1020,10 @@ export default function AdminLessons() {
                                                  );
                                                } else if (hasMarkedAttendance === 'absent') {
                                                  return (
-                                                   <div className="flex flex-col gap-1">
-                                                     <div className="flex items-center gap-1">
-                                                       <Badge className="bg-red-500 text-white px-2 py-1 text-xs">
-                                                         <UserX className="w-3 h-3 mr-1" />
+                                                   <div className="flex flex-col gap-1.5">
+                                                     <div className="flex items-center gap-1.5">
+                                                       <Badge className="bg-red-500 text-white px-3 py-1.5 text-sm font-bold shadow-sm">
+                                                         <UserX className="w-4 h-4 mr-1.5" />
                                                          Ausente
                                                        </Badge>
                                                        {canEditAttendance && (
@@ -1049,42 +1046,44 @@ export default function AdminLessons() {
                                                        )}
                                                      </div>
                                                      {booking.absence_compensable !== undefined && (
-                                                       <Badge className={`px-2 py-1 text-xs ${booking.absence_compensable ? 'bg-blue-500 text-white' : 'bg-stone-500 text-white'}`}>
-                                                         {booking.absence_compensable ? 'Compensável' : 'Não Compensável'}
+                                                       <Badge className={`px-3 py-1 text-xs font-bold shadow-sm ${booking.absence_compensable ? 'bg-blue-500 text-white' : 'bg-stone-500 text-white'}`}>
+                                                         {booking.absence_compensable ? '✓ Compensável' : 'Não Compensável'}
                                                        </Badge>
                                                      )}
-                                                   </div>
-                                                 );
-                                               } else {
-                                                 return canEditAttendance ? (
-                                                   <div className="flex gap-1">
+                                                     </div>
+                                                     );
+                                                     } else {
+                                                     return canEditAttendance ? (
+                                                     <div className="flex gap-2">
                                                      <Button
                                                        size="sm"
                                                        variant="outline"
-                                                       className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
+                                                       className="h-8 px-3 text-sm border-green-500 text-green-600 hover:bg-green-50 font-medium shadow-sm"
                                                        onClick={() => markAttendanceMutation.mutate({ bookingId: booking.id, attendance: 'present' })}
                                                      >
-                                                       <UserCheck className="w-3 h-3" />
+                                                       <UserCheck className="w-4 h-4 mr-1" />
+                                                       Presente
                                                      </Button>
                                                      <Button
                                                        size="sm"
                                                        variant="outline"
-                                                       className="h-6 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
+                                                       className="h-8 px-3 text-sm border-red-500 text-red-600 hover:bg-red-50 font-medium shadow-sm"
                                                        onClick={() => {
                                                          setSelectedAbsentBooking(booking.id);
                                                          setShowCompensableDialog(true);
                                                        }}
                                                      >
-                                                       <UserX className="w-3 h-3" />
+                                                       <UserX className="w-4 h-4 mr-1" />
+                                                       Ausente
                                                      </Button>
-                                                   </div>
-                                                 ) : (
-                                                   <Badge className="bg-stone-400 text-white px-2 py-1 text-xs">
+                                                     </div>
+                                                     ) : (
+                                                     <Badge className="bg-stone-400 text-white px-3 py-1.5 text-sm shadow-sm">
                                                      Prazo expirado
-                                                   </Badge>
-                                                 );
-                                               }
-                                             })()}
+                                                     </Badge>
+                                                     );
+                                                     }
+                                                     })()}
                                            </div>
                                           )}
                                         </div>

@@ -50,7 +50,6 @@
 import AdminAI from './pages/AdminAI';
 import AdminBlockedSlots from './pages/AdminBlockedSlots';
 import AdminContent from './pages/AdminContent';
-import AdminDashboard from './pages/AdminDashboard';
 import AdminEmails from './pages/AdminEmails';
 import AdminGallery from './pages/AdminGallery';
 import AdminImages from './pages/AdminImages';
@@ -74,6 +73,7 @@ import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import UserPreferences from './pages/UserPreferences';
+import AdminDashboard from './pages/AdminDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -81,7 +81,6 @@ export const PAGES = {
     "AdminAI": AdminAI,
     "AdminBlockedSlots": AdminBlockedSlots,
     "AdminContent": AdminContent,
-    "AdminDashboard": AdminDashboard,
     "AdminEmails": AdminEmails,
     "AdminGallery": AdminGallery,
     "AdminImages": AdminImages,
@@ -105,6 +104,7 @@ export const PAGES = {
     "ProductDetail": ProductDetail,
     "Services": Services,
     "UserPreferences": UserPreferences,
+    "AdminDashboard": AdminDashboard,
 }
 
 export const pagesConfig = {
