@@ -124,7 +124,7 @@ const LayoutContent = ({ children, currentPageName }) => {
     const recentTaps = [...logoTaps, now].filter(t => now - t < 2000);
     setLogoTaps(recentTaps);
     
-    if (recentTaps.length >= 5) {
+    if (recentTaps.length >= 7) {
       sessionStorage.setItem('admin_keyboard_access', 'true');
       window.location.href = createPageUrl('AdminLogin');
       setLogoTaps([]);
