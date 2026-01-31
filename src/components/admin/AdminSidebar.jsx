@@ -56,7 +56,7 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
             {collapsed && (
               <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-md p-1 mx-auto">
                 <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/ca1c58c7c_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/17a920d2a_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                   alt="Logo" 
                   className="w-full h-full object-contain"
                 />
