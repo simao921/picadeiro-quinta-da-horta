@@ -162,12 +162,46 @@ h1, h2, h3, h4, h5, h6 {
 /* Performance optimizations */
 img {
   content-visibility: auto;
+  will-change: auto;
 }
 
 /* Better image rendering */
 img {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+}
+
+/* GPU acceleration for smooth animations */
+.transform,
+.transition,
+[class*="animate"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize repaints */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Melhor responsividade */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1025px) {
+  html {
+    font-size: 16px;
+  }
 }
 
 /* Smooth font rendering */

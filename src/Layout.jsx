@@ -20,7 +20,7 @@ import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 import CookieBanner from '@/components/CookieBanner';
 
 
-const LayoutContent = ({ children, currentPageName }) => {
+const LayoutContent = React.memo(({ children, currentPageName }) => {
   const { t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -84,11 +84,17 @@ const LayoutContent = ({ children, currentPageName }) => {
 
   useEffect(() => {
     let ticking = false;
+    let lastScroll = 0;
     const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      // Só atualiza se mudou significativamente
+      if (Math.abs(currentScroll - lastScroll) < 10 && ticking) return;
+      
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 50);
-          setShowScrollTop(window.scrollY > 400);
+          setIsScrolled(currentScroll > 50);
+          setShowScrollTop(currentScroll > 400);
+          lastScroll = currentScroll;
           ticking = false;
         });
         ticking = true;
@@ -493,9 +499,9 @@ const LayoutContent = ({ children, currentPageName }) => {
       <CookieBanner />
       </div>
       );
-      };
+      });
 
-const Layout = ({ children, currentPageName }) => {
+      const Layout = ({ children, currentPageName }) => {
   return (
     <LanguageProvider>
       <LayoutContent children={children} currentPageName={currentPageName} />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
-export default function CookieBanner() {
+const CookieBanner = React.memo(() => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
@@ -56,4 +56,8 @@ export default function CookieBanner() {
       </div>
     </div>
   );
-}
+});
+
+CookieBanner.displayName = 'CookieBanner';
+
+export default CookieBanner;
