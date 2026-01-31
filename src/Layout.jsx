@@ -17,6 +17,7 @@ import { LanguageProvider, useLanguage } from '@/components/LanguageProvider';
 import LanguageSelector from '@/components/LanguageSelector';
 import LazyImage from '@/components/ui/LazyImage';
 import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
+import CookieBanner from '@/components/CookieBanner';
 
 
 const LayoutContent = ({ children, currentPageName }) => {
@@ -488,10 +489,11 @@ const LayoutContent = ({ children, currentPageName }) => {
         </button>
       )}
 
-
-    </div>
-  );
-};
+      {/* Cookie Banner */}
+      <CookieBanner />
+      </div>
+      );
+      };
 
 const Layout = ({ children, currentPageName }) => {
   return (
