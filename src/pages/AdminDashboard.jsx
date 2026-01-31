@@ -108,9 +108,9 @@ export default function AdminDashboard() {
     <AdminLayout currentPage="AdminDashboard">
       <div className="space-y-6">
         {/* Header */}
-        <div className="mb-2">
-          <h1 className="text-3xl font-bold text-[#2C3E1F] tracking-tight">Dashboard</h1>
-          <p className="text-stone-600 mt-1">Visão geral do Picadeiro Quinta da Horta</p>
+        <div>
+          <h1 className="text-2xl font-bold text-[#2C3E1F]">Dashboard</h1>
+          <p className="text-stone-500">Visão geral do Picadeiro Quinta da Horta</p>
         </div>
 
         {/* Notifications Banner */}
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] rounded-xl p-5 text-white shadow-lg border border-[#B8956A]/20"
+            className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] rounded-xl p-4 text-white shadow-lg"
           >
             <div className="flex items-center gap-3">
               <Bell className="w-6 h-6" />
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {stats.map((stat, index) => (
             <Link key={stat.label} to={createPageUrl(stat.link)}>
               <StatCard {...stat} delay={index * 0.05} />
