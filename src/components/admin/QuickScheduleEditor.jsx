@@ -63,8 +63,13 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
       const studentKey = booking.client_email;
       console.log('StudentKey:', studentKey);
       
-      // Encontrar o aluno
-      let student = allStudents.find(s => s.email === studentKey || s.phone === studentKey);
+      // Encontrar o aluno - pode ser email, phone OU id do PicadeiroStudent
+      let student = allStudents.find(s => 
+        s.email === studentKey || 
+        s.phone === studentKey || 
+        s.id === studentKey ||
+        `aluno-${s.name?.toLowerCase().replace(/\s+/g, '-')}` === studentKey
+      );
       let isPicadeiro = !!student;
       
       if (!student) {
@@ -75,7 +80,7 @@ export default function QuickScheduleEditor({ booking, lesson, open, onClose }) 
       console.log('isPicadeiro:', isPicadeiro);
 
       if (!student) {
-        toast.error('Aluno não encontrado');
+        toast.error('Aluno não encontrado - chave: ' + studentKey);
         throw new Error('Aluno não encontrado');
       }
 
