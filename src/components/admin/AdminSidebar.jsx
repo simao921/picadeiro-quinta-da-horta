@@ -40,9 +40,9 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
           <div className="flex items-center justify-between">
             {!collapsed && (
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-md p-1">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-md p-1">
                   <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/bf79de780_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/cf6d978da_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                     alt="Logo" 
                     className="w-full h-full object-contain"
                   />
@@ -54,9 +54,9 @@ export default function AdminSidebar({ currentPage, collapsed, setCollapsed }) {
               </div>
             )}
             {collapsed && (
-              <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-md p-1 mx-auto">
+              <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-md p-1 mx-auto">
                 <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/bf79de780_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/cf6d978da_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG" 
                   alt="Logo" 
                   className="w-full h-full object-contain"
                 />
