@@ -26,7 +26,7 @@ const LayoutContent = ({ children, currentPageName }) => {
   const [user, setUser] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const [logoUrl, setLogoUrl] = useState('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/cf6d978da_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG');
+  const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/cf6d978da_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG';
 
   const isAdminPage = currentPageName?.startsWith('Admin');
   const isDeveloperPage = currentPageName === 'DeveloperPanel';
@@ -118,10 +118,7 @@ const LayoutContent = ({ children, currentPageName }) => {
 
 
 
-  useEffect(() => {
-    // Load logo image
-    getSiteImage('logo', DEFAULT_IMAGES.logo).then(setLogoUrl);
-  }, []);
+
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
