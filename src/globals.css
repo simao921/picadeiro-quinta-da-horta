@@ -1,0 +1,274 @@
+css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 30 30% 55%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 30 30% 55%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 30 30% 55%;
+    --radius: 0.75rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 0 0% 10%;
+      --foreground: 0 0% 98%;
+      --card: 0 0% 12%;
+      --card-foreground: 0 0% 98%;
+      --popover: 0 0% 12%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 30 30% 55%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 0 0% 18%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 0 0% 18%;
+      --muted-foreground: 0 0% 65%;
+      --accent: 30 30% 55%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 0 0% 25%;
+      --input: 0 0% 25%;
+      --ring: 30 30% 55%;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Improve text rendering */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+  
+  p {
+    text-wrap: pretty;
+  }
+  
+  /* Enhanced buttons */
+  button, .btn {
+    @apply transition-all duration-300;
+  }
+  
+  button:hover:not(:disabled), .btn:hover:not(:disabled) {
+    @apply shadow-lg transform -translate-y-0.5;
+  }
+  
+  button:active:not(:disabled), .btn:active:not(:disabled) {
+    @apply transform translate-y-0;
+  }
+  
+  button:disabled, .btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+  
+  /* Focus styles for accessibility */
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    @apply outline-none ring-2 ring-[#B8956A] ring-offset-2;
+  }
+  
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Mobile native optimizations */
+  body {
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button, a, input, textarea, select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Prevent text selection on interactive elements */
+  nav, header, button, a[role="button"], [role="tab"], .tab-trigger {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Safe area support for iOS/Android */
+  @supports (padding: env(safe-area-inset-top)) {
+    .safe-top {
+      padding-top: env(safe-area-inset-top);
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+  
+  /* Smooth scrolling with fallback */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  @supports (scroll-behavior: smooth) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+/* Custom scrollbar - mais confortável */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(245, 245, 245, 0.5);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(184, 149, 106, 0.6), rgba(139, 115, 85, 0.6));
+  border-radius: 6px;
+  border: 3px solid rgba(245, 245, 245, 0.5);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(184, 149, 106, 0.8), rgba(139, 115, 85, 0.8));
+  border: 2px solid rgba(245, 245, 245, 0.5);
+}
+
+/* Animações suaves */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Melhorias para inputs */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.1);
+  border-color: #B8956A;
+}
+
+/* Melhor feedback visual em botões */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Reduzir strain visual */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Espaçamento confortável para leitura */
+p, li, td {
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+/* Performance optimizations */
+img {
+  content-visibility: auto;
+  will-change: auto;
+}
+
+/* Better image rendering */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* GPU acceleration for smooth animations */
+.transform,
+.transition,
+[class*="animate"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize repaints */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Melhor responsividade */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1025px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Smooth font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Better transitions */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
