@@ -545,32 +545,27 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
                                       <Button
                                         size="sm"
                                         variant="ghost"
-                                        className="h-6 px-2 text-xs"
+                                        className="h-6 px-2 text-xs hover:bg-green-50"
                                         onClick={() => toggleAbsent.mutate({ id: entry.id, absent: false })}
                                         title="Marcar como presente"
                                       >
-                                        ✕
+                                        ✓ Presente
                                       </Button>
                                     </div>
                                   ) : (
-                                    <div className="flex gap-1">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-7 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
-                                        onClick={() => toggleAbsent.mutate({ id: entry.id, absent: false })}
-                                      >
+                                    <div className="flex items-center gap-1">
+                                      <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-bold">
                                         <UserCheck className="w-3 h-3 mr-1" />
                                         Presente
-                                      </Button>
+                                      </Badge>
                                       <Button
-                                        variant="outline"
                                         size="sm"
-                                        className="h-7 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
+                                        variant="ghost"
+                                        className="h-6 px-2 text-xs hover:bg-red-50"
                                         onClick={() => toggleAbsent.mutate({ id: entry.id, absent: true })}
+                                        title="Marcar como ausente"
                                       >
-                                        <UserX className="w-3 h-3 mr-1" />
-                                        Ausente
+                                        ✕ Ausente
                                       </Button>
                                     </div>
                                   )}
