@@ -749,14 +749,19 @@ Estrutura no formato JSON especificado.
                     const comp = competitions.find(c => c.id === extractedData.competitionId);
                     const mod = comp?.modality_id ? modalities.find(m => m.id === comp.modality_id) : null;
                     const modExercises = getModalityExercises(mod);
+                    const baseScoreValue = toSafeNumber(result.base_score, 0);
+                    const technicalScoreValue = toSafeNumber(result.technical_score, 0);
+                    const artisticScoreValue = toSafeNumber(result.artistic_score, 0);
+                    const penaltiesValue = toSafeNumber(result.penalties, 0);
+                    const bonusValue = toSafeNumber(result.bonus, 0);
                     const calculated = calculateFinalScore(comp, mod, {
-                       base_score: result.base_score,
-                       technical_score: result.technical_score,
-                       artistic_score: result.artistic_score,
-                       penalties: result.penalties || 0,
-                       bonus: result.bonus || 0,
-                       final_score: result.final_score,
-                       percentage: result.percentage,
+                       base_score: baseScoreValue,
+                       technical_score: technicalScoreValue,
+                       artistic_score: artisticScoreValue,
+                       penalties: penaltiesValue,
+                       bonus: bonusValue,
+                       final_score: toSafeNumber(result.final_score, 0),
+                       percentage: toSafeNumber(result.percentage, 0),
                        exercise_scores: result.exercise_scores || {}
                      });
 
@@ -781,34 +786,34 @@ Estrutura no formato JSON especificado.
                             )}
                           </div>
                           <div className="space-y-1">
-                            {result.base_score > 0 && (
+                            {baseScoreValue > 0 && (
                               <div className="flex justify-between text-xs">
                                 <span className="text-stone-600">Base:</span>
-                                <span>{result.base_score}</span>
+                                <span>{baseScoreValue}</span>
                               </div>
                             )}
-                            {result.technical_score > 0 && (
+                            {technicalScoreValue > 0 && (
                               <div className="flex justify-between text-xs">
                                 <span className="text-stone-600">Técnica:</span>
-                                <span>{result.technical_score}</span>
+                                <span>{technicalScoreValue}</span>
                               </div>
                             )}
-                            {result.artistic_score > 0 && (
+                            {artisticScoreValue > 0 && (
                               <div className="flex justify-between text-xs">
                                 <span className="text-stone-600">Artística:</span>
-                                <span>{result.artistic_score}</span>
+                                <span>{artisticScoreValue}</span>
                               </div>
                             )}
-                            {result.penalties > 0 && (
+                            {penaltiesValue > 0 && (
                               <div className="flex justify-between text-xs text-red-600">
                                 <span>Penalizações:</span>
-                                <span>-{result.penalties}</span>
+                                <span>-{penaltiesValue}</span>
                               </div>
                             )}
-                            {result.bonus > 0 && (
+                            {bonusValue > 0 && (
                               <div className="flex justify-between text-xs text-green-700">
                                 <span>Bonificação:</span>
-                                <span>+{result.bonus}%</span>
+                                <span>+{bonusValue}%</span>
                               </div>
                             )}
                             <div className="border-t pt-1 mt-1">
