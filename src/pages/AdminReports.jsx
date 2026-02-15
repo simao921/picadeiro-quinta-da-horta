@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { 
   TrendingUp, Euro, ShoppingBag, 
-  Calendar, Download, FileText, UserCheck, UserX
+  Calendar, Download, FileText
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { pt } from 'date-fns/locale';

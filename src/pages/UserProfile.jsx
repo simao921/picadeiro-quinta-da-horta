@@ -9,12 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   User, Calendar, Euro, History, MessageSquare, 
   Mail, Phone, MapPin, Edit2, Save, X, CheckCircle2,
-  Clock, AlertCircle, Ban, FileText, Send
+  Clock, AlertCircle, Ban, Send
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Euro, Plus, AlertCircle } from 'lucide-react';
+import { Euro, Plus, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import NewBookingForm from '@/components/bookings/NewBookingForm';
 import PaymentsSection from '@/components/bookings/PaymentsSection';

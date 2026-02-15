@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Image as ImageIcon, Upload, Trash2, Edit, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { getSiteImage, clearImageCache, DEFAULT_IMAGES } from '@/components/lib/siteImages';
+import { clearImageCache, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 
 const imageKeys = [
   { key: 'hero_home', section: 'Home', description: 'Imagem de fundo do Hero da página inicial' },

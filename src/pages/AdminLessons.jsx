@@ -25,9 +25,9 @@ import {
 import { 
   Plus, CalendarDays, Clock, Users, 
   CheckCircle, XCircle, Loader2, AlertCircle, Search,
-  UserCheck, UserX, Eye, EyeOff, Edit2, Filter, ChevronLeft, ChevronRight
+  UserCheck, UserX, Edit2, Filter, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { toast } from 'sonner';
 import QuickScheduleEditor from '@/components/admin/QuickScheduleEditor';

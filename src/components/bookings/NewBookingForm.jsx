@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { 
-  CalendarDays, Clock, Users, Euro, 
+  CalendarDays, Clock, 
   CheckCircle, Loader2, AlertCircle, Camera
 } from 'lucide-react';
 import {

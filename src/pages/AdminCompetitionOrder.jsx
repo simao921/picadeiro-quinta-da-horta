@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { GripVertical, Clock, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles } from 'lucide-react';
+import { GripVertical, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';

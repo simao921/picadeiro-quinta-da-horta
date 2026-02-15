@@ -5,7 +5,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Star, Search, AlertCircle, CheckCircle2, MessageSquare, Calendar, Clock } from 'lucide-react';
+import { Star, Search, AlertCircle, MessageSquare, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
