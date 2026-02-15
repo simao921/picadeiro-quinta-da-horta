@@ -33,6 +33,7 @@ const menuItems = [
   { icon: FileText, label: 'Ordem de Entrada', page: 'AdminCompetitionOrder' },
   { icon: FileText, label: 'Relatórios IA', page: 'AdminCompetitionReports' },
   { icon: BarChart3, label: 'Rankings', page: 'AdminCompetitionRankings' },
+  { icon: Euro, label: 'Rel. Financeiro', page: 'AdminFinancialReport' },
   { icon: Settings, label: 'Definições', page: 'AdminSettings' },
 ];
 
