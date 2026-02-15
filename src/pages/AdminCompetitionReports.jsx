@@ -46,6 +46,16 @@ const getModalityExercises = (modality) => {
   }));
 };
 
+const toSafeNumber = (value, fallback = 0) => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+  if (typeof value === 'string') {
+    const normalized = value.trim().replace(/\s/g, '').replace(',', '.');
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+};
+
 export default function AdminCompetitionReports() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showManualDialog, setShowManualDialog] = useState(false);
@@ -133,8 +143,14 @@ export default function AdminCompetitionReports() {
           coefficients: {
             type: "object",
             properties: {
-              technical_percentage: { type: "number", description: "Peso percentual da nota técnica (ex: 70)" },
-              qualitative_percentage: { type: "number", description: "Peso percentual da nota qualitativa/artística (ex: 30)" }
+              technical_percentage: {
+                anyOf: [{ type: "number" }, { type: "string" }],
+                description: "Peso percentual da nota técnica (ex: 70)"
+              },
+              qualitative_percentage: {
+                anyOf: [{ type: "number" }, { type: "string" }],
+                description: "Peso percentual da nota qualitativa/artística (ex: 30)"
+              }
             },
             description: "Pesos de cálculo identificados no regulamento/protocolo"
           },
@@ -148,14 +164,14 @@ export default function AdminCompetitionReports() {
                 horse_name: { type: "string", description: "Nome do cavalo" },
                 federal_number: { type: "string", description: "Número federado" },
                 club: { type: "string", description: "Clube/Associação" },
-                base_score: { type: "number", description: "Pontuação base inicial" },
-                final_score: { type: "number", description: "Pontuação final" },
-                percentage: { type: "number", description: "Percentagem" },
-                penalties: { type: "number", description: "Penalizações" },
-                bonus: { type: "number", description: "Bonificação em percentagem (se aplicável)" },
+                base_score: { anyOf: [{ type: "number" }, { type: "string" }], description: "Pontuação base inicial" },
+                final_score: { anyOf: [{ type: "number" }, { type: "string" }], description: "Pontuação final" },
+                percentage: { anyOf: [{ type: "number" }, { type: "string" }], description: "Percentagem" },
+                penalties: { anyOf: [{ type: "number" }, { type: "string" }], description: "Penalizações" },
+                bonus: { anyOf: [{ type: "number" }, { type: "string" }], description: "Bonificação em percentagem (se aplicável)" },
                 time: { type: "string", description: "Tempo (se aplicável)" },
-                technical_score: { type: "number", description: "Nota técnica (se aplicável)" },
-                artistic_score: { type: "number", description: "Nota artística (se aplicável)" },
+                technical_score: { anyOf: [{ type: "number" }, { type: "string" }], description: "Nota técnica (se aplicável)" },
+                artistic_score: { anyOf: [{ type: "number" }, { type: "string" }], description: "Nota artística (se aplicável)" },
                 judge_name: { type: "string", description: "Nome do juiz" },
                 ...(hasExercises && {
                   exercise_scores: {
@@ -336,11 +352,11 @@ Estrutura no formato JSON especificado.
           }))
         : [];
 
-      const extractedTechnicalPercentage = Number(extracted?.coefficients?.technical_percentage);
-      const extractedQualitativePercentage = Number(extracted?.coefficients?.qualitative_percentage);
+      const extractedTechnicalPercentage = toSafeNumber(extracted?.coefficients?.technical_percentage, 70);
+      const extractedQualitativePercentage = toSafeNumber(extracted?.coefficients?.qualitative_percentage, 30);
       const normalizedCoefficients = {
-        technical_percentage: Number.isFinite(extractedTechnicalPercentage) ? extractedTechnicalPercentage : 70,
-        qualitative_percentage: Number.isFinite(extractedQualitativePercentage) ? extractedQualitativePercentage : 30
+        technical_percentage: extractedTechnicalPercentage,
+        qualitative_percentage: extractedQualitativePercentage
       };
 
       // Se a IA identificou exercícios, atualizar a modalidade IMEDIATAMENTE
@@ -414,16 +430,20 @@ Estrutura no formato JSON especificado.
 
       // Calcular pontuações finais se houver modalidade com fórmula
       const results = extractedData.data.results.map(r => {
+       const normalizedExerciseScores = Object.fromEntries(
+          Object.entries(r.exercise_scores || {}).map(([k, v]) => [k, toSafeNumber(v, 0)])
+        );
+
        const calculated = calculateFinalScore(competition, modality, {
-          base_score: r.base_score,
-          technical_score: r.technical_score,
-          artistic_score: r.artistic_score,
-          penalties: r.penalties || 0,
-          bonus: r.bonus || 0,
-          final_score: r.final_score,
-          percentage: r.percentage,
+          base_score: toSafeNumber(r.base_score, 0),
+          technical_score: toSafeNumber(r.technical_score, 0),
+          artistic_score: toSafeNumber(r.artistic_score, 0),
+          penalties: toSafeNumber(r.penalties, 0),
+          bonus: toSafeNumber(r.bonus, 0),
+          final_score: toSafeNumber(r.final_score, 0),
+          percentage: toSafeNumber(r.percentage, 0),
           time: r.time,
-          exercise_scores: r.exercise_scores || {}
+          exercise_scores: normalizedExerciseScores
         });
 
         const notesArray = [];
@@ -431,20 +451,20 @@ Estrutura no formato JSON especificado.
         // Adicionar exercícios às notas se existirem
         if (r.exercise_scores && Object.keys(r.exercise_scores).length > 0) {
           const exercises = getModalityExercises(modality);
-          Object.entries(r.exercise_scores).forEach(([exNum, exScore]) => {
+          Object.entries(normalizedExerciseScores).forEach(([exNum, exScore]) => {
             const ex = exercises.find(e => String(e.number) === String(exNum));
             notesArray.push(
               `Ex${exNum}: ${exScore}${ex?.coefficient > 1 ? `×${ex.coefficient}` : ''}${ex?.max_points ? `/${ex.max_points}` : ''}`
             );
           });
         } else {
-          if (r.base_score) notesArray.push(`Base: ${r.base_score}`);
-          if (r.technical_score) notesArray.push(`Técnica: ${r.technical_score}`);
-          if (r.artistic_score) notesArray.push(`Artística: ${r.artistic_score}`);
+          if (toSafeNumber(r.base_score, 0)) notesArray.push(`Base: ${toSafeNumber(r.base_score, 0)}`);
+          if (toSafeNumber(r.technical_score, 0)) notesArray.push(`Técnica: ${toSafeNumber(r.technical_score, 0)}`);
+          if (toSafeNumber(r.artistic_score, 0)) notesArray.push(`Artística: ${toSafeNumber(r.artistic_score, 0)}`);
         }
         
         if (calculated.calculation_details) notesArray.push(`Cálculo: ${calculated.calculation_details}`);
-        if (r.bonus > 0) notesArray.push(`Bonificação: ${r.bonus}%`);
+        if (toSafeNumber(r.bonus, 0) > 0) notesArray.push(`Bonificação: ${toSafeNumber(r.bonus, 0)}%`);
         if (r.judge_name) notesArray.push(`Juiz: ${r.judge_name}`);
         if (r.club) notesArray.push(`Clube: ${r.club}`);
 
@@ -454,7 +474,7 @@ Estrutura no formato JSON especificado.
           horse_name: r.horse_name,
           score: calculated.final_score,
           percentage: calculated.percentage,
-          penalties: r.penalties || 0,
+          penalties: toSafeNumber(r.penalties, 0),
           time: r.time || '',
           position: r.position,
           notes: notesArray.filter(Boolean).join(' | ')
