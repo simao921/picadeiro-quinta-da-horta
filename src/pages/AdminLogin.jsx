@@ -97,7 +97,7 @@ export default function AdminLogin() {
             </Button>
 
             <p className="text-center text-xs text-stone-400">
-              Atalho rápido: CTRL + SHIFT + 6
+              Atalho rápido: CTRL + SHIFT
             </p>
           </CardContent>
         </Card>
