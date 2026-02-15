@@ -7,8 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator } from 'lucide-react';
+import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { calculateFinalScore, calculateRankings } from '@/components/lib/scoreCalculator';
@@ -75,6 +79,11 @@ export default function AdminCompetitionReports() {
   });
 
   const queryClient = useQueryClient();
+
+  const { data: results = [] } = useQuery({
+    queryKey: ['competition-results'],
+    queryFn: () => base44.entities.CompetitionResult.list()
+  });
 
   const { data: competitions = [] } = useQuery({
     queryKey: ['competitions'],
@@ -518,6 +527,116 @@ Estrutura no formato JSON especificado.
     return comp?.name || 'Prova desconhecida';
   };
 
+  const generateResultsPDF = () => {
+    if (!selectedCompetition) {
+      toast.error('Selecione uma competição');
+      return;
+    }
+
+    const comp = competitions.find(c => c.id === selectedCompetition);
+    const compResults = results.filter(r => r.competition_id === selectedCompetition)
+      .sort((a, b) => (a.position || 999) - (b.position || 999));
+
+    if (compResults.length === 0) {
+      toast.error('Nenhum resultado disponível');
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.text('RESULTADOS FINAIS', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(16);
+    doc.text(comp.name, 105, 30, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.text(`Data: ${format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}`, 105, 40, { align: 'center' });
+    if (comp.location) {
+      doc.text(`Local: ${comp.location}`, 105, 45, { align: 'center' });
+    }
+
+    let y = 60;
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Pos', 15, y);
+    doc.text('Cavaleiro', 35, y);
+    doc.text('Cavalo', 100, y);
+    doc.text('Pontos', 150, y);
+    doc.text('%', 175, y);
+    
+    doc.line(10, y + 2, 200, y + 2);
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    y += 10;
+
+    compResults.forEach((result) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.text((result.position || '-').toString(), 15, y);
+      doc.text(result.rider_name, 35, y);
+      doc.text(result.horse_name, 100, y);
+      doc.text((result.score || 0).toFixed(2), 150, y);
+      doc.text((result.percentage || 0).toFixed(2) + '%', 175, y);
+      
+      y += 8;
+    });
+
+    doc.setFontSize(8);
+    doc.text(`Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, 285, { align: 'center' });
+    doc.text('Picadeiro Quinta da Horta', 105, 290, { align: 'center' });
+
+    doc.save(`resultados_${comp.name.replace(/\s+/g, '_')}.pdf`);
+    toast.success('PDF de resultados gerado!');
+  };
+
+  const generateResultsExcel = () => {
+    if (!selectedCompetition) {
+      toast.error('Selecione uma competição');
+      return;
+    }
+
+    const comp = competitions.find(c => c.id === selectedCompetition);
+    const compResults = results.filter(r => r.competition_id === selectedCompetition)
+      .sort((a, b) => (a.position || 999) - (b.position || 999));
+
+    if (compResults.length === 0) {
+      toast.error('Nenhum resultado disponível');
+      return;
+    }
+
+    const data = compResults.map((result) => ({
+      'Posição': result.position || '-',
+      'Cavaleiro': result.rider_name,
+      'Cavalo': result.horse_name,
+      'Pontuação': (result.score || 0).toFixed(2),
+      'Percentagem': (result.percentage || 0).toFixed(2) + '%',
+      'Penalizações': (result.penalties || 0).toFixed(2),
+      'Notas': result.notes || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Resultados');
+
+    worksheet['!cols'] = [
+      { wch: 8 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 40 }
+    ];
+
+    XLSX.writeFile(workbook, `resultados_${comp.name.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyyyy')}.xlsx`);
+    toast.success('Excel de resultados gerado!');
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -527,11 +646,38 @@ Estrutura no formato JSON especificado.
             <p className="text-stone-600 mt-1">Upload e processamento automático de resultados com IA</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setShowManualDialog(true)} variant="outline">
+            <div>
+              <Label className="text-xs text-stone-600 mb-1">Selecionar Prova</Label>
+              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Escolha a prova" />
+                </SelectTrigger>
+                <SelectContent>
+                  {competitions.map(comp => (
+                    <SelectItem key={comp.id} value={comp.id}>
+                      {comp.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedCompetition && results.filter(r => r.competition_id === selectedCompetition).length > 0 && (
+              <>
+                <Button onClick={generateResultsPDF} variant="outline" className="border-red-500 text-red-700 hover:bg-red-50 mt-5">
+                  <Download className="w-4 h-4 mr-2" />
+                  PDF
+                </Button>
+                <Button onClick={generateResultsExcel} variant="outline" className="border-green-500 text-green-700 hover:bg-green-50 mt-5">
+                  <Download className="w-4 h-4 mr-2" />
+                  Excel
+                </Button>
+              </>
+            )}
+            <Button onClick={() => setShowManualDialog(true)} variant="outline" className="mt-5">
               <Edit className="w-4 h-4 mr-2" />
               Registar Manual
             </Button>
-            <Button onClick={() => setShowUploadDialog(true)} className="bg-[#2D2D2D]">
+            <Button onClick={() => setShowUploadDialog(true)} className="bg-[#2D2D2D] mt-5">
               <Upload className="w-4 h-4 mr-2" />
               Upload Protocolo
             </Button>
