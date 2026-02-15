@@ -65,17 +65,18 @@ export default function ExerciseScoreForm({
       }
     });
 
-    const withPenalties = Math.max(0, total - (penalties || 0));
-    const percentageBase = maxTotal > 0 ? (withPenalties / maxTotal) * 100 : 0;
+    // Penalizações são em %, aplicadas à percentagem, não aos pontos
+    const percentageBase = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
+    const percentageFinal = Math.max(0, percentageBase - (penalties || 0) + (bonus || 0));
     
     return {
       subtotal: total,
       max_total: maxTotal,
       penalties: penalties || 0,
       bonus: bonus || 0,
-      final: withPenalties,
+      final: total, // Pontuação final = total de pontos (sem subtrair penalizações)
       details: details.join(' | '),
-      percentage: Math.max(0, percentageBase + (bonus || 0))
+      percentage: percentageFinal
     };
   }, [exercises, scores, penalties, bonus]);
 
@@ -234,7 +235,7 @@ export default function ExerciseScoreForm({
       {/* Penalizações */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <Label className="mb-2 block">Penalizações</Label>
+          <Label className="mb-2 block">Penalizações (%)</Label>
           <Input
             type="number"
             step="0.1"
@@ -286,7 +287,7 @@ export default function ExerciseScoreForm({
                 {calculation.penalties > 0 && (
                   <div className="flex justify-between text-sm text-red-600">
                     <span>Penalizações:</span>
-                    <span className="font-bold">-{calculation.penalties.toFixed(2)}</span>
+                    <span className="font-bold">-{calculation.penalties.toFixed(2)}%</span>
                   </div>
                 )}
 
