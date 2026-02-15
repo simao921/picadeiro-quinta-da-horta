@@ -16,6 +16,7 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     technical_score = 0,
     artistic_score = 0,
     penalties = 0,
+    bonus = 0,
     time = null,
     exercise_scores = null
   } = scores;
@@ -35,17 +36,54 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     let scoredExercises = 0;
     let maxPoints = 0;
     let details = [];
+    let technicalPoints = 0;
+    let technicalMax = 0;
+    let qualitativePoints = 0;
+    let qualitativeMax = 0;
+    let hasTechnicalExercises = false;
+    let hasQualitativeExercises = false;
+
+    const getExerciseCategory = (exercise) => {
+      const raw = String(
+        exercise?.category ||
+        exercise?.type ||
+        exercise?.evaluation_type ||
+        exercise?.group ||
+        exercise?.area ||
+        ''
+      ).toLowerCase();
+
+      if (raw.includes('qualit') || raw.includes('art') || raw.includes('subjet')) {
+        return 'qualitative';
+      }
+      if (raw.includes('tecn') || raw.includes('technic') || raw.includes('obj')) {
+        return 'technical';
+      }
+      return 'general';
+    };
 
     exercisesSource.forEach(exercise => {
       const score = exercise_scores[exercise.number];
       const coef = exercise.coefficient || 1;
       const exMax = typeof exercise.max_points === 'number' ? exercise.max_points : 10;
+      const category = getExerciseCategory(exercise);
+      const exerciseMaxWeighted = exMax * coef;
       maxPoints += exMax * coef;
+
+      if (category === 'technical') {
+        hasTechnicalExercises = true;
+        technicalMax += exerciseMaxWeighted;
+      } else if (category === 'qualitative') {
+        hasQualitativeExercises = true;
+        qualitativeMax += exerciseMaxWeighted;
+      }
 
       if (score !== null && score !== undefined && !isNaN(score)) {
         const weighted = score * coef;
         totalPoints += weighted;
         scoredExercises++;
+        if (category === 'technical') technicalPoints += weighted;
+        if (category === 'qualitative') qualitativePoints += weighted;
         if (coef !== 1) {
           details.push(`Ex${exercise.number}: ${score}×${coef}=${weighted}`);
         } else {
@@ -56,13 +94,58 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
 
     if (scoredExercises > 0) {
       // Soma total com coeficientes (não média)
-      const final_score = totalPoints - (penalties || 0);
-      const percentage = maxPoints > 0 ? (final_score / maxPoints) * 100 : 0;
+      const final_score = Math.max(0, totalPoints - (penalties || 0));
+      let percentage = maxPoints > 0 ? (final_score / maxPoints) * 100 : 0;
+      let weightedDetails = '';
+
+      if (hasTechnicalExercises || hasQualitativeExercises) {
+        const coefficients = modalityData?.coefficients || {};
+        const technicalRaw = Number(
+          coefficients.technical_percentage ??
+          coefficients.technical_weight ??
+          70
+        );
+        const qualitativeRaw = Number(
+          coefficients.qualitative_percentage ??
+          coefficients.qualitative_weight ??
+          (100 - technicalRaw)
+        );
+
+        const technicalWeight = Number.isFinite(technicalRaw) ? technicalRaw : 70;
+        const qualitativeWeight = Number.isFinite(qualitativeRaw) ? qualitativeRaw : 30;
+
+        const technicalPercentage = technicalMax > 0 ? (technicalPoints / technicalMax) * 100 : null;
+        const qualitativePercentage = qualitativeMax > 0 ? (qualitativePoints / qualitativeMax) * 100 : null;
+
+        if (technicalPercentage !== null || qualitativePercentage !== null) {
+          const weightedTechnical = technicalPercentage !== null
+            ? (technicalPercentage * technicalWeight) / 100
+            : 0;
+          const weightedQualitative = qualitativePercentage !== null
+            ? (qualitativePercentage * qualitativeWeight) / 100
+            : 0;
+          const penaltiesPercentage = maxPoints > 0 ? ((penalties || 0) / maxPoints) * 100 : 0;
+
+          percentage = Math.max(0, weightedTechnical + weightedQualitative - penaltiesPercentage + (bonus || 0));
+          weightedDetails = [
+            technicalPercentage !== null
+              ? `Téc: ${technicalPercentage.toFixed(2)}%×${technicalWeight}%`
+              : '',
+            qualitativePercentage !== null
+              ? `Qual: ${qualitativePercentage.toFixed(2)}%×${qualitativeWeight}%`
+              : '',
+            penaltiesPercentage > 0 ? `- Penaliz%(${penaltiesPercentage.toFixed(2)})` : '',
+            bonus > 0 ? `+ Bónus%(${bonus})` : ''
+          ].filter(Boolean).join(' | ');
+        }
+      } else if (bonus > 0) {
+        percentage = Math.max(0, percentage + bonus);
+      }
       
       return {
         final_score: parseFloat(final_score.toFixed(2)),
         percentage: parseFloat(Math.max(0, percentage).toFixed(2)),
-        calculation_details: `Total: ${details.join(' + ')}${penalties > 0 ? ` - Penalizações(${penalties})` : ''} = ${final_score}`
+        calculation_details: `Total: ${details.join(' + ')}${penalties > 0 ? ` - Penalizações(${penalties})` : ''} = ${final_score}${weightedDetails ? ` | ${weightedDetails}` : ''}`
       };
     }
   }
@@ -71,7 +154,7 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
   if (scores.final_score && !modalityData?.scoring_formula) {
     return {
       final_score: scores.final_score,
-      percentage: scores.percentage || 0,
+      percentage: parseFloat(((scores.percentage || 0) + (bonus || 0)).toFixed(2)),
       calculation_details: 'Pontuação extraída do protocolo'
     };
   }
@@ -83,7 +166,10 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
   if (!modalityData?.scoring_formula) {
     // Sem fórmula: pontuação base menos penalizações
     final_score = base_score - penalties;
-    calculation_details = `Base (${base_score}) - Penalizações (${penalties})`;
+    const base_percentage = competitionData?.base_percentage || 100;
+    percentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
+    percentage += bonus || 0;
+    calculation_details = `Base (${base_score}) - Penalizações (${penalties})${bonus > 0 ? ` + Bónus% (${bonus})` : ''}`;
   } else {
     const formula = modalityData.scoring_formula.toLowerCase();
     const coefficients = modalityData.coefficients || {};
@@ -96,7 +182,8 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       if (base_score > 0) {
         percentage = (base_score / max_points) * 100;
         final_score = base_score - penalties;
-        calculation_details = `Dressage: ${base_score}/${max_points} = ${percentage.toFixed(2)}% - Penalizações: ${penalties}`;
+        percentage += bonus || 0;
+        calculation_details = `Dressage: ${base_score}/${max_points} = ${percentage.toFixed(2)}% - Penalizações: ${penalties}${bonus > 0 ? ` + Bónus%: ${bonus}` : ''}`;
       }
     }
     // Working Equitation - Sistema de 3 provas
@@ -129,12 +216,14 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
         final_score = Math.max(0, total_weighted - penalties);
         const max_possible = base_percentage || 300;
         percentage = (final_score / max_possible) * 100;
+        percentage += bonus || 0;
         
-        calculation_details = `WE: ${details.join(' + ')}${penalties > 0 ? ` - Penaliz(${penalties})` : ''} = ${final_score}`;
+        calculation_details = `WE: ${details.join(' + ')}${penalties > 0 ? ` - Penaliz(${penalties})` : ''}${bonus > 0 ? ` + Bónus%(${bonus})` : ''} = ${final_score}`;
       } else {
         final_score = Math.max(0, base_score - penalties);
         percentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
-        calculation_details = `WE: ${base_score}${penalties > 0 ? ` - ${penalties}` : ''} = ${final_score}`;
+        percentage += bonus || 0;
+        calculation_details = `WE: ${base_score}${penalties > 0 ? ` - ${penalties}` : ''}${bonus > 0 ? ` + Bónus%(${bonus})` : ''} = ${final_score}`;
       }
     }
     // Saltos de Obstáculos - Sistema de penalizações
@@ -151,16 +240,24 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       // Percentagem inversa (100% = 0 faltas)
       const max_faults = base_percentage || 50;
       percentage = Math.max(0, 100 - ((penalties / max_faults) * 100));
+      percentage += bonus || 0;
     }
     // Fórmula personalizada (expressão matemática)
-    else if (formula.includes('base') || formula.includes('technical') || formula.includes('artistic')) {
+    else if (
+      formula.includes('base') ||
+      formula.includes('technical') ||
+      formula.includes('artistic') ||
+      formula.includes('qualit')
+    ) {
       try {
         // Tenta avaliar a fórmula como expressão
         const formula_result = evaluateFormula(formula, {
           base: base_score,
           technical: technical_score,
+          qualitative: artistic_score,
           artistic: artistic_score,
           penalties: penalties,
+          bonus: bonus,
           ...coefficients
         });
         final_score = formula_result;
@@ -176,6 +273,9 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     else {
       final_score = base_score - penalties;
       calculation_details = `${base_score} - ${penalties}`;
+      const base_percentage = competitionData?.base_percentage || 100;
+      percentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
+      percentage += bonus || 0;
     }
   }
 
@@ -286,8 +386,10 @@ export function validateFormula(formula) {
     evaluateFormula(formula, {
       base: 100,
       technical: 50,
+      qualitative: 40,
       artistic: 50,
-      penalties: 0
+      penalties: 0,
+      bonus: 0
     });
     return true;
   } catch (e) {

@@ -200,7 +200,14 @@ export default function CompetitionDetail() {
                           const baseMatch = notes.match(/Base:\s*([\d.]+)/);
                           const techMatch = notes.match(/Técnica:\s*([\d.]+)/);
                           const artMatch = notes.match(/Artística:\s*([\d.]+)/);
+                          const bonusMatch = notes.match(/Bonifica(?:ção|cao):\s*([+\-]?[\d.]+)%?/i);
                           const calcMatch = notes.match(/Cálculo:\s*([^|]+)/);
+                          const scoreValue = typeof result.score === 'number'
+                            ? result.score
+                            : parseFloat(result.score || 0);
+                          const percentageValue = typeof result.percentage === 'number'
+                            ? result.percentage
+                            : parseFloat(result.percentage || 0);
 
                           return (
                             <div key={result.id} className="p-4 bg-stone-50 rounded-lg border-l-4 border-[#B8956A]">
@@ -220,16 +227,16 @@ export default function CompetitionDetail() {
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-2xl font-bold text-[#B8956A]">{result.score}</p>
-                                  {result.percentage > 0 && (
-                                    <p className="text-sm text-stone-600">{result.percentage}%</p>
+                                  {percentageValue > 0 && (
+                                    <p className="text-2xl font-bold text-[#B8956A]">{percentageValue.toFixed(2)}%</p>
                                   )}
+                                  <p className="text-sm text-stone-600">{scoreValue.toFixed(2)} pts</p>
                                 </div>
                               </div>
 
-                              {(baseMatch || techMatch || artMatch || result.penalties > 0) && (
+                              {(baseMatch || techMatch || artMatch || result.penalties > 0 || bonusMatch) && (
                                 <div className="mt-3 pt-3 border-t border-stone-200">
-                                  <div className="grid grid-cols-4 gap-2 text-xs text-center">
+                                  <div className="grid grid-cols-5 gap-2 text-xs text-center">
                                     {baseMatch && (
                                       <div>
                                         <div className="text-stone-500">Base</div>
@@ -252,6 +259,12 @@ export default function CompetitionDetail() {
                                       <div>
                                         <div className="text-stone-500">Penalizações</div>
                                         <div className="font-medium text-red-600 mt-1">-{result.penalties}</div>
+                                      </div>
+                                    )}
+                                    {bonusMatch && (
+                                      <div>
+                                        <div className="text-stone-500">Bonificação</div>
+                                        <div className="font-medium text-green-700 mt-1">+{bonusMatch[1]}%</div>
                                       </div>
                                     )}
                                   </div>

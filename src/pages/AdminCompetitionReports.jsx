@@ -41,7 +41,8 @@ const getModalityExercises = (modality) => {
     ...ex,
     number: String(ex.number),
     coefficient: typeof ex.coefficient === 'number' && ex.coefficient > 0 ? ex.coefficient : 1,
-    max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10
+    max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10,
+    category: ex.category || ex.type || ex.evaluation_type || 'general'
   }));
 };
 
@@ -59,7 +60,8 @@ export default function AdminCompetitionReports() {
   const [currentScore, setCurrentScore] = useState({
     modality_id: '',
     exercise_scores: {},
-    penalties: 0
+    penalties: 0,
+    bonus: 0
   });
 
   const queryClient = useQueryClient();
@@ -122,10 +124,19 @@ export default function AdminCompetitionReports() {
                 number: { type: "string", description: "Número do exercício" },
                 name: { type: "string", description: "Nome/descrição" },
                 coefficient: { type: "number", description: "Coeficiente", default: 1 },
-                max_points: { type: "number", description: "Pontuação máxima do exercício (se existir no protocolo)" }
+                max_points: { type: "number", description: "Pontuação máxima do exercício (se existir no protocolo)" },
+                category: { type: "string", description: "Categoria do exercício: technical, qualitative ou general" }
               }
             },
             description: "Lista de exercícios identificados no protocolo"
+          },
+          coefficients: {
+            type: "object",
+            properties: {
+              technical_percentage: { type: "number", description: "Peso percentual da nota técnica (ex: 70)" },
+              qualitative_percentage: { type: "number", description: "Peso percentual da nota qualitativa/artística (ex: 30)" }
+            },
+            description: "Pesos de cálculo identificados no regulamento/protocolo"
           },
           results: {
             type: "array",
@@ -141,6 +152,7 @@ export default function AdminCompetitionReports() {
                 final_score: { type: "number", description: "Pontuação final" },
                 percentage: { type: "number", description: "Percentagem" },
                 penalties: { type: "number", description: "Penalizações" },
+                bonus: { type: "number", description: "Bonificação em percentagem (se aplicável)" },
                 time: { type: "string", description: "Tempo (se aplicável)" },
                 technical_score: { type: "number", description: "Nota técnica (se aplicável)" },
                 artistic_score: { type: "number", description: "Nota artística (se aplicável)" },
@@ -173,6 +185,15 @@ Identifica TODOS os exercícios listados no protocolo:
 - Título/nome/descrição completa do exercício
 - Coeficiente (se indicado, senão usa 1)
 - Pontuação máxima por exercício (ex: 10, 20, 30). Se não estiver explícito, usa 10
+- Categoria do exercício: technical, qualitative ou general
+
+PESOS DA FÓRMULA (CRÍTICO):
+- Extrai os pesos percentuais da nota técnica e da nota qualitativa/artística para ESTA prova específica
+- Exemplo: se o protocolo disser "Nota Final = 70% técnica + 30% qualitativa", devolver:
+  coefficients.technical_percentage = 70
+  coefficients.qualitative_percentage = 30
+- Se os pesos não estiverem explícitos, infere da fórmula textual quando possível
+- Se não existir qualquer indicação, usa 70 e 30
 
 RESULTADOS (para cada participante):
 - Posição/Classificação final
@@ -184,6 +205,7 @@ RESULTADOS (para cada participante):
 - Pontuação final (resultado após cálculos)
 - Percentagem (se disponível)
 - Penalizações aplicadas
+- Bonificações em percentagem (se existirem)
 - Tempo (se aplicável)
 - Notas técnicas (se disponível)
 - Notas artísticas (se disponível)
@@ -275,7 +297,7 @@ Estrutura no formato JSON especificado.
       queryClient.invalidateQueries(['competition-results']);
       setShowScoreDialog(false);
       setSelectedStudent(null);
-      setCurrentScore({ modality_id: '', exercise_scores: {}, penalties: 0 });
+      setCurrentScore({ modality_id: '', exercise_scores: {}, penalties: 0, bonus: 0 });
       toast.success('Pontuação guardada!');
     }
   });
@@ -309,9 +331,17 @@ Estrutura no formato JSON especificado.
             number: String(ex.number),
             name: String(ex.name),
             coefficient: typeof ex.coefficient === 'number' && ex.coefficient > 0 ? ex.coefficient : 1,
-            max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10
+            max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10,
+            category: ex.category || 'general'
           }))
         : [];
+
+      const extractedTechnicalPercentage = Number(extracted?.coefficients?.technical_percentage);
+      const extractedQualitativePercentage = Number(extracted?.coefficients?.qualitative_percentage);
+      const normalizedCoefficients = {
+        technical_percentage: Number.isFinite(extractedTechnicalPercentage) ? extractedTechnicalPercentage : 70,
+        qualitative_percentage: Number.isFinite(extractedQualitativePercentage) ? extractedQualitativePercentage : 30
+      };
 
       // Se a IA identificou exercícios, atualizar a modalidade IMEDIATAMENTE
       if (normalizedExercises.length > 0 && competition?.modality_id) {
@@ -320,6 +350,7 @@ Estrutura no formato JSON especificado.
           await base44.entities.CompetitionModality.update(modality.id, {
             coefficients: {
               ...(modality.coefficients || {}),
+              ...normalizedCoefficients,
               __exercises: normalizedExercises
             },
             exercises: normalizedExercises
@@ -334,6 +365,10 @@ Estrutura no formato JSON especificado.
         fileUrl,
         data: {
           ...extracted,
+          coefficients: {
+            ...(extracted.coefficients || {}),
+            ...normalizedCoefficients
+          },
           exercises: normalizedExercises
         },
         competitionId: selectedCompetition,
@@ -384,6 +419,7 @@ Estrutura no formato JSON especificado.
           technical_score: r.technical_score,
           artistic_score: r.artistic_score,
           penalties: r.penalties || 0,
+          bonus: r.bonus || 0,
           final_score: r.final_score,
           percentage: r.percentage,
           time: r.time,
@@ -408,6 +444,7 @@ Estrutura no formato JSON especificado.
         }
         
         if (calculated.calculation_details) notesArray.push(`Cálculo: ${calculated.calculation_details}`);
+        if (r.bonus > 0) notesArray.push(`Bonificação: ${r.bonus}%`);
         if (r.judge_name) notesArray.push(`Juiz: ${r.judge_name}`);
         if (r.club) notesArray.push(`Clube: ${r.club}`);
 
@@ -636,6 +673,23 @@ Estrutura no formato JSON especificado.
                 </div>
               </div>
 
+              {extractedData.data.coefficients && (
+                <div className="grid grid-cols-2 gap-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
+                  <div>
+                    <span className="text-emerald-700">Peso Técnica:</span>
+                    <p className="font-bold text-emerald-900">
+                      {extractedData.data.coefficients.technical_percentage ?? 70}%
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-emerald-700">Peso Qualitativa:</span>
+                    <p className="font-bold text-emerald-900">
+                      {extractedData.data.coefficients.qualitative_percentage ?? 30}%
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Mostrar exercícios extraídos */}
               {extractedData.data.exercises && extractedData.data.exercises.length > 0 && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
@@ -680,6 +734,7 @@ Estrutura no formato JSON especificado.
                        technical_score: result.technical_score,
                        artistic_score: result.artistic_score,
                        penalties: result.penalties || 0,
+                       bonus: result.bonus || 0,
                        final_score: result.final_score,
                        percentage: result.percentage,
                        exercise_scores: result.exercise_scores || {}
@@ -730,6 +785,12 @@ Estrutura no formato JSON especificado.
                                 <span>-{result.penalties}</span>
                               </div>
                             )}
+                            {result.bonus > 0 && (
+                              <div className="flex justify-between text-xs text-green-700">
+                                <span>Bonificação:</span>
+                                <span>+{result.bonus}%</span>
+                              </div>
+                            )}
                             <div className="border-t pt-1 mt-1">
                               <div className="flex justify-between font-bold">
                                 <span className="text-[#B8956A]">Final:</span>
@@ -738,7 +799,7 @@ Estrutura no formato JSON especificado.
                               {calculated.percentage > 0 && (
                                 <div className="flex justify-between text-xs text-stone-600 mt-1">
                                   <span>%:</span>
-                                  <span>{calculated.percentage}%</span>
+                                  <span>{calculated.percentage.toFixed(2)}%</span>
                                 </div>
                               )}
                             </div>
@@ -837,7 +898,7 @@ Estrutura no formato JSON especificado.
                             <Button
                               onClick={() => {
                                 setSelectedStudent(entry);
-                                setCurrentScore({ modality_id: '', exercise_scores: {}, penalties: 0 });
+                                setCurrentScore({ modality_id: '', exercise_scores: {}, penalties: 0, bonus: 0 });
                                 setShowScoreDialog(true);
                               }}
                               className="bg-[#B8956A] hover:bg-[#8B7355]"
@@ -906,6 +967,7 @@ Estrutura no formato JSON especificado.
                     exercises={selectedExercises}
                     scores={currentScore.exercise_scores}
                     penalties={currentScore.penalties}
+                    bonus={currentScore.bonus}
                     onScoreChange={(exNumber, value) => {
                       setCurrentScore({
                         ...currentScore,
@@ -917,6 +979,9 @@ Estrutura no formato JSON especificado.
                     }}
                     onPenaltiesChange={(value) => {
                       setCurrentScore({ ...currentScore, penalties: value });
+                    }}
+                    onBonusChange={(value) => {
+                      setCurrentScore({ ...currentScore, bonus: value });
                     }}
                     showCalculation={true}
                   />
@@ -944,6 +1009,7 @@ Estrutura no formato JSON especificado.
                         notesArray.push(`Ex${exNum}: ${exScore}${ex?.coefficient > 1 ? `×${ex.coefficient}` : ''}`);
                       });
                     }
+                    if (currentScore.bonus > 0) notesArray.push(`Bonificação: ${currentScore.bonus}%`);
                     if (calculated.calculation_details) notesArray.push(`${calculated.calculation_details}`);
 
                     await saveIndividualResult.mutateAsync({

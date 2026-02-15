@@ -42,7 +42,8 @@ const normalizeExercises = (rawExercises) => {
       number: ex.number !== undefined ? String(ex.number) : '',
       name: ex.name !== undefined ? String(ex.name) : '',
       coefficient: typeof ex.coefficient === 'number' && ex.coefficient > 0 ? ex.coefficient : 1,
-      max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10
+      max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10,
+      category: ex.category || ex.type || ex.evaluation_type || 'general'
     }));
 };
 
@@ -66,7 +67,7 @@ export default function AdminCompetitionModalities() {
     scoring_formula: '',
     tiebreaker_criteria: '',
     regulation_url: '',
-    coefficients: {},
+    coefficients: { technical_percentage: 70, qualitative_percentage: 30 },
     exercises: [],
     is_active: true
   });
@@ -131,7 +132,11 @@ export default function AdminCompetitionModalities() {
             description: "Regras de penalização extraídas do protocolo"
           },
           coefficients: {
-            type: "object", 
+            type: "object",
+            properties: {
+              technical_percentage: { type: "number", description: "Peso da nota técnica em percentagem" },
+              qualitative_percentage: { type: "number", description: "Peso da nota qualitativa/artística em percentagem" }
+            },
             description: "Coeficientes aplicáveis extraídos"
           },
           exercises: {
@@ -142,7 +147,8 @@ export default function AdminCompetitionModalities() {
                 number: { type: "string", description: "Número do exercício" },
                 name: { type: "string", description: "Nome/descrição" },
                 coefficient: { type: "number", description: "Coeficiente", default: 1 },
-                max_points: { type: "number", description: "Pontuação máxima do exercício (se indicada)" }
+                max_points: { type: "number", description: "Pontuação máxima do exercício (se indicada)" },
+                category: { type: "string", description: "Categoria do exercício: technical, qualitative ou general" }
               }
             },
             description: "Lista de exercícios da prova"
@@ -160,11 +166,13 @@ Analisa este protocolo/regulamento de competição equestre e extrai as seguinte
 4. FÓRMULA DE PONTUAÇÃO: Extrai a fórmula exata de cálculo da pontuação final
 5. REGRAS DE PENALIZAÇÃO: Lista todas as penalizações (ex: erro de percurso: -5 pontos, derrubar obstáculo: -4 pontos)
 6. COEFICIENTES: Identifica coeficientes aplicáveis (ex: coeficiente de dificuldade: 1.5x)
+   - Extrai também os pesos percentuais da fórmula quando existirem (ex: técnica 70%, qualitativa 30%)
 7. EXERCÍCIOS: Identifica TODOS os exercícios listados:
    - Número do exercício (ex: "1", "2", "3"...)
    - Nome/título/descrição do exercício
    - Coeficiente do exercício (se indicado, senão usa 1)
    - Pontuação máxima do exercício (se não existir no protocolo, usa 10)
+   - Categoria do exercício: technical, qualitative ou general
 9. CRITÉRIO DE DESEMPATE: Como se resolve empates (ex: menor tempo, melhor nota em movimento específico)
 
 ⚠️ IMPORTANTE para EXERCÍCIOS:
@@ -202,7 +210,8 @@ Estrutura os dados de forma clara seguindo o schema JSON.
             number: String(ex.number),
             name: String(ex.name),
             coefficient: typeof ex.coefficient === 'number' && ex.coefficient > 0 ? ex.coefficient : 1,
-            max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10
+            max_points: typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10,
+            category: ex.category || 'general'
           }))
         : [];
 
@@ -213,7 +222,11 @@ Estrutura os dados de forma clara seguindo o schema JSON.
         scoring_formula: extracted.scoring_formula || '',
         tiebreaker_criteria: extracted.tiebreaker_criteria || '',
         regulation_url: fileUrl,
-        coefficients: extracted.coefficients || {},
+        coefficients: {
+          technical_percentage: 70,
+          qualitative_percentage: 30,
+          ...(extracted.coefficients || {})
+        },
         exercises: normalizeExercises(normalizedExercises),
         is_active: true
       });
@@ -236,7 +249,7 @@ Estrutura os dados de forma clara seguindo o schema JSON.
       scoring_formula: '',
       tiebreaker_criteria: '',
       regulation_url: '',
-      coefficients: {},
+      coefficients: { technical_percentage: 70, qualitative_percentage: 30 },
       exercises: [],
       is_active: true
     });
@@ -253,7 +266,11 @@ Estrutura os dados de forma clara seguindo o schema JSON.
       scoring_formula: mod.scoring_formula || '',
       tiebreaker_criteria: mod.tiebreaker_criteria || '',
       regulation_url: mod.regulation_url || '',
-      coefficients: mod.coefficients || {},
+      coefficients: {
+        technical_percentage: 70,
+        qualitative_percentage: 30,
+        ...(mod.coefficients || {})
+      },
       exercises: extractExercisesFromModality(mod),
       is_active: mod.is_active !== undefined ? mod.is_active : true
     });
@@ -434,6 +451,51 @@ Estrutura os dados de forma clara seguindo o schema JSON.
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Peso Técnica (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  className="h-8 text-sm"
+                  value={formData.coefficients?.technical_percentage ?? 70}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    setFormData({
+                      ...formData,
+                      coefficients: {
+                        ...(formData.coefficients || {}),
+                        technical_percentage: Number.isFinite(value) ? value : 70
+                      }
+                    });
+                  }}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Peso Qualitativa (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  className="h-8 text-sm"
+                  value={formData.coefficients?.qualitative_percentage ?? 30}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    setFormData({
+                      ...formData,
+                      coefficients: {
+                        ...(formData.coefficients || {}),
+                        qualitative_percentage: Number.isFinite(value) ? value : 30
+                      }
+                    });
+                  }}
+                />
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="tiebreaker" className="text-xs">Desempate</Label>
               <Input
@@ -457,7 +519,7 @@ Estrutura os dados de forma clara seguindo o schema JSON.
                   onClick={() => {
                     setFormData({
                       ...formData,
-                      exercises: [...formData.exercises, { number: '', name: '', coefficient: 1, max_points: 10 }]
+                      exercises: [...formData.exercises, { number: '', name: '', coefficient: 1, max_points: 10, category: 'general' }]
                     });
                   }}
                 >
@@ -513,6 +575,23 @@ Estrutura os dados de forma clara seguindo o schema JSON.
                           setFormData({ ...formData, exercises: updated });
                         }}
                       />
+                      <Select
+                        value={ex.category || 'general'}
+                        onValueChange={(value) => {
+                          const updated = [...formData.exercises];
+                          updated[index] = { ...updated[index], category: value };
+                          setFormData({ ...formData, exercises: updated });
+                        }}
+                      >
+                        <SelectTrigger className="w-28 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">Geral</SelectItem>
+                          <SelectItem value="technical">Técnica</SelectItem>
+                          <SelectItem value="qualitative">Qualitativa</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Button
                         type="button"
                         size="icon"

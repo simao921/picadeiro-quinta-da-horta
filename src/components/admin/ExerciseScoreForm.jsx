@@ -8,17 +8,55 @@ export default function ExerciseScoreForm({
   exercises = [], 
   scores = {}, 
   penalties = 0,
+  bonus = 0,
   onScoreChange,
   onPenaltiesChange,
+  onBonusChange,
   showCalculation = true 
 }) {
+  const getExerciseCategory = (exercise) => {
+    const raw = String(
+      exercise?.category ||
+      exercise?.type ||
+      exercise?.evaluation_type ||
+      exercise?.group ||
+      exercise?.area ||
+      ''
+    ).toLowerCase();
+
+    if (raw.includes('qualit') || raw.includes('art') || raw.includes('subjet')) {
+      return 'qualitative';
+    }
+    if (raw.includes('tecn') || raw.includes('technic') || raw.includes('obj')) {
+      return 'technical';
+    }
+    return 'general';
+  };
+
+  const groupedExercises = useMemo(() => {
+    const groups = {
+      technical: [],
+      qualitative: [],
+      general: []
+    };
+
+    exercises.forEach((ex) => {
+      groups[getExerciseCategory(ex)].push(ex);
+    });
+
+    return groups;
+  }, [exercises]);
+
   const calculation = useMemo(() => {
     if (!exercises || exercises.length === 0) return null;
 
     let total = 0;
+    let maxTotal = 0;
     const details = [];
 
     exercises.forEach(ex => {
+      const exMax = typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10;
+      maxTotal += exMax * (ex.coefficient || 1);
       const score = scores[ex.number] || 0;
       if (score > 0) {
         const exerciseValue = score * (ex.coefficient || 1);
@@ -28,60 +66,163 @@ export default function ExerciseScoreForm({
     });
 
     const withPenalties = Math.max(0, total - (penalties || 0));
+    const percentageBase = maxTotal > 0 ? (withPenalties / maxTotal) * 100 : 0;
     
     return {
       subtotal: total,
+      max_total: maxTotal,
       penalties: penalties || 0,
+      bonus: bonus || 0,
       final: withPenalties,
       details: details.join(' | '),
-      percentage: total > 0 ? Math.round((withPenalties / (total || 1)) * 100) : 0
+      percentage: Math.max(0, percentageBase + (bonus || 0))
     };
-  }, [exercises, scores, penalties]);
+  }, [exercises, scores, penalties, bonus]);
 
   return (
     <div className="space-y-4">
       {/* Exercícios */}
       {exercises && exercises.length > 0 ? (
         <div>
-          <Label className="mb-3 block font-bold">Exercícios (0-10 cada)</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {exercises.map(ex => (
-              <div 
-                key={ex.number} 
-                className="p-3 border rounded-lg bg-white hover:border-[#B8956A] transition-colors"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <Label className="text-sm font-bold">
-                      Exercício {ex.number}
-                    </Label>
-                    {ex.name && (
-                      <p className="text-xs text-stone-600 mt-1">{ex.name}</p>
-                    )}
-                  </div>
-                  {ex.coefficient > 1 && (
-                    <Badge variant="outline" className="text-xs">
-                      ×{ex.coefficient}
-                    </Badge>
-                  )}
+          <Label className="mb-3 block font-bold">Exercícios</Label>
+          <div className="space-y-4">
+            {groupedExercises.technical.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">Nota Técnica</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {groupedExercises.technical.map(ex => (
+                    <div 
+                      key={ex.number} 
+                      className="p-3 border rounded-lg bg-white hover:border-[#B8956A] transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <Label className="text-sm font-bold">
+                            Exercício {ex.number}
+                          </Label>
+                          {ex.name && (
+                            <p className="text-xs text-stone-600 mt-1">{ex.name}</p>
+                          )}
+                        </div>
+                        {ex.coefficient > 1 && (
+                          <Badge variant="outline" className="text-xs">
+                            ×{ex.coefficient}
+                          </Badge>
+                        )}
+                      </div>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={ex.max_points || 10}
+                        placeholder="0"
+                        value={scores[ex.number] || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? parseFloat(e.target.value) : 0;
+                          const maxValue = ex.max_points || 10;
+                          if (value >= 0 && value <= maxValue) {
+                            onScoreChange(ex.number, value);
+                          }
+                        }}
+                        className="font-medium text-center"
+                      />
+                    </div>
+                  ))}
                 </div>
-                <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="10"
-                  placeholder="0"
-                  value={scores[ex.number] || ''}
-                  onChange={(e) => {
-                    const value = e.target.value ? parseFloat(e.target.value) : 0;
-                    if (value >= 0 && value <= 10) {
-                      onScoreChange(ex.number, value);
-                    }
-                  }}
-                  className="font-medium text-center"
-                />
               </div>
-            ))}
+            )}
+
+            {groupedExercises.qualitative.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">Nota Qualitativa</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {groupedExercises.qualitative.map(ex => (
+                    <div 
+                      key={ex.number} 
+                      className="p-3 border rounded-lg bg-white hover:border-[#B8956A] transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <Label className="text-sm font-bold">
+                            Exercício {ex.number}
+                          </Label>
+                          {ex.name && (
+                            <p className="text-xs text-stone-600 mt-1">{ex.name}</p>
+                          )}
+                        </div>
+                        {ex.coefficient > 1 && (
+                          <Badge variant="outline" className="text-xs">
+                            ×{ex.coefficient}
+                          </Badge>
+                        )}
+                      </div>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={ex.max_points || 10}
+                        placeholder="0"
+                        value={scores[ex.number] || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? parseFloat(e.target.value) : 0;
+                          const maxValue = ex.max_points || 10;
+                          if (value >= 0 && value <= maxValue) {
+                            onScoreChange(ex.number, value);
+                          }
+                        }}
+                        className="font-medium text-center"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {groupedExercises.general.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">Outros Exercícios</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {groupedExercises.general.map(ex => (
+                    <div 
+                      key={ex.number} 
+                      className="p-3 border rounded-lg bg-white hover:border-[#B8956A] transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <Label className="text-sm font-bold">
+                            Exercício {ex.number}
+                          </Label>
+                          {ex.name && (
+                            <p className="text-xs text-stone-600 mt-1">{ex.name}</p>
+                          )}
+                        </div>
+                        {ex.coefficient > 1 && (
+                          <Badge variant="outline" className="text-xs">
+                            ×{ex.coefficient}
+                          </Badge>
+                        )}
+                      </div>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={ex.max_points || 10}
+                        placeholder="0"
+                        value={scores[ex.number] || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? parseFloat(e.target.value) : 0;
+                          const maxValue = ex.max_points || 10;
+                          if (value >= 0 && value <= maxValue) {
+                            onScoreChange(ex.number, value);
+                          }
+                        }}
+                        className="font-medium text-center"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -91,17 +232,31 @@ export default function ExerciseScoreForm({
       )}
 
       {/* Penalizações */}
-      <div>
-        <Label className="mb-2 block">Penalizações</Label>
-        <Input
-          type="number"
-          step="0.1"
-          min="0"
-          placeholder="0"
-          value={penalties || ''}
-          onChange={(e) => onPenaltiesChange(parseFloat(e.target.value) || 0)}
-          className="font-medium"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <Label className="mb-2 block">Penalizações</Label>
+          <Input
+            type="number"
+            step="0.1"
+            min="0"
+            placeholder="0"
+            value={penalties || ''}
+            onChange={(e) => onPenaltiesChange(parseFloat(e.target.value) || 0)}
+            className="font-medium"
+          />
+        </div>
+        <div>
+          <Label className="mb-2 block">Bonificação (%)</Label>
+          <Input
+            type="number"
+            step="0.1"
+            min="0"
+            placeholder="0"
+            value={bonus || ''}
+            onChange={(e) => onBonusChange?.(parseFloat(e.target.value) || 0)}
+            className="font-medium"
+          />
+        </div>
       </div>
 
       {/* Cálculo */}
@@ -122,11 +277,23 @@ export default function ExerciseScoreForm({
                   <span className="text-stone-700">Subtotal:</span>
                   <span className="font-bold">{calculation.subtotal.toFixed(2)}</span>
                 </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-stone-700">Máximo:</span>
+                  <span className="font-bold">{calculation.max_total.toFixed(2)}</span>
+                </div>
                 
                 {calculation.penalties > 0 && (
                   <div className="flex justify-between text-sm text-red-600">
                     <span>Penalizações:</span>
                     <span className="font-bold">-{calculation.penalties.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {calculation.bonus > 0 && (
+                  <div className="flex justify-between text-sm text-green-700">
+                    <span>Bonificação:</span>
+                    <span className="font-bold">+{calculation.bonus.toFixed(2)}%</span>
                   </div>
                 )}
 
@@ -142,7 +309,7 @@ export default function ExerciseScoreForm({
                 {calculation.percentage > 0 && (
                   <div className="flex justify-between text-xs text-stone-600 mt-1 italic">
                     <span>Percentagem:</span>
-                    <span>{calculation.percentage}%</span>
+                    <span>{calculation.percentage.toFixed(2)}%</span>
                   </div>
                 )}
               </div>
