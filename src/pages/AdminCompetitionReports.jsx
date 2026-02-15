@@ -616,15 +616,18 @@ Estrutura no formato JSON especificado.
       }
 
       // Highlight top 3
-      if (result.position <= 3) {
+      if (result.position && result.position <= 3) {
         const colors = {
           1: [255, 215, 0],
           2: [192, 192, 192], 
           3: [205, 127, 50]
         };
-        doc.setFillColor(...colors[result.position]);
-        doc.rect(15, y - 5, 180, 7, 'F');
-        doc.setFont(undefined, 'bold');
+        const color = colors[result.position];
+        if (color) {
+          doc.setFillColor(...color);
+          doc.rect(15, y - 5, 180, 7, 'F');
+          doc.setFont(undefined, 'bold');
+        }
       } else if (index % 2 === 0) {
         doc.setFillColor(250, 250, 250);
         doc.rect(15, y - 5, 180, 7, 'F');
