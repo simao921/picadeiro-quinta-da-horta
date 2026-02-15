@@ -527,7 +527,7 @@ Estrutura no formato JSON especificado.
     return comp?.name || 'Prova desconhecida';
   };
 
-  const generateResultsPDF = () => {
+  const generateResultsPDF = async () => {
     if (!selectedCompetition) {
       toast.error('Selecione uma competição');
       return;
@@ -544,51 +544,114 @@ Estrutura no formato JSON especificado.
 
     const doc = new jsPDF();
     
-    doc.setFontSize(20);
-    doc.text('RESULTADOS FINAIS', 105, 20, { align: 'center' });
+    // Load logo
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/12aedfc33_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG';
     
-    doc.setFontSize(16);
-    doc.text(comp.name, 105, 30, { align: 'center' });
+    try {
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'anonymous';
+      await new Promise((resolve, reject) => {
+        logoImg.onload = resolve;
+        logoImg.onerror = reject;
+        logoImg.src = logoUrl;
+      });
+      
+      // Add logo centered at top
+      doc.addImage(logoImg, 'PNG', 75, 10, 60, 30);
+    } catch (e) {
+      console.log('Logo não carregado');
+    }
     
-    doc.setFontSize(10);
-    doc.text(`Data: ${format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}`, 105, 40, { align: 'center' });
+    // Golden decorative line
+    doc.setDrawColor(184, 149, 106);
+    doc.setLineWidth(0.5);
+    doc.line(20, 45, 190, 45);
+    
+    // Header
+    doc.setTextColor(45, 45, 45);
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text('RESULTADOS FINAIS', 105, 55, { align: 'center' });
+    
+    doc.setFontSize(14);
+    doc.setTextColor(184, 149, 106);
+    doc.text(comp.name, 105, 63, { align: 'center' });
+    
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Data: ${format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}`, 105, 70, { align: 'center' });
     if (comp.location) {
-      doc.text(`Local: ${comp.location}`, 105, 45, { align: 'center' });
+      doc.text(`Local: ${comp.location}`, 105, 75, { align: 'center' });
     }
 
-    let y = 60;
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text('Pos', 15, y);
-    doc.text('Cavaleiro', 35, y);
-    doc.text('Cavalo', 100, y);
-    doc.text('Pontos', 150, y);
-    doc.text('%', 175, y);
-    
-    doc.line(10, y + 2, 200, y + 2);
+    // Golden line
+    doc.setDrawColor(184, 149, 106);
+    doc.line(20, 78, 190, 78);
 
+    // Table headers with golden background
+    let y = 88;
+    doc.setFillColor(184, 149, 106);
+    doc.rect(15, y - 5, 180, 8, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('Pos', 20, y);
+    doc.text('Cavaleiro', 40, y);
+    doc.text('Cavalo', 105, y);
+    doc.text('Pontos', 155, y);
+    doc.text('%', 180, y);
+
+    // Table content
     doc.setFont(undefined, 'normal');
     doc.setFontSize(10);
+    doc.setTextColor(45, 45, 45);
     y += 10;
 
-    compResults.forEach((result) => {
-      if (y > 270) {
+    compResults.forEach((result, index) => {
+      if (y > 265) {
         doc.addPage();
         y = 20;
       }
 
-      doc.text((result.position || '-').toString(), 15, y);
-      doc.text(result.rider_name, 35, y);
-      doc.text(result.horse_name, 100, y);
-      doc.text((result.score || 0).toFixed(2), 150, y);
-      doc.text((result.percentage || 0).toFixed(2) + '%', 175, y);
+      // Highlight top 3
+      if (result.position <= 3) {
+        const colors = {
+          1: [255, 215, 0],
+          2: [192, 192, 192], 
+          3: [205, 127, 50]
+        };
+        doc.setFillColor(...colors[result.position]);
+        doc.rect(15, y - 5, 180, 7, 'F');
+        doc.setFont(undefined, 'bold');
+      } else if (index % 2 === 0) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(15, y - 5, 180, 7, 'F');
+        doc.setFont(undefined, 'normal');
+      } else {
+        doc.setFont(undefined, 'normal');
+      }
+
+      doc.text((result.position || '-').toString(), 20, y);
+      doc.text(result.rider_name, 40, y);
+      doc.text(result.horse_name, 105, y);
+      doc.text((result.score || 0).toFixed(2), 155, y);
+      doc.text((result.percentage || 0).toFixed(2) + '%', 180, y);
       
-      y += 8;
+      y += 7;
     });
 
+    // Footer with golden line
+    doc.setDrawColor(184, 149, 106);
+    doc.setLineWidth(0.3);
+    doc.line(20, 280, 190, 280);
+    
     doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
     doc.text(`Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, 285, { align: 'center' });
-    doc.text('Picadeiro Quinta da Horta', 105, 290, { align: 'center' });
+    doc.setTextColor(184, 149, 106);
+    doc.setFont(undefined, 'bold');
+    doc.text('Picadeiro Quinta da Horta - Gilberto Filipe', 105, 290, { align: 'center' });
 
     doc.save(`resultados_${comp.name.replace(/\s+/g, '_')}.pdf`);
     toast.success('PDF de resultados gerado!');
