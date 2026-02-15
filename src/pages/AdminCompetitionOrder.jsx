@@ -403,17 +403,18 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
     doc.setFillColor(184, 149, 106);
     doc.rect(15, y - 5, 180, 8, 'F');
     
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text('Nº', 20, y);
-    doc.text('Cavaleiro', 40, y);
+    doc.text('Nº', 18, y);
+    doc.text('Horário', 30, y);
+    doc.text('Cavaleiro', 55, y);
     doc.text('Cavalo', 115, y);
     doc.text('Grau', 170, y);
 
     // Table content
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(45, 45, 45);
     y += 10;
 
@@ -429,8 +430,17 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
         doc.rect(15, y - 5, 180, 7, 'F');
       }
 
-      doc.text((index + 1).toString(), 20, y);
-      doc.text(entry.rider_name, 40, y);
+      // Extract time from notes
+      const timeMatch = entry.notes?.match(/Horário:\s*(\d{2}:\d{2})/);
+      const entryTime = timeMatch?.[1] || '-';
+
+      doc.text((index + 1).toString(), 18, y);
+      doc.setTextColor(184, 149, 106);
+      doc.setFont(undefined, 'bold');
+      doc.text(entryTime, 30, y);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(45, 45, 45);
+      doc.text(entry.rider_name, 55, y);
       doc.text(entry.horse_name, 115, y);
       doc.text(entry.grade || '-', 170, y);
       
@@ -457,14 +467,18 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
     const comp = competitions.find(c => c.id === selectedCompetition);
     if (!comp) return;
 
-    const data = orderedEntries.map((entry, index) => ({
-      'Nº': index + 1,
-      'Cavaleiro': entry.rider_name,
-      'Cavalo': entry.horse_name,
-      'Grau': entry.grade || '-',
-      'Presença': entry.absent ? 'Ausente' : 'Presente',
-      'Pagamento': entry.paid ? 'Pago' : 'Não Pago'
-    }));
+    const data = orderedEntries.map((entry, index) => {
+      const timeMatch = entry.notes?.match(/Horário:\s*(\d{2}:\d{2})/);
+      return {
+        'Nº': index + 1,
+        'Horário': timeMatch?.[1] || '-',
+        'Cavaleiro': entry.rider_name,
+        'Cavalo': entry.horse_name,
+        'Grau': entry.grade || '-',
+        'Presença': entry.absent ? 'Ausente' : 'Presente',
+        'Pagamento': entry.paid ? 'Pago' : 'Não Pago'
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
@@ -474,6 +488,7 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
     const max_width = data.reduce((w, r) => Math.max(w, r['Cavaleiro'].length), 10);
     worksheet['!cols'] = [
       { wch: 5 },
+      { wch: 10 },
       { wch: max_width },
       { wch: max_width },
       { wch: 15 },
@@ -602,7 +617,16 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
                                   {index + 1}
                                 </div>
 
-                                <div className="flex-1 grid grid-cols-3 gap-4">
+                                <div className="flex-1 grid grid-cols-4 gap-3">
+                                  <div>
+                                    <div className="text-stone-600 text-xs mb-1">⏰ Horário</div>
+                                    <p className="font-bold text-[#B8956A]">
+                                      {(() => {
+                                        const timeMatch = entry.notes?.match(/Horário:\s*(\d{2}:\d{2})/);
+                                        return timeMatch?.[1] || '-';
+                                      })()}
+                                    </p>
+                                  </div>
                                   <div>
                                     <div className="flex items-center gap-2 text-stone-600 text-xs mb-1">
                                       <User className="w-3 h-3" />
