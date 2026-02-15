@@ -85,6 +85,7 @@ import ProductDetail from './pages/ProductDetail';
 import Services from './pages/Services';
 import UserPreferences from './pages/UserPreferences';
 import UserProfile from './pages/UserProfile';
+import AdminFinancialReport from './pages/AdminFinancialReport';
 import __Layout from './Layout.jsx';
 
 
@@ -127,6 +128,7 @@ export const PAGES = {
     "Services": Services,
     "UserPreferences": UserPreferences,
     "UserProfile": UserProfile,
+    "AdminFinancialReport": AdminFinancialReport,
 }
 
 export const pagesConfig = {
