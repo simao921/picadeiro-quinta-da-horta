@@ -724,18 +724,14 @@ Estrutura no formato JSON especificado.
                 </SelectContent>
               </Select>
             </div>
-            {selectedCompetition && results.filter(r => r.competition_id === selectedCompetition).length > 0 && (
-              <>
-                <Button onClick={generateResultsPDF} variant="outline" className="border-red-500 text-red-700 hover:bg-red-50 mt-5">
-                  <Download className="w-4 h-4 mr-2" />
-                  PDF
-                </Button>
-                <Button onClick={generateResultsExcel} variant="outline" className="border-green-500 text-green-700 hover:bg-green-50 mt-5">
-                  <Download className="w-4 h-4 mr-2" />
-                  Excel
-                </Button>
-              </>
-            )}
+            <Button onClick={generateResultsPDF} variant="outline" className="border-red-500 text-red-700 hover:bg-red-50 mt-5">
+              <Download className="w-4 h-4 mr-2" />
+              PDF Resultados
+            </Button>
+            <Button onClick={generateResultsExcel} variant="outline" className="border-green-500 text-green-700 hover:bg-green-50 mt-5">
+              <Download className="w-4 h-4 mr-2" />
+              Excel Resultados
+            </Button>
             <Button onClick={() => setShowManualDialog(true)} variant="outline" className="mt-5">
               <Edit className="w-4 h-4 mr-2" />
               Registar Manual
