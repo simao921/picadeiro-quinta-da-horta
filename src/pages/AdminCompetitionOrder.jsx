@@ -353,22 +353,23 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
 
     const doc = new jsPDF();
     
-    // Load logo
-    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/12aedfc33_93c9f5a3c_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG';
+    // Load logo with proper CORS handling
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/38ec6cae6_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B.PNG';
     
     try {
-      const logoImg = new Image();
-      logoImg.crossOrigin = 'anonymous';
-      await new Promise((resolve, reject) => {
-        logoImg.onload = resolve;
-        logoImg.onerror = reject;
-        logoImg.src = logoUrl;
+      const response = await fetch(logoUrl);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      const logoBase64 = await new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
       });
       
-      // Add logo centered at top
-      doc.addImage(logoImg, 'PNG', 75, 10, 60, 30);
+      // Add logo centered at top with proper sizing
+      doc.addImage(logoBase64, 'PNG', 70, 8, 70, 35);
     } catch (e) {
-      console.log('Logo não carregado');
+      console.log('Logo não carregado:', e);
     }
     
     // Golden decorative line
