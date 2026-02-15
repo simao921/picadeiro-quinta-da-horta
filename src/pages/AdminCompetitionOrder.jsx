@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
 
 export default function AdminCompetitionOrder() {
   const [selectedCompetition, setSelectedCompetition] = useState('');
@@ -404,6 +405,38 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
     toast.success('PDF gerado!');
   };
 
+  const generateExcelReport = () => {
+    const comp = competitions.find(c => c.id === selectedCompetition);
+    if (!comp) return;
+
+    const data = orderedEntries.map((entry, index) => ({
+      'Nº': index + 1,
+      'Cavaleiro': entry.rider_name,
+      'Cavalo': entry.horse_name,
+      'Grau': entry.grade || '-',
+      'Presença': entry.absent ? 'Ausente' : 'Presente',
+      'Pagamento': entry.paid ? 'Pago' : 'Não Pago'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Relatório');
+
+    // Auto-size columns
+    const max_width = data.reduce((w, r) => Math.max(w, r['Cavaleiro'].length), 10);
+    worksheet['!cols'] = [
+      { wch: 5 },
+      { wch: max_width },
+      { wch: max_width },
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 12 }
+    ];
+
+    XLSX.writeFile(workbook, `relatorio_${comp.name.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyyyy')}.xlsx`);
+    toast.success('Relatório Excel gerado!');
+  };
+
   const selectedComp = competitions.find(c => c.id === selectedCompetition);
 
   return (
@@ -439,7 +472,11 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
                 </Button>
                 <Button onClick={generatePDF} variant="outline">
                   <Download className="w-4 h-4 mr-2" />
-                  Exportar PDF
+                  PDF
+                </Button>
+                <Button onClick={generateExcelReport} variant="outline" className="bg-green-50 border-green-500 text-green-700 hover:bg-green-100">
+                  <Download className="w-4 h-4 mr-2" />
+                  Relatório Excel
                 </Button>
               </>
             )}
