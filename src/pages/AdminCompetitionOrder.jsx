@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { GripVertical, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles } from 'lucide-react';
+import { GripVertical, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles, UserCheck, UserX, DollarSign } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
@@ -51,7 +52,9 @@ export default function AdminCompetitionOrder() {
     if (entries.length > 0) {
       setOrderedEntries(entries.map((entry, index) => ({
         ...entry,
-        order_number: entry.order_number || index + 1
+        order_number: entry.order_number || index + 1,
+        absent: entry.absent || false,
+        paid: entry.paid || false
       })).sort((a, b) => a.order_number - b.order_number));
       return;
     }
@@ -111,6 +114,34 @@ export default function AdminCompetitionOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries(['entries']);
       toast.success('Participante removido!');
+    }
+  });
+
+  const toggleAbsent = useMutation({
+    mutationFn: async ({ id, absent }) => {
+      await base44.entities.CompetitionEntry.update(id, { absent });
+      return { id, absent };
+    },
+    onSuccess: ({ id, absent }) => {
+      setOrderedEntries(prev => prev.map(e => 
+        e.id === id ? { ...e, absent } : e
+      ));
+      queryClient.invalidateQueries(['entries', selectedCompetition]);
+      toast.success(absent ? 'Marcado como ausente' : 'Marcado como presente');
+    }
+  });
+
+  const togglePaid = useMutation({
+    mutationFn: async ({ id, paid }) => {
+      await base44.entities.CompetitionEntry.update(id, { paid });
+      return { id, paid };
+    },
+    onSuccess: ({ id, paid }) => {
+      setOrderedEntries(prev => prev.map(e => 
+        e.id === id ? { ...e, paid } : e
+      ));
+      queryClient.invalidateQueries(['entries', selectedCompetition]);
+      toast.success(paid ? 'Marcado como pago' : 'Marcado como não pago');
     }
   });
 
@@ -504,11 +535,56 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
                                   </div>
                                 </div>
 
-                                {entry.order_number && (
-                                  <div className="text-xs text-stone-500">
-                                    Ordem: {entry.order_number}
-                                  </div>
-                                )}
+                                <div className="flex flex-col gap-2">
+                                  {entry.absent ? (
+                                    <div className="flex items-center gap-1">
+                                      <Badge className="bg-red-500 text-white px-2 py-1 text-xs font-bold">
+                                        <UserX className="w-3 h-3 mr-1" />
+                                        Ausente
+                                      </Badge>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 px-2 text-xs"
+                                        onClick={() => toggleAbsent.mutate({ id: entry.id, absent: false })}
+                                        title="Marcar como presente"
+                                      >
+                                        ✕
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50"
+                                        onClick={() => toggleAbsent.mutate({ id: entry.id, absent: false })}
+                                      >
+                                        <UserCheck className="w-3 h-3 mr-1" />
+                                        Presente
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-2 text-xs border-red-500 text-red-600 hover:bg-red-50"
+                                        onClick={() => toggleAbsent.mutate({ id: entry.id, absent: true })}
+                                      >
+                                        <UserX className="w-3 h-3 mr-1" />
+                                        Ausente
+                                      </Button>
+                                    </div>
+                                  )}
+
+                                  <Button
+                                    variant={entry.paid ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => togglePaid.mutate({ id: entry.id, paid: !entry.paid })}
+                                    className={entry.paid ? "bg-green-600 hover:bg-green-700 text-xs h-7 font-bold" : "text-xs h-7 border-stone-300"}
+                                  >
+                                    <DollarSign className="w-3 h-3 mr-1" />
+                                    {entry.paid ? 'Pago' : 'Não Pago'}
+                                  </Button>
+                                </div>
 
                                 <Button
                                   variant="outline"
