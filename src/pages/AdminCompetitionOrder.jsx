@@ -353,53 +353,34 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
 
     const doc = new jsPDF();
     
-    // Load logo with proper CORS handling
-    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/38ec6cae6_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B.PNG';
-    
-    try {
-      const response = await fetch(logoUrl);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      
-      const logoBase64 = await new Promise((resolve) => {
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-      
-      // Add logo centered at top with proper sizing
-      doc.addImage(logoBase64, 'PNG', 70, 8, 70, 35);
-    } catch (e) {
-      console.log('Logo não carregado:', e);
-    }
-    
-    // Golden decorative line
+    // Golden decorative line at top
     doc.setDrawColor(184, 149, 106);
     doc.setLineWidth(0.5);
-    doc.line(20, 45, 190, 45);
+    doc.line(20, 20, 190, 20);
     
     // Header
     doc.setTextColor(45, 45, 45);
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
-    doc.text('ORDEM DE ENTRADA', 105, 55, { align: 'center' });
+    doc.text('ORDEM DE ENTRADA', 105, 30, { align: 'center' });
     
     doc.setFontSize(14);
     doc.setTextColor(184, 149, 106);
-    doc.text(comp.name, 105, 63, { align: 'center' });
+    doc.text(comp.name, 105, 38, { align: 'center' });
     
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Data: ${format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}`, 105, 70, { align: 'center' });
+    doc.text(`Data: ${format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}`, 105, 45, { align: 'center' });
     if (comp.location) {
-      doc.text(`Local: ${comp.location}`, 105, 75, { align: 'center' });
+      doc.text(`Local: ${comp.location}`, 105, 50, { align: 'center' });
     }
 
     // Golden line
     doc.setDrawColor(184, 149, 106);
-    doc.line(20, 78, 190, 78);
+    doc.line(20, 53, 190, 53);
 
     // Table headers with golden background
-    let y = 88;
+    let y = 63;
     doc.setFillColor(184, 149, 106);
     doc.rect(15, y - 5, 180, 8, 'F');
     
