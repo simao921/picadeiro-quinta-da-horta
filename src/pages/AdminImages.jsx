@@ -19,6 +19,8 @@ const imageKeys = [
   { key: 'hero_bookings', section: 'Reservas', description: 'Imagem de fundo do Hero das reservas' },
   { key: 'about_section', section: 'Sobre Nós', description: 'Imagem da secção Sobre Nós' },
   { key: 'logo', section: 'Global', description: 'Logotipo do site' },
+  { key: 'pdf_logo_left', section: 'Relatórios', description: 'Logo esquerda para PDF de resultados (azulejo)' },
+  { key: 'pdf_logo_right', section: 'Relatórios', description: 'Logo direita para PDF de resultados (Gilberto Filipe)' },
   { key: 'testimonials_bg', section: 'Testemunhos', description: 'Fundo da secção de testemunhos' },
   { key: 'cta_section', section: 'Call to Action', description: 'Imagem da secção CTA' },
 ];
