@@ -440,10 +440,7 @@ Estrutura no formato JSON especificado.
       // Calcular pontuações finais se houver modalidade com fórmula
       const results = extractedData.data.results.map(r => {
        const normalizedExerciseScores = Object.fromEntries(
-          Object.entries(r.exercise_scores || {}).map(([k, v]) => {
-            if (v === null || v === undefined || v === '') return [k, null];
-            return [k, toSafeNumber(v, 0)];
-          })
+          Object.entries(r.exercise_scores || {}).map(([k, v]) => [k, toSafeNumber(v, 0)])
         );
 
        const calculated = calculateFinalScore(competition, modality, {
@@ -530,312 +527,181 @@ Estrutura no formato JSON especificado.
     return comp?.name || 'Prova desconhecida';
   };
 
-  const sanitizeFilename = (value = 'ficheiro') =>
-    String(value)
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9_-]+/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '') || 'ficheiro';
-
-  const safeCompetitionDate = (dateValue) => {
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return 'Data não definida';
-    return format(date, "d 'de' MMMM 'de' yyyy", { locale: pt });
-  };
-
-  const loadImageAsDataUrl = async (url) => {
-    if (!url) return null;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Falha a carregar imagem (${response.status})`);
-    const blob = await response.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const recolorLogoToWhite = async (sourceDataUrl) => {
-    if (!sourceDataUrl) return null;
-    return await new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        ctx.globalCompositeOperation = 'source-in';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => resolve(sourceDataUrl);
-      img.src = sourceDataUrl;
-    });
-  };
-
-  const drawAzulejoBadge = (doc, x, y, width, height) => {
-    doc.setFillColor(245, 249, 255);
-    doc.roundedRect(x, y, width, height, 2, 2, 'F');
-
-    doc.setDrawColor(178, 204, 232);
-    doc.setLineWidth(0.2);
-    const tileSize = 6;
-    for (let px = x; px <= x + width; px += tileSize) {
-      doc.line(px, y, px, y + height);
-    }
-    for (let py = y; py <= y + height; py += tileSize) {
-      doc.line(x, py, x + width, py);
-    }
-
-    doc.setDrawColor(40, 95, 160);
-    doc.setLineWidth(0.7);
-    // Cavalo estilizado (traço simples)
-    doc.line(x + 6, y + 22, x + 11, y + 18); // pescoço
-    doc.line(x + 11, y + 18, x + 15, y + 18.5); // cabeça topo
-    doc.line(x + 15, y + 18.5, x + 16.5, y + 20.5); // focinho
-    doc.line(x + 16.5, y + 20.5, x + 14, y + 22.5); // mandíbula
-    doc.line(x + 14, y + 22.5, x + 10.5, y + 23); // garganta
-    doc.line(x + 10.5, y + 23, x + 8.5, y + 25); // peito
-    doc.line(x + 11, y + 18.2, x + 10, y + 16.8); // orelha
-    doc.line(x + 13, y + 18.3, x + 12.2, y + 16.7); // orelha
-
-    doc.setTextColor(25, 76, 140);
-    doc.setFontSize(8.5);
-    doc.setFont(undefined, 'bold');
-    doc.text('Picadeiro da', x + 20, y + 19);
-    doc.text('Quinta da Horta', x + 20, y + 24);
-  };
-
   const generateResultsPDF = async () => {
-    try {
-      if (!selectedCompetition) {
-        toast.error('Selecione uma competição');
-        return;
-      }
-
-      const comp = competitions.find(c => c.id === selectedCompetition);
-      if (!comp) {
-        toast.error('Competição não encontrada');
-        return;
-      }
-
-      const compResults = results.filter(r => r.competition_id === selectedCompetition)
-        .sort((a, b) => (a.position || 999) - (b.position || 999));
-
-      if (compResults.length === 0) {
-        toast.error('Nenhum resultado disponível');
-        return;
-      }
-
-      const doc = new jsPDF();
-
-      const siteImages = await base44.entities.SiteImage.list().catch(() => []);
-      const customLeftLogo = siteImages.find(img => img.image_key === 'pdf_logo_left')?.image_url;
-      const customRightLogo = siteImages.find(img => img.image_key === 'pdf_logo_right')?.image_url;
-      const defaultRightLogo = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG';
-      let rightLogoWhite = null;
-      let leftLogo = null;
-      try {
-        const loaded = await loadImageAsDataUrl(customRightLogo || defaultRightLogo);
-        rightLogoWhite = await recolorLogoToWhite(loaded);
-      } catch {
-        rightLogoWhite = null;
-      }
-      try {
-        leftLogo = customLeftLogo ? await loadImageAsDataUrl(customLeftLogo) : null;
-      } catch {
-        leftLogo = null;
-      }
-
-      const drawHeader = () => {
-        doc.setFillColor(19, 82, 147);
-        doc.rect(0, 0, 210, 38, 'F');
-
-        if (leftLogo) {
-          doc.addImage(leftLogo, 'PNG', 8, 5.5, 30, 30);
-          doc.setTextColor(219, 234, 254);
-          doc.setFontSize(8.5);
-          doc.setFont(undefined, 'bold');
-          doc.text('Picadeiro da Quinta da Horta', 42, 21);
-        } else {
-          drawAzulejoBadge(doc, 8, 6, 68, 26);
-        }
-
-        if (rightLogoWhite) {
-          doc.addImage(rightLogoWhite, 'PNG', 150, 4.5, 52, 28);
-        } else {
-          doc.setFontSize(12);
-          doc.setFont(undefined, 'bold');
-          doc.setTextColor(255, 255, 255);
-          doc.text('Gilberto Filipe', 202, 18, { align: 'right' });
-        }
-      };
-
-      const drawFooter = () => {
-        doc.setDrawColor(19, 82, 147);
-        doc.setLineWidth(0.3);
-        doc.line(12, 282, 198, 282);
-        doc.setFontSize(8);
-        doc.setTextColor(90, 90, 90);
-        doc.setFont(undefined, 'normal');
-        doc.text(`Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, 286, { align: 'center' });
-      };
-
-      const drawTableHeader = (y) => {
-        doc.setFillColor(19, 82, 147);
-        doc.rect(12, y - 5, 186, 8, 'F');
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(255, 255, 255);
-        doc.text('Pos', 16, y);
-        doc.text('Cavaleiro', 30, y);
-        doc.text('Cavalo', 92, y);
-        doc.text('Pontos', 160, y);
-        doc.text('%', 186, y);
-      };
-
-      drawHeader();
-
-      doc.setTextColor(25, 25, 25);
-      doc.setFontSize(17);
-      doc.setFont(undefined, 'bold');
-      doc.text('RESULTADOS FINAIS', 105, 51, { align: 'center' });
-
-      doc.setFontSize(13);
-      doc.setTextColor(19, 82, 147);
-      doc.text(comp.name || 'Competição', 105, 59, { align: 'center' });
-
-      doc.setFontSize(9);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(95, 95, 95);
-      doc.text(`Data: ${safeCompetitionDate(comp.date)}`, 105, 65, { align: 'center' });
-      if (comp.location) {
-        doc.text(`Local: ${comp.location}`, 105, 70, { align: 'center' });
-      }
-
-      let y = 80;
-      drawTableHeader(y);
-      y += 9;
-
-      compResults.forEach((result, index) => {
-        if (y > 272) {
-          drawFooter();
-          doc.addPage();
-          drawHeader();
-          y = 50;
-          drawTableHeader(y);
-          y += 9;
-        }
-
-        if (result.position && result.position <= 3) {
-          doc.setFillColor(255, 246, 214);
-          doc.rect(12, y - 5, 186, 7, 'F');
-          doc.setFont(undefined, 'bold');
-        } else if (index % 2 === 0) {
-          doc.setFillColor(247, 250, 254);
-          doc.rect(12, y - 5, 186, 7, 'F');
-          doc.setFont(undefined, 'normal');
-        } else {
-          doc.setFont(undefined, 'normal');
-        }
-
-        doc.setFontSize(9.5);
-        doc.setTextColor(35, 35, 35);
-
-        const riderName = String(result.rider_name || '-').slice(0, 28);
-        const horseName = String(result.horse_name || '-').slice(0, 30);
-
-        doc.text((result.position || '-').toString(), 16, y);
-        doc.text(riderName, 30, y);
-        doc.text(horseName, 92, y);
-        doc.text((toSafeNumber(result.score, 0)).toFixed(2), 160, y);
-        doc.text((toSafeNumber(result.percentage, 0)).toFixed(2) + '%', 186, y);
-        y += 7;
-      });
-
-      drawFooter();
-
-      const safeComp = sanitizeFilename(comp.name || 'competicao');
-      doc.save(`resultados_${safeComp}_${format(new Date(), 'ddMMyyyy')}.pdf`);
-      toast.success('PDF de resultados gerado!');
-    } catch (error) {
-      console.error('Erro a gerar PDF de resultados:', error);
-      toast.error('Erro ao gerar PDF de resultados.');
+    if (!selectedCompetition) {
+      toast.error('Selecione uma competição');
+      return;
     }
+
+    const comp = competitions.find(c => c.id === selectedCompetition);
+    const compResults = results.filter(r => r.competition_id === selectedCompetition)
+      .sort((a, b) => (a.position || 999) - (b.position || 999));
+
+    if (compResults.length === 0) {
+      toast.error('Nenhum resultado disponível');
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    // Load logo with proper CORS handling
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/38ec6cae6_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B.PNG';
+    
+    try {
+      const response = await fetch(logoUrl);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      const logoBase64 = await new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      
+      // Add logo centered at top with proper sizing
+      doc.addImage(logoBase64, 'PNG', 70, 8, 70, 35);
+    } catch (e) {
+      console.log('Logo não carregado:', e);
+    }
+    
+    // Golden decorative line
+    doc.setDrawColor(184, 149, 106);
+    doc.setLineWidth(0.5);
+    doc.line(20, 45, 190, 45);
+    
+    // Header
+    doc.setTextColor(45, 45, 45);
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text('RESULTADOS FINAIS', 105, 55, { align: 'center' });
+    
+    doc.setFontSize(14);
+    doc.setTextColor(184, 149, 106);
+    doc.text(comp.name, 105, 63, { align: 'center' });
+    
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Data: ${format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}`, 105, 70, { align: 'center' });
+    if (comp.location) {
+      doc.text(`Local: ${comp.location}`, 105, 75, { align: 'center' });
+    }
+
+    // Golden line
+    doc.setDrawColor(184, 149, 106);
+    doc.line(20, 78, 190, 78);
+
+    // Table headers with golden background
+    let y = 88;
+    doc.setFillColor(184, 149, 106);
+    doc.rect(15, y - 5, 180, 8, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('Pos', 20, y);
+    doc.text('Cavaleiro', 40, y);
+    doc.text('Cavalo', 105, y);
+    doc.text('Pontos', 155, y);
+    doc.text('%', 180, y);
+
+    // Table content
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(45, 45, 45);
+    y += 10;
+
+    compResults.forEach((result, index) => {
+      if (y > 265) {
+        doc.addPage();
+        y = 20;
+      }
+
+      // Highlight top 3
+      if (result.position && result.position <= 3) {
+        const colors = {
+          1: [255, 215, 0],
+          2: [192, 192, 192], 
+          3: [205, 127, 50]
+        };
+        const color = colors[result.position];
+        if (color) {
+          doc.setFillColor(...color);
+          doc.rect(15, y - 5, 180, 7, 'F');
+          doc.setFont(undefined, 'bold');
+        }
+      } else if (index % 2 === 0) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(15, y - 5, 180, 7, 'F');
+        doc.setFont(undefined, 'normal');
+      } else {
+        doc.setFont(undefined, 'normal');
+      }
+
+      doc.text((result.position || '-').toString(), 20, y);
+      doc.text(result.rider_name, 40, y);
+      doc.text(result.horse_name, 105, y);
+      doc.text((result.score || 0).toFixed(2), 155, y);
+      doc.text((result.percentage || 0).toFixed(2) + '%', 180, y);
+      
+      y += 7;
+    });
+
+    // Footer with golden line
+    doc.setDrawColor(184, 149, 106);
+    doc.setLineWidth(0.3);
+    doc.line(20, 280, 190, 280);
+    
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, 285, { align: 'center' });
+    doc.setTextColor(184, 149, 106);
+    doc.setFont(undefined, 'bold');
+    doc.text('Picadeiro Quinta da Horta - Gilberto Filipe', 105, 290, { align: 'center' });
+
+    doc.save(`resultados_${comp.name.replace(/\s+/g, '_')}.pdf`);
+    toast.success('PDF de resultados gerado!');
   };
 
   const generateResultsExcel = () => {
-    try {
-      if (!selectedCompetition) {
-        toast.error('Selecione uma competição');
-        return;
-      }
-
-      const comp = competitions.find(c => c.id === selectedCompetition);
-      if (!comp) {
-        toast.error('Competição não encontrada');
-        return;
-      }
-
-      const compResults = results.filter(r => r.competition_id === selectedCompetition)
-        .sort((a, b) => (a.position || 999) - (b.position || 999));
-
-      if (compResults.length === 0) {
-        toast.error('Nenhum resultado disponível');
-        return;
-      }
-
-      const tableHeader = ['Posição', 'Cavaleiro', 'Cavalo', 'Pontuação', 'Percentagem', 'Penalizações', 'Notas'];
-      const tableRows = compResults.map((result) => ([
-        result.position || '-',
-        result.rider_name || '',
-        result.horse_name || '',
-        toSafeNumber(result.score, 0).toFixed(2),
-        `${toSafeNumber(result.percentage, 0).toFixed(2)}%`,
-        toSafeNumber(result.penalties, 0).toFixed(2),
-        result.notes || ''
-      ]));
-
-      const sheetData = [
-        ['Picadeiro da Quinta da Horta'],
-        ['Gilberto Filipe - Resultados Oficiais'],
-        ['Competição', comp.name || ''],
-        ['Data', safeCompetitionDate(comp.date)],
-        ['Local', comp.location || ''],
-        [],
-        tableHeader,
-        ...tableRows
-      ];
-
-      const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-      worksheet['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }
-      ];
-      worksheet['!cols'] = [
-        { wch: 8 },
-        { wch: 28 },
-        { wch: 28 },
-        { wch: 12 },
-        { wch: 13 },
-        { wch: 13 },
-        { wch: 45 }
-      ];
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Resultados');
-
-      const safeComp = sanitizeFilename(comp.name || 'competicao');
-      XLSX.writeFile(workbook, `resultados_${safeComp}_${format(new Date(), 'ddMMyyyy')}.xlsx`);
-      toast.success('Excel de resultados gerado!');
-    } catch (error) {
-      console.error('Erro a gerar Excel de resultados:', error);
-      toast.error('Erro ao gerar Excel de resultados.');
+    if (!selectedCompetition) {
+      toast.error('Selecione uma competição');
+      return;
     }
+
+    const comp = competitions.find(c => c.id === selectedCompetition);
+    const compResults = results.filter(r => r.competition_id === selectedCompetition)
+      .sort((a, b) => (a.position || 999) - (b.position || 999));
+
+    if (compResults.length === 0) {
+      toast.error('Nenhum resultado disponível');
+      return;
+    }
+
+    const data = compResults.map((result) => ({
+      'Posição': result.position || '-',
+      'Cavaleiro': result.rider_name,
+      'Cavalo': result.horse_name,
+      'Pontuação': (result.score || 0).toFixed(2),
+      'Percentagem': (result.percentage || 0).toFixed(2) + '%',
+      'Penalizações': (result.penalties || 0).toFixed(2),
+      'Notas': result.notes || ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Resultados');
+
+    worksheet['!cols'] = [
+      { wch: 8 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 40 }
+    ];
+
+    XLSX.writeFile(workbook, `resultados_${comp.name.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyyyy')}.xlsx`);
+    toast.success('Excel de resultados gerado!');
   };
 
   return (

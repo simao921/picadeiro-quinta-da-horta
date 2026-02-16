@@ -1,50 +1,28 @@
 import { base44 } from '@/api/base44Client';
 
-let siteImagesCache = null;
-let cacheTimestamp = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+export const DEFAULT_IMAGES = {
+  hero_home: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&w=1920&q=80',
+  hero_services: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1920&q=80',
+  hero_gallery: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1920&q=80',
+  hero_bookings: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
+  about_section: 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?auto=format&fit=crop&w=1200&q=80',
+  logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG',
+  testimonials_bg: 'https://images.unsplash.com/photo-1598662779094-d8de6b04f1c5?auto=format&fit=crop&w=1920&q=80',
+  cta_section: 'https://images.unsplash.com/photo-1560925691-17f5b06af77a?auto=format&fit=crop&w=1920&q=80'
+};
 
-export async function getSiteImage(key, defaultUrl) {
+// SEM CACHE - buscar sempre direto
+export async function getSiteImage(imageKey, fallbackUrl) {
   try {
-    // Use cache if available and fresh
-    const now = Date.now();
-    if (siteImagesCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
-      const image = siteImagesCache.find(img => img.key === key);
-      return image?.url || defaultUrl;
-    }
-
-    // Fetch from database
-    const images = await base44.entities.SiteImage?.list() || [];
-    siteImagesCache = images;
-    cacheTimestamp = now;
-
-    const image = images.find(img => img.key === key);
-    return image?.url || defaultUrl;
+    const images = await base44.entities.SiteImage.list();
+    const image = images.find(img => img.image_key === imageKey);
+    return image?.image_url || fallbackUrl || DEFAULT_IMAGES[imageKey] || '';
   } catch (error) {
-    console.warn('Error fetching site image:', error);
-    return defaultUrl;
+    console.error('Erro ao carregar imagem:', error);
+    return fallbackUrl || DEFAULT_IMAGES[imageKey] || '';
   }
 }
 
-export function clearSiteImagesCache() {
-  siteImagesCache = null;
-  cacheTimestamp = null;
+export function clearImageCache() {
+  // Não faz nada - sem cache
 }
-
-// Default image URLs
-export const DEFAULT_IMAGES = {
-  logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG',
-  pdf_logo_left: '',
-  pdf_logo_right: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG',
-  hero: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1920&q=80',
-  cta: 'https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80',
-  service_1: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
-  service_2: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80',
-  service_3: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=600&q=80',
-  about_decorative: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&q=80',
-  about_grid_1: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=600&q=80',
-  about_grid_2: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  about_grid_3: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=400&q=80',
-  about_grid_4: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80',
-  gallery_background: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1920&q=80',
-};

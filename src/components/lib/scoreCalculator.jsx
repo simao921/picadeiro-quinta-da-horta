@@ -35,31 +35,9 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
   const artisticScoreNum = toSafeNumber(artistic_score, 0);
   const penaltiesNum = toSafeNumber(penalties, 0);
   const bonusNum = toSafeNumber(bonus, 0);
-  const modalityType = String(modalityData?.type || '').toLowerCase();
-  const scoringFormula = String(modalityData?.scoring_formula || '').toLowerCase();
-  const isSaltos =
-    modalityType === 'saltos' ||
-    scoringFormula.includes('saltos') ||
-    scoringFormula.includes('jumping');
-  const isWorkingEquitation =
-    modalityType === 'working_equitation' ||
-    scoringFormula.includes('working') ||
-    scoringFormula.includes('equitacao') ||
-    scoringFormula.includes('equitação') ||
-    /\bwe\b/.test(scoringFormula);
-  const penaltyMode = isSaltos || isWorkingEquitation ? 'none' : 'percentage';
-  const applyPercentageAdjustments = (basePercentage) => {
-    if (penaltyMode === 'percentage') {
-      return Math.max(0, basePercentage - penaltiesNum + bonusNum);
-    }
-    return Math.max(0, basePercentage + bonusNum);
-  };
   const exerciseScoresNum = exercise_scores && typeof exercise_scores === 'object'
     ? Object.fromEntries(
-      Object.entries(exercise_scores).map(([k, v]) => {
-        if (v === null || v === undefined || v === '') return [k, null];
-        return [k, toSafeNumber(v, 0)];
-      })
+      Object.entries(exercise_scores).map(([k, v]) => [k, toSafeNumber(v, 0)])
     )
     : null;
 
@@ -107,8 +85,7 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     exercisesSource.forEach(exercise => {
       const score = exerciseScoresNum[exercise.number];
       const coef = exercise.coefficient || 1;
-      const exMaxRaw = toSafeNumber(exercise.max_points, 10);
-      const exMax = exMaxRaw > 0 ? exMaxRaw : 10;
+      const exMax = typeof exercise.max_points === 'number' ? exercise.max_points : 10;
       const category = getExerciseCategory(exercise);
       const exerciseMaxWeighted = exMax * coef;
       maxPoints += exMax * coef;
@@ -138,8 +115,7 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     if (scoredExercises > 0) {
       // Soma total com coeficientes (não média) - penalizações NÃO são subtraídas dos pontos
       const final_score = totalPoints;
-      const basePercentage = maxPoints > 0 ? (final_score / maxPoints) * 100 : 0;
-      let percentage = basePercentage;
+      let percentage = maxPoints > 0 ? (final_score / maxPoints) * 100 : 0;
       let weightedDetails = '';
 
       if (hasTechnicalExercises || hasQualitativeExercises) {
@@ -168,8 +144,8 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
           const weightedQualitative = qualitativePercentage !== null
             ? (qualitativePercentage * qualitativeWeight) / 100
             : 0;
-          const weightedBase = weightedTechnical + weightedQualitative;
-          percentage = applyPercentageAdjustments(weightedBase);
+          // Penalizações são em percentagem, subtraídas diretamente
+          percentage = Math.max(0, weightedTechnical + weightedQualitative - penaltiesNum + bonusNum);
           weightedDetails = [
             technicalPercentage !== null
               ? `Téc: ${technicalPercentage.toFixed(2)}%×${technicalWeight}%`
@@ -177,29 +153,28 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
             qualitativePercentage !== null
               ? `Qual: ${qualitativePercentage.toFixed(2)}%×${qualitativeWeight}%`
               : '',
-            penaltyMode === 'percentage' && penaltiesNum > 0 ? `- ${penaltiesNum}%` : '',
-            penaltyMode !== 'percentage' && penaltiesNum > 0 ? `Penalizações: ${penaltiesNum} (sem desconto % automático)` : '',
+            penaltiesNum > 0 ? `- ${penaltiesNum}%` : '',
             bonusNum > 0 ? `+ ${bonusNum}%` : ''
           ].filter(Boolean).join(' | ');
         }
       } else {
-        percentage = applyPercentageAdjustments(percentage);
+        // Penalizações são em percentagem, subtraídas diretamente
+        percentage = Math.max(0, percentage - penaltiesNum + bonusNum);
       }
       
       return {
         final_score: parseFloat(final_score.toFixed(2)),
         percentage: parseFloat(Math.max(0, percentage).toFixed(2)),
-        calculation_details: `Total: ${details.join(' + ')} = ${final_score} pts${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` | Perc: -${penaltiesNum}%` : ''}${bonusNum > 0 ? ` +${bonusNum}%` : ''}${weightedDetails ? ` | ${weightedDetails}` : ` = ${percentage.toFixed(2)}%`}`
+        calculation_details: `Total: ${details.join(' + ')} = ${final_score} pts${penaltiesNum > 0 ? ` | Perc: -${penaltiesNum}%` : ''}${bonusNum > 0 ? ` +${bonusNum}%` : ''}${weightedDetails ? ` | ${weightedDetails}` : ` = ${percentage.toFixed(2)}%`}`
       };
     }
   }
 
   // Se já tiver pontuação final extraída e não houver fórmula, usa a extraída
   if (scores.final_score && !modalityData?.scoring_formula) {
-    const extractedPercentage = toSafeNumber(scores.percentage, 0);
     return {
       final_score: scores.final_score,
-      percentage: parseFloat(applyPercentageAdjustments(extractedPercentage).toFixed(2)),
+      percentage: parseFloat((toSafeNumber(scores.percentage, 0) + bonusNum).toFixed(2)),
       calculation_details: 'Pontuação extraída do protocolo'
     };
   }
@@ -212,11 +187,11 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     // Sem fórmula: pontuação base, penalizações em %
     final_score = baseScoreNum;
     const base_percentage = competitionData?.base_percentage || 100;
-    const basePercentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
-    percentage = applyPercentageAdjustments(basePercentage);
-    calculation_details = `Base (${baseScoreNum}) = ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
+    percentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
+    percentage = Math.max(0, percentage - penaltiesNum + bonusNum);
+    calculation_details = `Base (${baseScoreNum})${penaltiesNum > 0 ? ` | ${percentage.toFixed(2)}% - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
   } else {
-    const formula = scoringFormula;
+    const formula = modalityData.scoring_formula.toLowerCase();
     const coefficients = modalityData.coefficients || {};
     const base_percentage = competitionData?.base_percentage || 100;
 
@@ -226,9 +201,9 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       const max_points = base_percentage || 100;
       if (baseScoreNum > 0) {
         final_score = baseScoreNum;
-        const basePercentage = (baseScoreNum / max_points) * 100;
-        percentage = applyPercentageAdjustments(basePercentage);
-        calculation_details = `Dressage: ${baseScoreNum}/${max_points} = ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
+        percentage = (baseScoreNum / max_points) * 100;
+        percentage = Math.max(0, percentage - penaltiesNum + bonusNum);
+        calculation_details = `Dressage: ${baseScoreNum}/${max_points} = ${((baseScoreNum / max_points) * 100).toFixed(2)}%${penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
       }
     }
     // Working Equitation - Sistema de 3 provas
@@ -260,15 +235,15 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
         // Penalizações em percentagem
         final_score = total_weighted;
         const max_possible = base_percentage || 300;
-        const basePercentage = (final_score / max_possible) * 100;
-        percentage = applyPercentageAdjustments(basePercentage);
+        percentage = (final_score / max_possible) * 100;
+        percentage = Math.max(0, percentage - penaltiesNum + bonusNum);
         
-        calculation_details = `WE: ${details.join(' + ')} = ${final_score} | ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
+        calculation_details = `WE: ${details.join(' + ')} = ${final_score}${penaltiesNum > 0 ? ` | ${((final_score / max_possible) * 100).toFixed(2)}% - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
       } else {
         final_score = baseScoreNum;
-        const basePercentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
-        percentage = applyPercentageAdjustments(basePercentage);
-        calculation_details = `WE: ${baseScoreNum} = ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
+        percentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
+        percentage = Math.max(0, percentage - penaltiesNum + bonusNum);
+        calculation_details = `WE: ${baseScoreNum} = ${((baseScoreNum / base_percentage) * 100).toFixed(2)}%${penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
       }
     }
     // Saltos de Obstáculos - Sistema de penalizações
@@ -282,7 +257,7 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       final_score = penaltiesNum; // Em saltos, menor pontuação é melhor (0 = percurso limpo)
       calculation_details = `Saltos: ${penaltiesNum} pontos de falta`;
       
-      // Percentagem inversa usada apenas como métrica interna de visualização
+      // Percentagem inversa (100% = 0 faltas)
       const max_faults = base_percentage || 50;
       percentage = Math.max(0, 100 - ((penaltiesNum / max_faults) * 100));
       percentage += bonusNum;
@@ -311,18 +286,18 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       } catch (e) {
         // Se falhar, usa base, penalizações em %
         final_score = baseScoreNum;
-        const basePercentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
-        percentage = applyPercentageAdjustments(basePercentage);
-        calculation_details = `Base ${baseScoreNum} | ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}% (fórmula inválida)`;
+        percentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
+        percentage = Math.max(0, percentage - penaltiesNum);
+        calculation_details = `Base ${baseScoreNum} | ${percentage.toFixed(2)}% - ${penaltiesNum}% (fórmula inválida)`;
       }
     }
     // Default
     else {
       final_score = baseScoreNum;
       const base_percentage = competitionData?.base_percentage || 100;
-      const basePercentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
-      percentage = applyPercentageAdjustments(basePercentage);
-      calculation_details = `${baseScoreNum} = ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
+      percentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
+      percentage = Math.max(0, percentage - penaltiesNum + bonusNum);
+      calculation_details = `${baseScoreNum} = ${((baseScoreNum / base_percentage) * 100).toFixed(2)}%${penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
     }
   }
 

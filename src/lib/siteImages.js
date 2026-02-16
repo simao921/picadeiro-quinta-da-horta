@@ -34,8 +34,6 @@ export function clearSiteImagesCache() {
 // Default image URLs
 export const DEFAULT_IMAGES = {
   logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG',
-  pdf_logo_left: '',
-  pdf_logo_right: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG',
   hero: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1920&q=80',
   cta: 'https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80',
   service_1: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
@@ -48,3 +46,4 @@ export const DEFAULT_IMAGES = {
   about_grid_4: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80',
   gallery_background: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1920&q=80',
 };
+
