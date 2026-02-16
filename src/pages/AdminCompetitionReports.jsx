@@ -566,10 +566,15 @@ Estrutura no formato JSON especificado.
       }
 
       const doc = new jsPDF();
+      const BRAND_GOLD = [184, 149, 106];
+      const BRAND_GOLD_SOFT = [205, 176, 140];
+      const BRAND_TEXT = [120, 92, 62];
 
       const drawHeader = () => {
-        doc.setFillColor(19, 82, 147);
+        doc.setFillColor(...BRAND_GOLD);
         doc.rect(0, 0, 210, 38, 'F');
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 34, 210, 4, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
@@ -578,7 +583,7 @@ Estrutura no formato JSON especificado.
       };
 
       const drawFooter = () => {
-        doc.setDrawColor(19, 82, 147);
+        doc.setDrawColor(...BRAND_GOLD);
         doc.setLineWidth(0.3);
         doc.line(12, 282, 198, 282);
         doc.setFontSize(8);
@@ -588,7 +593,7 @@ Estrutura no formato JSON especificado.
       };
 
       const drawTableHeader = (y) => {
-        doc.setFillColor(19, 82, 147);
+        doc.setFillColor(...BRAND_GOLD);
         doc.rect(12, y - 5, 186, 8, 'F');
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
@@ -602,13 +607,13 @@ Estrutura no formato JSON especificado.
 
       drawHeader();
 
-      doc.setTextColor(25, 25, 25);
+      doc.setTextColor(...BRAND_TEXT);
       doc.setFontSize(17);
       doc.setFont(undefined, 'bold');
       doc.text('RESULTADOS FINAIS', 105, 51, { align: 'center' });
 
       doc.setFontSize(13);
-      doc.setTextColor(19, 82, 147);
+      doc.setTextColor(...BRAND_GOLD);
       doc.text(comp.name || 'Competição', 105, 59, { align: 'center' });
 
       doc.setFontSize(9);
@@ -634,14 +639,19 @@ Estrutura no formato JSON especificado.
         }
 
         if (result.position && result.position <= 3) {
-          doc.setFillColor(255, 246, 214);
+          doc.setFillColor(249, 240, 227);
           doc.rect(12, y - 5, 186, 7, 'F');
+          doc.setDrawColor(...BRAND_GOLD);
+          doc.setLineWidth(0.2);
+          doc.line(12, y - 5, 12, y + 2);
           doc.setFont(undefined, 'bold');
         } else if (index % 2 === 0) {
-          doc.setFillColor(247, 250, 254);
+          doc.setFillColor(...BRAND_GOLD_SOFT);
           doc.rect(12, y - 5, 186, 7, 'F');
           doc.setFont(undefined, 'normal');
         } else {
+          doc.setFillColor(255, 255, 255);
+          doc.rect(12, y - 5, 186, 7, 'F');
           doc.setFont(undefined, 'normal');
         }
 
