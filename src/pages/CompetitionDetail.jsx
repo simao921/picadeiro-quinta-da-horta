@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Calendar, MapPin, Trophy, Download, Users, FileText, Award, Calculator } from 'lucide-react';
@@ -14,6 +15,7 @@ import CompetitionEntryForm from '@/components/competitions/CompetitionEntryForm
 
 export default function CompetitionDetail() {
   const [showEntryDialog, setShowEntryDialog] = useState(false);
+  const [selectedResultGrade, setSelectedResultGrade] = useState('all');
   const urlParams = new URLSearchParams(window.location.search);
   const competitionId = urlParams.get('id');
 
@@ -71,6 +73,57 @@ export default function CompetitionDetail() {
   const isFull = !!competition.max_entries && entries.length >= competition.max_entries;
   const canEnroll = competition.status === 'inscricoes_abertas' && !isFull;
   const hasResults = results.length > 0;
+  
+  const resultsWithGrade = useMemo(() => {
+    if (!results.length) return [];
+
+    const entryGradeById = new Map(
+      entries.map((entry) => [entry.id, entry.grade || 'Sem escalão'])
+    );
+
+    return results.map((result) => {
+      const entryGrade = result.entry_id ? entryGradeById.get(result.entry_id) : null;
+      const fallbackEntry = !entryGrade
+        ? entries.find((entry) =>
+            entry.rider_name === result.rider_name &&
+            entry.horse_name === result.horse_name
+          )
+        : null;
+
+      return {
+        ...result,
+        grade: entryGrade || fallbackEntry?.grade || 'Sem escalão'
+      };
+    });
+  }, [results, entries]);
+
+  const availableGrades = useMemo(() => {
+    return Array.from(new Set(resultsWithGrade.map((result) => result.grade)))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'pt'));
+  }, [resultsWithGrade]);
+
+  const filteredResults = useMemo(() => {
+    const source = selectedResultGrade === 'all'
+      ? resultsWithGrade
+      : resultsWithGrade.filter((result) => result.grade === selectedResultGrade);
+
+    return [...source].sort((a, b) => {
+      const aPercentage = Number(a.percentage);
+      const bPercentage = Number(b.percentage);
+      if (Number.isFinite(aPercentage) && Number.isFinite(bPercentage) && aPercentage !== bPercentage) {
+        return bPercentage - aPercentage;
+      }
+
+      const aScore = Number(a.score);
+      const bScore = Number(b.score);
+      if (Number.isFinite(aScore) && Number.isFinite(bScore) && aScore !== bScore) {
+        return bScore - aScore;
+      }
+
+      return Number(a.position || 999) - Number(b.position || 999);
+    });
+  }, [resultsWithGrade, selectedResultGrade]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100">
@@ -195,7 +248,26 @@ export default function CompetitionDetail() {
                       <p className="text-stone-500 text-center py-8">Resultados disponíveis após a conclusão da prova</p>
                     ) : (
                       <div className="space-y-3">
-                        {results.sort((a, b) => a.position - b.position).map((result) => {
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm text-stone-600">
+                            Melhores resultados por escalão
+                          </p>
+                          <Select value={selectedResultGrade} onValueChange={setSelectedResultGrade}>
+                            <SelectTrigger className="w-56">
+                              <SelectValue placeholder="Selecionar escalão" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos os escalões</SelectItem>
+                              {availableGrades.map((grade) => (
+                                <SelectItem key={grade} value={grade}>
+                                  {grade}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {filteredResults.map((result, index) => {
                           const notes = result.notes || '';
                           const baseMatch = notes.match(/Base:\s*([\d.]+)/);
                           const techMatch = notes.match(/Técnica:\s*([\d.]+)/);
@@ -214,16 +286,17 @@ export default function CompetitionDetail() {
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-4">
                                   <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                                    result.position === 1 ? 'bg-yellow-400 text-yellow-900' :
-                                    result.position === 2 ? 'bg-gray-300 text-gray-900' :
-                                    result.position === 3 ? 'bg-amber-600 text-white' :
+                                    index + 1 === 1 ? 'bg-yellow-400 text-yellow-900' :
+                                    index + 1 === 2 ? 'bg-gray-300 text-gray-900' :
+                                    index + 1 === 3 ? 'bg-amber-600 text-white' :
                                     'bg-[#B8956A] text-white'
                                   }`}>
-                                    {result.position}
+                                    {index + 1}
                                   </div>
                                   <div>
                                     <p className="font-bold">{result.rider_name}</p>
                                     <p className="text-sm text-stone-600">{result.horse_name}</p>
+                                    <p className="text-xs text-stone-500">{result.grade}</p>
                                   </div>
                                 </div>
                                 <div className="text-right">
@@ -231,6 +304,9 @@ export default function CompetitionDetail() {
                                     <p className="text-2xl font-bold text-[#B8956A]">{percentageValue.toFixed(2)}%</p>
                                   )}
                                   <p className="text-sm text-stone-600">{scoreValue.toFixed(2)} pts</p>
+                                  {result.position ? (
+                                    <p className="text-xs text-stone-500">Geral: {result.position}º</p>
+                                  ) : null}
                                 </div>
                               </div>
 
@@ -330,9 +406,14 @@ export default function CompetitionDetail() {
                                     <p className="text-xs text-stone-500">Horário</p>
                                   </div>
                                 )}
-                              </div>
-                            );
-                          })}
+                            </div>
+                          );
+                        })}
+                        {filteredResults.length === 0 && (
+                          <p className="text-stone-500 text-center py-8">
+                            Sem resultados para o escalão selecionado.
+                          </p>
+                        )}
                       </div>
                     )}
                   </CardContent>
