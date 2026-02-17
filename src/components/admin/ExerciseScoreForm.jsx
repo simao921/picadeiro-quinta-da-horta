@@ -11,6 +11,9 @@ export default function ExerciseScoreForm({
   bonus = 0,
   technicalPercentage = 70,
   qualitativePercentage = 30,
+  useTechQualAverage = false,
+  technicalBaseOverride = null,
+  qualitativeBaseOverride = null,
   onScoreChange,
   onPenaltiesChange,
   onBonusChange,
@@ -81,15 +84,23 @@ export default function ExerciseScoreForm({
 
     // Penalizações são em %, aplicadas à percentagem, não aos pontos
     const percentageBase = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
-    const technicalPct = technicalMax > 0 ? (technicalTotal / technicalMax) * 100 : null;
-    const qualitativePct = qualitativeMax > 0 ? (qualitativeTotal / qualitativeMax) * 100 : null;
+    const technicalBase = Number.isFinite(Number(technicalBaseOverride)) && Number(technicalBaseOverride) > 0
+      ? Number(technicalBaseOverride)
+      : technicalMax;
+    const qualitativeBase = Number.isFinite(Number(qualitativeBaseOverride)) && Number(qualitativeBaseOverride) > 0
+      ? Number(qualitativeBaseOverride)
+      : qualitativeMax;
+    const technicalPct = technicalBase > 0 ? (technicalTotal / technicalBase) * 100 : null;
+    const qualitativePct = qualitativeBase > 0 ? (qualitativeTotal / qualitativeBase) * 100 : null;
     const hasSplitWeights = technicalMax > 0 || qualitativeMax > 0;
 
     let weightedBase = percentageBase;
     if (hasSplitWeights && (technicalPct !== null || qualitativePct !== null)) {
       const techWeight = Number.isFinite(Number(technicalPercentage)) ? Number(technicalPercentage) : 70;
       const qualWeight = Number.isFinite(Number(qualitativePercentage)) ? Number(qualitativePercentage) : 30;
-      if (technicalPct !== null && qualitativePct !== null) {
+      if (useTechQualAverage && technicalPct !== null && qualitativePct !== null) {
+        weightedBase = (technicalPct + qualitativePct) / 2;
+      } else if (technicalPct !== null && qualitativePct !== null) {
         const weightedTechnical = (technicalPct * techWeight) / 100;
         const weightedQualitative = (qualitativePct * qualWeight) / 100;
         weightedBase = weightedTechnical + weightedQualitative;
@@ -100,7 +111,9 @@ export default function ExerciseScoreForm({
       }
     }
 
-    const percentageFinal = Math.max(0, weightedBase - (penalties || 0) + (bonus || 0));
+    const percentageFinal = useTechQualAverage
+      ? Math.max(0, weightedBase)
+      : Math.max(0, weightedBase - (penalties || 0) + (bonus || 0));
     
     return {
       subtotal: total,
@@ -111,7 +124,7 @@ export default function ExerciseScoreForm({
       details: details.join(' | '),
       percentage: percentageFinal
     };
-  }, [exercises, scores, penalties, bonus, technicalPercentage, qualitativePercentage]);
+  }, [exercises, scores, penalties, bonus, technicalPercentage, qualitativePercentage, useTechQualAverage, technicalBaseOverride, qualitativeBaseOverride]);
 
   return (
     <div className="space-y-4">
