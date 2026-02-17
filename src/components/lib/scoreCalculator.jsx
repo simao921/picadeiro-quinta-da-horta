@@ -30,6 +30,19 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     time = null,
     exercise_scores = null
   } = scores;
+  const rawTechnicalScore = scores?.technical_score;
+  const rawArtisticScore = scores?.artistic_score;
+
+  const inferScaleMax = (...values) => {
+    const numeric = values
+      .map((v) => toSafeNumber(v, NaN))
+      .filter((v) => Number.isFinite(v) && v > 0);
+    const maxValue = numeric.length > 0 ? Math.max(...numeric) : 0;
+
+    if (maxValue <= 10) return 10;
+    if (maxValue <= 20) return 20;
+    return 100;
+  };
   const baseScoreNum = toSafeNumber(base_score, 0);
   const technicalScoreNum = toSafeNumber(technical_score, 0);
   const artisticScoreNum = toSafeNumber(artistic_score, 0);
@@ -38,8 +51,8 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     const parsed = toSafeNumber(value, NaN);
     return Number.isFinite(parsed);
   };
-  const hasTechnicalProvided = hasProvidedScore(technical_score);
-  const hasQualitativeProvided = hasProvidedScore(artistic_score);
+  const hasTechnicalProvided = hasProvidedScore(rawTechnicalScore);
+  const hasQualitativeProvided = hasProvidedScore(rawArtisticScore);
   const techQualFinalScore = hasTechnicalProvided && hasQualitativeProvided
     ? (technicalScoreNum + artisticScoreNum) / 2
     : hasTechnicalProvided
@@ -50,7 +63,25 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
   const penaltiesNum = toSafeNumber(penalties, 0);
   const bonusNum = toSafeNumber(bonus, 0);
   const modalityType = String(modalityData?.type || '').toLowerCase();
+  const modalityName = String(modalityData?.name || '').toLowerCase();
   const scoringFormula = String(modalityData?.scoring_formula || '').toLowerCase();
+  const coefficients = modalityData?.coefficients || {};
+  const averageModeByConfig =
+    coefficients.use_tech_qual_average === true ||
+    coefficients.average_tech_qual === true;
+  const averageModeByFormula =
+    ((scoringFormula.includes('media') || scoringFormula.includes('média')) &&
+      (scoringFormula.includes('tecn') || scoringFormula.includes('technical')) &&
+      (scoringFormula.includes('qualit') || scoringFormula.includes('artistic'))) ||
+    (scoringFormula.includes('/2') &&
+      (scoringFormula.includes('tecn') || scoringFormula.includes('technical')) &&
+      (scoringFormula.includes('qualit') || scoringFormula.includes('artistic')));
+  const isInfantil1Or3 = /infantil\s*(1|i|3|iii)\b/.test(modalityName);
+  const isJuniorsTeam = /juniors?\s*team\b/.test(modalityName);
+  const isFixedTechQualScale = isInfantil1Or3 || isJuniorsTeam;
+  const averageModeByModalityName = isFixedTechQualScale;
+  const isInfantil3 = /infantil\s*(3|iii)\b/.test(modalityName);
+  const shouldUseTechQualAverage = averageModeByConfig || averageModeByFormula || averageModeByModalityName;
   const isSaltos =
     modalityType === 'saltos' ||
     scoringFormula.includes('saltos') ||
@@ -62,7 +93,11 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     scoringFormula.includes('equitação') ||
     /\bwe\b/.test(scoringFormula);
   const penaltyMode = isSaltos || isWorkingEquitation ? 'none' : 'percentage';
+  const shouldAutoAdjustPercentage = !shouldUseTechQualAverage;
   const applyPercentageAdjustments = (basePercentage) => {
+    if (!shouldAutoAdjustPercentage) {
+      return Math.max(0, basePercentage);
+    }
     if (penaltyMode === 'percentage') {
       return Math.max(0, basePercentage - penaltiesNum + bonusNum);
     }
@@ -76,6 +111,40 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       })
     )
     : null;
+
+  // Para modalidades com regra de média Técnica/Qualitativa (ex: Infantil 3),
+  // quando as notas já existem no protocolo, elas têm prioridade sobre recomputação por exercícios.
+  if (techQualFinalScore !== null && shouldUseTechQualAverage) {
+    const technicalBase = isInfantil1Or3 ? 100 : inferScaleMax(technicalScoreNum);
+    const qualitativeBase = isInfantil1Or3 ? 40 : inferScaleMax(artisticScoreNum);
+    const technicalPercentage = hasTechnicalProvided
+      ? (technicalBase > 0 ? (technicalScoreNum / technicalBase) * 100 : 0)
+      : null;
+    const qualitativePercentage = hasQualitativeProvided
+      ? (qualitativeBase > 0 ? (artisticScoreNum / qualitativeBase) * 100 : 0)
+      : null;
+    const basePercentage = technicalPercentage !== null && qualitativePercentage !== null
+      ? (technicalPercentage + qualitativePercentage) / 2
+      : technicalPercentage !== null
+        ? technicalPercentage
+        : qualitativePercentage !== null
+          ? qualitativePercentage
+          : 0;
+    const percentage = Math.max(0, basePercentage);
+    const details = hasTechnicalProvided && hasQualitativeProvided
+      ? isInfantil1Or3
+        ? `((Téc ${technicalScoreNum}/100) + (Qual ${artisticScoreNum}/40)) / 2`
+        : `(${technicalScoreNum} + ${artisticScoreNum}) / 2`
+      : hasTechnicalProvided
+        ? `Apenas nota técnica (${technicalScoreNum})`
+        : `Apenas nota qualitativa (${artisticScoreNum})`;
+
+    return {
+      final_score: parseFloat(basePercentage.toFixed(2)),
+      percentage: parseFloat(percentage.toFixed(2)),
+      calculation_details: `${details} = ${basePercentage.toFixed(2)}% = ${percentage.toFixed(2)}%`
+    };
+  }
 
   const exercisesSource =
     competitionData?.exercises?.length > 0
@@ -151,9 +220,10 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
 
     if (scoredExercises > 0) {
       // Soma total com coeficientes (não média) - penalizações NÃO são subtraídas dos pontos
-      const final_score = totalPoints;
-      const basePercentage = maxPoints > 0 ? (final_score / maxPoints) * 100 : 0;
+      const basePointsScore = totalPoints;
+      const basePercentage = maxPoints > 0 ? (basePointsScore / maxPoints) * 100 : 0;
       let percentage = basePercentage;
+      let finalScoreValue = basePointsScore;
       let weightedDetails = '';
 
       if (hasTechnicalExercises || hasQualitativeExercises) {
@@ -172,22 +242,41 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
         const technicalWeight = Number.isFinite(technicalRaw) ? technicalRaw : 70;
         const qualitativeWeight = Number.isFinite(qualitativeRaw) ? qualitativeRaw : 30;
 
-        const technicalPercentage = technicalMax > 0 ? (technicalPoints / technicalMax) * 100 : null;
-        const qualitativePercentage = qualitativeMax > 0 ? (qualitativePoints / qualitativeMax) * 100 : null;
+        const technicalBaseForAverage = isFixedTechQualScale ? 100 : technicalMax;
+        const qualitativeBaseForAverage = isFixedTechQualScale ? 40 : qualitativeMax;
+        const technicalPercentage = technicalBaseForAverage > 0 ? (technicalPoints / technicalBaseForAverage) * 100 : null;
+        const qualitativePercentage = qualitativeBaseForAverage > 0 ? (qualitativePoints / qualitativeBaseForAverage) * 100 : null;
 
         if (technicalPercentage !== null || qualitativePercentage !== null) {
           let weightedBase = basePercentage;
-          if (technicalPercentage !== null && qualitativePercentage !== null) {
-            const weightedTechnical = (technicalPercentage * technicalWeight) / 100;
-            const weightedQualitative = (qualitativePercentage * qualitativeWeight) / 100;
-            weightedBase = weightedTechnical + weightedQualitative;
-          } else if (technicalPercentage !== null) {
-            weightedBase = technicalPercentage;
-          } else if (qualitativePercentage !== null) {
-            weightedBase = qualitativePercentage;
+
+          if (shouldUseTechQualAverage) {
+            if (technicalPercentage !== null && qualitativePercentage !== null) {
+              weightedBase = (technicalPercentage + qualitativePercentage) / 2;
+            } else if (technicalPercentage !== null) {
+              weightedBase = technicalPercentage;
+            } else if (qualitativePercentage !== null) {
+              weightedBase = qualitativePercentage;
+            }
+          } else {
+            if (technicalPercentage !== null && qualitativePercentage !== null) {
+              const weightedTechnical = (technicalPercentage * technicalWeight) / 100;
+              const weightedQualitative = (qualitativePercentage * qualitativeWeight) / 100;
+              weightedBase = weightedTechnical + weightedQualitative;
+            } else if (technicalPercentage !== null) {
+              weightedBase = technicalPercentage;
+            } else if (qualitativePercentage !== null) {
+              weightedBase = qualitativePercentage;
+            }
           }
 
-          percentage = applyPercentageAdjustments(weightedBase);
+          const shouldApplyAdjustments = shouldAutoAdjustPercentage;
+          percentage = shouldApplyAdjustments
+            ? applyPercentageAdjustments(weightedBase)
+            : Math.max(0, weightedBase);
+          if (shouldUseTechQualAverage) {
+            finalScoreValue = percentage;
+          }
           weightedDetails = [
             technicalPercentage !== null
               ? `Téc: ${technicalPercentage.toFixed(2)}%×${technicalWeight}%`
@@ -195,15 +284,18 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
             qualitativePercentage !== null
               ? `Qual: ${qualitativePercentage.toFixed(2)}%×${qualitativeWeight}%`
               : '',
+            shouldUseTechQualAverage && technicalPercentage !== null && qualitativePercentage !== null
+              ? `Média(Téc,Qual): (${technicalPercentage.toFixed(2)}% + ${qualitativePercentage.toFixed(2)}%) / 2`
+              : '',
             technicalPercentage !== null && qualitativePercentage === null
               ? `Apenas Técnica considerada`
               : '',
             qualitativePercentage !== null && technicalPercentage === null
               ? `Apenas Qualitativa considerada`
               : '',
-            penaltyMode === 'percentage' && penaltiesNum > 0 ? `- ${penaltiesNum}%` : '',
-            penaltyMode !== 'percentage' && penaltiesNum > 0 ? `Penalizações: ${penaltiesNum} (sem desconto % automático)` : '',
-            bonusNum > 0 ? `+ ${bonusNum}%` : ''
+            !shouldUseTechQualAverage && penaltyMode === 'percentage' && penaltiesNum > 0 ? `- ${penaltiesNum}%` : '',
+            !shouldUseTechQualAverage && penaltyMode !== 'percentage' && penaltiesNum > 0 ? `Penalizações: ${penaltiesNum} (sem desconto % automático)` : '',
+            !shouldUseTechQualAverage && bonusNum > 0 ? `+ ${bonusNum}%` : ''
           ].filter(Boolean).join(' | ');
         }
       } else {
@@ -211,9 +303,9 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       }
       
       return {
-        final_score: parseFloat(final_score.toFixed(2)),
+        final_score: parseFloat(finalScoreValue.toFixed(2)),
         percentage: parseFloat(Math.max(0, percentage).toFixed(2)),
-        calculation_details: `Total: ${details.join(' + ')} = ${final_score} pts${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` | Perc: -${penaltiesNum}%` : ''}${bonusNum > 0 ? ` +${bonusNum}%` : ''}${weightedDetails ? ` | ${weightedDetails}` : ` = ${percentage.toFixed(2)}%`}`
+        calculation_details: `Total: ${details.join(' + ')} = ${basePointsScore} pts${!shouldUseTechQualAverage && penaltyMode === 'percentage' && penaltiesNum > 0 ? ` | Perc: -${penaltiesNum}%` : ''}${!shouldUseTechQualAverage && bonusNum > 0 ? ` +${bonusNum}%` : ''}${weightedDetails ? ` | ${weightedDetails}` : ` = ${percentage.toFixed(2)}%`}${shouldUseTechQualAverage ? ` | Nota final: ${finalScoreValue.toFixed(2)}` : ''}`
       };
     }
   }
@@ -228,23 +320,6 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     };
   }
 
-  if (techQualFinalScore !== null) {
-    const base_percentage = competitionData?.base_percentage || 100;
-    const basePercentage = base_percentage > 0 ? (techQualFinalScore / base_percentage) * 100 : 0;
-    const percentage = applyPercentageAdjustments(basePercentage);
-    const details = hasTechnicalProvided && hasQualitativeProvided
-      ? `(${technicalScoreNum} + ${artisticScoreNum}) / 2`
-      : hasTechnicalProvided
-        ? `Apenas nota técnica (${technicalScoreNum})`
-        : `Apenas nota qualitativa (${artisticScoreNum})`;
-
-    return {
-      final_score: parseFloat(techQualFinalScore.toFixed(2)),
-      percentage: parseFloat(percentage.toFixed(2)),
-      calculation_details: `${details} = ${techQualFinalScore.toFixed(2)} | ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`
-    };
-  }
-
   let final_score = 0;
   let percentage = 0;
   let calculation_details = '';
@@ -252,14 +327,20 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
   if (!modalityData?.scoring_formula) {
     // Sem fórmula: pontuação base, penalizações em %
     final_score = baseScoreNum;
-    const base_percentage = competitionData?.base_percentage || 100;
+    const configuredBase = toSafeNumber(competitionData?.base_percentage, 0);
+    const base_percentage = configuredBase > 0
+      ? configuredBase
+      : inferScaleMax(baseScoreNum);
     const basePercentage = base_percentage > 0 ? (final_score / base_percentage) * 100 : 0;
     percentage = applyPercentageAdjustments(basePercentage);
     calculation_details = `Base (${baseScoreNum}) = ${basePercentage.toFixed(2)}%${penaltyMode === 'percentage' && penaltiesNum > 0 ? ` - ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''} = ${percentage.toFixed(2)}%`;
   } else {
     const formula = scoringFormula;
     const coefficients = modalityData.coefficients || {};
-    const base_percentage = competitionData?.base_percentage || 100;
+    const configuredBase = toSafeNumber(competitionData?.base_percentage, 0);
+    const base_percentage = configuredBase > 0
+      ? configuredBase
+      : inferScaleMax(baseScoreNum, technicalScoreNum, artisticScoreNum);
 
     // Dressage / Ensino (fórmula típica)
     if (formula.includes('dressage') || formula.includes('ensino')) {
