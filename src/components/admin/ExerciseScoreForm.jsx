@@ -9,6 +9,8 @@ export default function ExerciseScoreForm({
   scores = {}, 
   penalties = 0,
   bonus = 0,
+  technicalPercentage = 70,
+  qualitativePercentage = 30,
   onScoreChange,
   onPenaltiesChange,
   onBonusChange,
@@ -52,22 +54,53 @@ export default function ExerciseScoreForm({
 
     let total = 0;
     let maxTotal = 0;
+    let technicalTotal = 0;
+    let technicalMax = 0;
+    let qualitativeTotal = 0;
+    let qualitativeMax = 0;
     const details = [];
 
     exercises.forEach(ex => {
+      const category = getExerciseCategory(ex);
       const exMax = typeof ex.max_points === 'number' && ex.max_points > 0 ? ex.max_points : 10;
-      maxTotal += exMax * (ex.coefficient || 1);
+      const coefficient = ex.coefficient || 1;
+      const weightedMax = exMax * coefficient;
+      maxTotal += weightedMax;
+      if (category === 'technical') technicalMax += weightedMax;
+      if (category === 'qualitative') qualitativeMax += weightedMax;
+
       const score = scores[ex.number] || 0;
       if (score > 0) {
-        const exerciseValue = score * (ex.coefficient || 1);
+        const exerciseValue = score * coefficient;
         total += exerciseValue;
+        if (category === 'technical') technicalTotal += exerciseValue;
+        if (category === 'qualitative') qualitativeTotal += exerciseValue;
         details.push(`Ex${ex.number}: ${score}×${ex.coefficient || 1} = ${exerciseValue}`);
       }
     });
 
     // Penalizações são em %, aplicadas à percentagem, não aos pontos
     const percentageBase = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
-    const percentageFinal = Math.max(0, percentageBase - (penalties || 0) + (bonus || 0));
+    const technicalPct = technicalMax > 0 ? (technicalTotal / technicalMax) * 100 : null;
+    const qualitativePct = qualitativeMax > 0 ? (qualitativeTotal / qualitativeMax) * 100 : null;
+    const hasSplitWeights = technicalMax > 0 || qualitativeMax > 0;
+
+    let weightedBase = percentageBase;
+    if (hasSplitWeights && (technicalPct !== null || qualitativePct !== null)) {
+      const techWeight = Number.isFinite(Number(technicalPercentage)) ? Number(technicalPercentage) : 70;
+      const qualWeight = Number.isFinite(Number(qualitativePercentage)) ? Number(qualitativePercentage) : 30;
+      if (technicalPct !== null && qualitativePct !== null) {
+        const weightedTechnical = (technicalPct * techWeight) / 100;
+        const weightedQualitative = (qualitativePct * qualWeight) / 100;
+        weightedBase = weightedTechnical + weightedQualitative;
+      } else if (technicalPct !== null) {
+        weightedBase = technicalPct;
+      } else if (qualitativePct !== null) {
+        weightedBase = qualitativePct;
+      }
+    }
+
+    const percentageFinal = Math.max(0, weightedBase - (penalties || 0) + (bonus || 0));
     
     return {
       subtotal: total,
@@ -78,7 +111,7 @@ export default function ExerciseScoreForm({
       details: details.join(' | '),
       percentage: percentageFinal
     };
-  }, [exercises, scores, penalties, bonus]);
+  }, [exercises, scores, penalties, bonus, technicalPercentage, qualitativePercentage]);
 
   return (
     <div className="space-y-4">
