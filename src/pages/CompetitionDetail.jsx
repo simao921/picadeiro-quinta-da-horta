@@ -50,14 +50,6 @@ export default function CompetitionDetail() {
     enabled: !!competition?.modality_id
   });
 
-  if (isLoading || !competition) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B8956A]"></div>
-      </div>
-    );
-  }
-
   const getStatusInfo = (status) => {
     const statusMap = {
       inscricoes_abertas: { label: 'Inscrições Abertas', color: 'bg-green-100 text-green-800' },
@@ -124,6 +116,14 @@ export default function CompetitionDetail() {
       return Number(a.position || 999) - Number(b.position || 999);
     });
   }, [resultsWithGrade, selectedResultGrade]);
+
+  if (isLoading || !competition) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B8956A]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100">
