@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download } from 'lucide-react';
+import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -66,6 +66,7 @@ export default function AdminCompetitionReports() {
   const [showScoreDialog, setShowScoreDialog] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [reportFile, setReportFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -109,6 +110,15 @@ export default function AdminCompetitionReports() {
     enabled: !!selectedCompetition && showManualDialog
   });
 
+  const filteredEntries = useMemo(() => {
+    const query = studentSearchQuery.trim().toLowerCase();
+    if (!query) return entries;
+    return entries.filter((entry) =>
+      String(entry.rider_name || '').toLowerCase().includes(query) ||
+      String(entry.horse_name || '').toLowerCase().includes(query)
+    );
+  }, [entries, studentSearchQuery]);
+
   const uploadFile = useMutation({
     mutationFn: async (file) => {
       const response = await base44.integrations.Core.UploadFile({ file });
@@ -122,6 +132,20 @@ export default function AdminCompetitionReports() {
       const modality = modalityId ? modalities.find(m => m.id === modalityId) : null;
       const modalityExercises = getModalityExercises(modality);
       const hasExercises = modalityExercises.length > 0;
+      const modalityTechnicalWeight = Number(
+        modality?.coefficients?.technical_percentage ??
+        modality?.coefficients?.technical_weight ??
+        70
+      );
+      const modalityQualitativeWeight = Number(
+        modality?.coefficients?.qualitative_percentage ??
+        modality?.coefficients?.qualitative_weight ??
+        30
+      );
+      const regulationUrl = modality?.regulation_url ? String(modality.regulation_url) : '';
+      const fileUrls = regulationUrl
+        ? Array.from(new Set([fileUrl, regulationUrl]))
+        : [fileUrl];
 
       const schema = {
         type: "object",
@@ -182,6 +206,7 @@ export default function AdminCompetitionReports() {
                 technical_score: { anyOf: [{ type: "number" }, { type: "string" }], description: "Nota técnica (se aplicável)" },
                 artistic_score: { anyOf: [{ type: "number" }, { type: "string" }], description: "Nota artística (se aplicável)" },
                 judge_name: { type: "string", description: "Nome do juiz" },
+                calculation_notes: { type: "string", description: "Resumo do cálculo aplicado para este participante" },
                 ...(hasExercises && {
                   exercise_scores: {
                     type: "object",
@@ -197,6 +222,14 @@ export default function AdminCompetitionReports() {
 
       let prompt = `
 Analisa este PROTOCOLO de competição equestre e extrai TODOS os dados disponíveis:
+
+CONTEXTO FIXO DA MODALIDADE (OBRIGATÓRIO):
+- Nome: ${modality?.name || 'Não definido'}
+- Tipo: ${modality?.type || 'Não definido'}
+- Fórmula configurada: ${modality?.scoring_formula || 'Sem fórmula explícita'}
+- Pesos configurados: Técnica ${Number.isFinite(modalityTechnicalWeight) ? modalityTechnicalWeight : 70}% | Qualitativa ${Number.isFinite(modalityQualitativeWeight) ? modalityQualitativeWeight : 30}%
+- Critério de desempate: ${modality?.tiebreaker_criteria || 'Não definido'}
+- Regulamento anexado na modalidade: ${regulationUrl || 'Não anexado'}
 
 INFORMAÇÃO DA PROVA:
 - Nome da competição
@@ -235,6 +268,7 @@ RESULTADOS (para cada participante):
 - Notas técnicas (se disponível)
 - Notas artísticas (se disponível)
 - Nome do juiz/júri
+- calculation_notes com explicação curta do cálculo usado
 `;
 
       if (hasExercises) {
@@ -274,6 +308,9 @@ Resultado: {"1": 7.5, "2": 8.0, "3": 6.5, "4": 7.0, ...}
 
       prompt += `
 IMPORTANTE:
+✓ Usa o regulamento da modalidade (quando anexado) como fonte principal da fórmula e regras
+✓ Cruzar protocolo de resultados + regulamento da modalidade para calcular o valor de cada aluno
+✓ Se houver conflito entre documentos, segue a regra explícita do regulamento da modalidade
 ✓ Extrai TODOS os participantes do protocolo
 ✓ Mantém a ordem de classificação
 ✓ Se um campo não existir, deixa null ou 0
@@ -286,7 +323,7 @@ Estrutura no formato JSON especificado.
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
-        file_urls: [fileUrl],
+        file_urls: fileUrls,
         response_json_schema: schema
       });
 
@@ -324,6 +361,19 @@ Estrutura no formato JSON especificado.
       setSelectedStudent(null);
       setCurrentScore({ modality_id: '', exercise_scores: {}, penalties: 0, bonus: 0 });
       toast.success('Pontuação guardada!');
+    }
+  });
+
+  const updateIndividualResult = useMutation({
+    mutationFn: async ({ id, data }) => {
+      return await base44.entities.CompetitionResult.update(id, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['competition-results']);
+      setShowScoreDialog(false);
+      setSelectedStudent(null);
+      setCurrentScore({ modality_id: '', exercise_scores: {}, penalties: 0, bonus: 0 });
+      toast.success('Pontuação atualizada!');
     }
   });
 
@@ -476,6 +526,7 @@ Estrutura no formato JSON especificado.
         }
         
         if (calculated.calculation_details) notesArray.push(`Cálculo: ${calculated.calculation_details}`);
+        if (r.calculation_notes) notesArray.push(`IA: ${r.calculation_notes}`);
         if (toSafeNumber(r.bonus, 0) > 0) notesArray.push(`Bonificação: ${toSafeNumber(r.bonus, 0)}%`);
         if (r.judge_name) notesArray.push(`Juiz: ${r.judge_name}`);
         if (r.club) notesArray.push(`Clube: ${r.club}`);
@@ -544,72 +595,6 @@ Estrutura no formato JSON especificado.
     return format(date, "d 'de' MMMM 'de' yyyy", { locale: pt });
   };
 
-  const loadImageAsDataUrl = async (url) => {
-    if (!url) return null;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Falha a carregar imagem (${response.status})`);
-    const blob = await response.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const recolorLogoToWhite = async (sourceDataUrl) => {
-    if (!sourceDataUrl) return null;
-    return await new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        ctx.globalCompositeOperation = 'source-in';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => resolve(sourceDataUrl);
-      img.src = sourceDataUrl;
-    });
-  };
-
-  const drawAzulejoBadge = (doc, x, y, width, height) => {
-    doc.setFillColor(245, 249, 255);
-    doc.roundedRect(x, y, width, height, 2, 2, 'F');
-
-    doc.setDrawColor(178, 204, 232);
-    doc.setLineWidth(0.2);
-    const tileSize = 6;
-    for (let px = x; px <= x + width; px += tileSize) {
-      doc.line(px, y, px, y + height);
-    }
-    for (let py = y; py <= y + height; py += tileSize) {
-      doc.line(x, py, x + width, py);
-    }
-
-    doc.setDrawColor(40, 95, 160);
-    doc.setLineWidth(0.7);
-    // Cavalo estilizado (traço simples)
-    doc.line(x + 6, y + 22, x + 11, y + 18); // pescoço
-    doc.line(x + 11, y + 18, x + 15, y + 18.5); // cabeça topo
-    doc.line(x + 15, y + 18.5, x + 16.5, y + 20.5); // focinho
-    doc.line(x + 16.5, y + 20.5, x + 14, y + 22.5); // mandíbula
-    doc.line(x + 14, y + 22.5, x + 10.5, y + 23); // garganta
-    doc.line(x + 10.5, y + 23, x + 8.5, y + 25); // peito
-    doc.line(x + 11, y + 18.2, x + 10, y + 16.8); // orelha
-    doc.line(x + 13, y + 18.3, x + 12.2, y + 16.7); // orelha
-
-    doc.setTextColor(25, 76, 140);
-    doc.setFontSize(8.5);
-    doc.setFont(undefined, 'bold');
-    doc.text('Picadeiro da', x + 20, y + 19);
-    doc.text('Quinta da Horta', x + 20, y + 24);
-  };
-
   const generateResultsPDF = async () => {
     try {
       if (!selectedCompetition) {
@@ -632,51 +617,24 @@ Estrutura no formato JSON especificado.
       }
 
       const doc = new jsPDF();
-
-      const siteImages = await base44.entities.SiteImage.list().catch(() => []);
-      const customLeftLogo = siteImages.find(img => img.image_key === 'pdf_logo_left')?.image_url;
-      const customRightLogo = siteImages.find(img => img.image_key === 'pdf_logo_right')?.image_url;
-      const defaultRightLogo = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG';
-      let rightLogoWhite = null;
-      let leftLogo = null;
-      try {
-        const loaded = await loadImageAsDataUrl(customRightLogo || defaultRightLogo);
-        rightLogoWhite = await recolorLogoToWhite(loaded);
-      } catch {
-        rightLogoWhite = null;
-      }
-      try {
-        leftLogo = customLeftLogo ? await loadImageAsDataUrl(customLeftLogo) : null;
-      } catch {
-        leftLogo = null;
-      }
+      const BRAND_GOLD = [184, 149, 106];
+      const BRAND_GOLD_SOFT = [205, 176, 140];
+      const BRAND_TEXT = [120, 92, 62];
 
       const drawHeader = () => {
-        doc.setFillColor(19, 82, 147);
+        doc.setFillColor(...BRAND_GOLD);
         doc.rect(0, 0, 210, 38, 'F');
-
-        if (leftLogo) {
-          doc.addImage(leftLogo, 'PNG', 8, 5.5, 30, 30);
-          doc.setTextColor(219, 234, 254);
-          doc.setFontSize(8.5);
-          doc.setFont(undefined, 'bold');
-          doc.text('Picadeiro da Quinta da Horta', 42, 21);
-        } else {
-          drawAzulejoBadge(doc, 8, 6, 68, 26);
-        }
-
-        if (rightLogoWhite) {
-          doc.addImage(rightLogoWhite, 'PNG', 150, 4.5, 52, 28);
-        } else {
-          doc.setFontSize(12);
-          doc.setFont(undefined, 'bold');
-          doc.setTextColor(255, 255, 255);
-          doc.text('Gilberto Filipe', 202, 18, { align: 'right' });
-        }
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 34, 210, 4, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('Picadeiro da Quinta da Horta', 12, 17);
+        doc.text('Relatório Oficial de Resultados', 12, 25);
       };
 
       const drawFooter = () => {
-        doc.setDrawColor(19, 82, 147);
+        doc.setDrawColor(...BRAND_GOLD);
         doc.setLineWidth(0.3);
         doc.line(12, 282, 198, 282);
         doc.setFontSize(8);
@@ -686,7 +644,7 @@ Estrutura no formato JSON especificado.
       };
 
       const drawTableHeader = (y) => {
-        doc.setFillColor(19, 82, 147);
+        doc.setFillColor(...BRAND_GOLD);
         doc.rect(12, y - 5, 186, 8, 'F');
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
@@ -700,13 +658,13 @@ Estrutura no formato JSON especificado.
 
       drawHeader();
 
-      doc.setTextColor(25, 25, 25);
+      doc.setTextColor(...BRAND_TEXT);
       doc.setFontSize(17);
       doc.setFont(undefined, 'bold');
       doc.text('RESULTADOS FINAIS', 105, 51, { align: 'center' });
 
       doc.setFontSize(13);
-      doc.setTextColor(19, 82, 147);
+      doc.setTextColor(...BRAND_GOLD);
       doc.text(comp.name || 'Competição', 105, 59, { align: 'center' });
 
       doc.setFontSize(9);
@@ -732,14 +690,19 @@ Estrutura no formato JSON especificado.
         }
 
         if (result.position && result.position <= 3) {
-          doc.setFillColor(255, 246, 214);
+          doc.setFillColor(249, 240, 227);
           doc.rect(12, y - 5, 186, 7, 'F');
+          doc.setDrawColor(...BRAND_GOLD);
+          doc.setLineWidth(0.2);
+          doc.line(12, y - 5, 12, y + 2);
           doc.setFont(undefined, 'bold');
         } else if (index % 2 === 0) {
-          doc.setFillColor(247, 250, 254);
+          doc.setFillColor(...BRAND_GOLD_SOFT);
           doc.rect(12, y - 5, 186, 7, 'F');
           doc.setFont(undefined, 'normal');
         } else {
+          doc.setFillColor(255, 255, 255);
+          doc.rect(12, y - 5, 186, 7, 'F');
           doc.setFont(undefined, 'normal');
         }
 
@@ -849,7 +812,13 @@ Estrutura no formato JSON especificado.
           <div className="flex gap-2">
             <div>
               <Label className="text-xs text-stone-600 mb-1">Selecionar Prova</Label>
-              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+              <Select
+                value={selectedCompetition}
+                onValueChange={(value) => {
+                  setSelectedCompetition(value);
+                  setStudentSearchQuery('');
+                }}
+              >
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Escolha a prova" />
                 </SelectTrigger>
@@ -936,7 +905,10 @@ Estrutura no formato JSON especificado.
           <div className="space-y-4">
             <div>
               <Label>1. Selecione a Competição</Label>
-              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+              <Select value={selectedCompetition} onValueChange={(value) => {
+                setSelectedCompetition(value);
+                setStudentSearchQuery('');
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Escolha a prova" />
                 </SelectTrigger>
@@ -1236,7 +1208,13 @@ Estrutura no formato JSON especificado.
           <div className="space-y-4">
             <div>
               <Label>Selecione a Competição</Label>
-              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+              <Select
+                value={selectedCompetition}
+                onValueChange={(value) => {
+                  setSelectedCompetition(value);
+                  setStudentSearchQuery('');
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Escolha a prova" />
                 </SelectTrigger>
@@ -1254,8 +1232,17 @@ Estrutura no formato JSON especificado.
               <>
                 <div>
                   <h3 className="font-bold mb-3">Participantes ({entries.length})</h3>
+                  <div className="relative mb-3">
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Input
+                      value={studentSearchQuery}
+                      onChange={(e) => setStudentSearchQuery(e.target.value)}
+                      placeholder="Pesquisar aluno para registar classificação..."
+                      className="pl-9"
+                    />
+                  </div>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {entries.map((entry) => (
+                    {filteredEntries.map((entry) => (
                       <Card key={entry.id} className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
@@ -1277,6 +1264,11 @@ Estrutura no formato JSON especificado.
                         </CardContent>
                       </Card>
                     ))}
+                    {filteredEntries.length === 0 && (
+                      <p className="text-center text-stone-500 py-6">
+                        Nenhum aluno encontrado para "{studentSearchQuery}".
+                      </p>
+                    )}
                   </div>
                 </div>
               </>
@@ -1330,12 +1322,43 @@ Estrutura no formato JSON especificado.
               {currentScore.modality_id && (() => {
                 const selectedMod = modalities.find(m => m.id === currentScore.modality_id);
                 const selectedExercises = getModalityExercises(selectedMod);
+                const technicalPercentage = Number(
+                  selectedMod?.coefficients?.technical_percentage ??
+                  selectedMod?.coefficients?.technical_weight ??
+                  70
+                );
+                const qualitativePercentage = Number(
+                  selectedMod?.coefficients?.qualitative_percentage ??
+                  selectedMod?.coefficients?.qualitative_weight ??
+                  30
+                );
+                const modFormula = String(selectedMod?.scoring_formula || '').toLowerCase();
+                const modName = String(selectedMod?.name || '').toLowerCase();
+                const useTechQualAverage =
+                  selectedMod?.coefficients?.use_tech_qual_average === true ||
+                  selectedMod?.coefficients?.average_tech_qual === true ||
+                  (((modFormula.includes('media') || modFormula.includes('média')) &&
+                    (modFormula.includes('tecn') || modFormula.includes('technical')) &&
+                    (modFormula.includes('qualit') || modFormula.includes('artistic'))) ||
+                   (modFormula.includes('/2') &&
+                    (modFormula.includes('tecn') || modFormula.includes('technical')) &&
+                    (modFormula.includes('qualit') || modFormula.includes('artistic')))) ||
+                  /infantil\s*(1|i|3|iii)\b/.test(modName) ||
+                  /juniors?\s*team\b/.test(modName);
+                const useFixedTechQualScale =
+                  /infantil\s*(1|i|3|iii)\b/.test(modName) ||
+                  /juniors?\s*team\b/.test(modName);
                 return (
                   <ExerciseScoreForm
                     exercises={selectedExercises}
                     scores={currentScore.exercise_scores}
                     penalties={currentScore.penalties}
                     bonus={currentScore.bonus}
+                    technicalPercentage={Number.isFinite(technicalPercentage) ? technicalPercentage : 70}
+                    qualitativePercentage={Number.isFinite(qualitativePercentage) ? qualitativePercentage : 30}
+                    useTechQualAverage={useTechQualAverage}
+                    technicalBaseOverride={useFixedTechQualScale ? 100 : null}
+                    qualitativeBaseOverride={useFixedTechQualScale ? 40 : null}
                     onScoreChange={(exNumber, value) => {
                       setCurrentScore({
                         ...currentScore,
@@ -1364,33 +1387,63 @@ Estrutura no formato JSON especificado.
                       return;
                     }
 
-                    const selectedMod = modalities.find(m => m.id === currentScore.modality_id);
-                    const selectedExercises = getModalityExercises(selectedMod);
-                     const comp = competitions.find(c => c.id === selectedCompetition);
-                     const calculated = calculateFinalScore(comp, selectedMod, currentScore);
+                    try {
+                      const selectedMod = modalities.find(m => m.id === currentScore.modality_id);
+                      const selectedExercises = getModalityExercises(selectedMod);
+                      const comp = competitions.find(c => c.id === selectedCompetition);
+                      const calculated = calculateFinalScore(comp, selectedMod, currentScore);
 
-                     const notesArray = [];
-                    if (selectedMod) notesArray.push(`Modalidade: ${selectedMod.name}`);
-                    if (currentScore.exercise_scores && Object.keys(currentScore.exercise_scores).length > 0) {
-                      Object.entries(currentScore.exercise_scores).forEach(([exNum, exScore]) => {
-                        const ex = selectedExercises.find(e => String(e.number) === String(exNum));
-                        notesArray.push(`Ex${exNum}: ${exScore}${ex?.coefficient > 1 ? `×${ex.coefficient}` : ''}`);
+                      const notesArray = [];
+                      if (selectedMod) notesArray.push(`Modalidade: ${selectedMod.name}`);
+                      if (currentScore.exercise_scores && Object.keys(currentScore.exercise_scores).length > 0) {
+                        Object.entries(currentScore.exercise_scores).forEach(([exNum, exScore]) => {
+                          const ex = selectedExercises.find(e => String(e.number) === String(exNum));
+                          notesArray.push(`Ex${exNum}: ${exScore}${ex?.coefficient > 1 ? `×${ex.coefficient}` : ''}`);
+                        });
+                      }
+                      if (currentScore.bonus > 0) notesArray.push(`Bonificação: ${currentScore.bonus}%`);
+                      if (calculated.calculation_details) notesArray.push(`${calculated.calculation_details}`);
+
+                      const existingResults = await base44.entities.CompetitionResult.filter({
+                        competition_id: selectedCompetition
                       });
-                    }
-                    if (currentScore.bonus > 0) notesArray.push(`Bonificação: ${currentScore.bonus}%`);
-                    if (calculated.calculation_details) notesArray.push(`${calculated.calculation_details}`);
 
-                    await saveIndividualResult.mutateAsync({
-                      competition_id: selectedCompetition,
-                      entry_id: selectedStudent.id,
-                      rider_name: selectedStudent.rider_name,
-                      horse_name: selectedStudent.horse_name,
-                      score: calculated.final_score,
-                      percentage: calculated.percentage,
-                      penalties: currentScore.penalties || 0,
-                      position: 0,
-                      notes: notesArray.join(' | ')
-                    });
+                      const existingForEntry = existingResults.find((result) =>
+                        (selectedStudent?.id && result.entry_id === selectedStudent.id) ||
+                        (result.rider_name === selectedStudent.rider_name && result.horse_name === selectedStudent.horse_name)
+                      );
+
+                      const payload = {
+                        competition_id: selectedCompetition,
+                        entry_id: selectedStudent.id,
+                        rider_name: selectedStudent.rider_name,
+                        horse_name: selectedStudent.horse_name,
+                        score: calculated.final_score,
+                        percentage: calculated.percentage,
+                        penalties: currentScore.penalties || 0,
+                        notes: notesArray.join(' | ')
+                      };
+
+                      if (existingForEntry) {
+                        await updateIndividualResult.mutateAsync({
+                          id: existingForEntry.id,
+                          data: payload
+                        });
+                        return;
+                      }
+
+                      const maxPosition = existingResults.reduce((max, result) => {
+                        const pos = Number(result.position || 0);
+                        return Number.isFinite(pos) && pos > max ? pos : max;
+                      }, 0);
+
+                      await saveIndividualResult.mutateAsync({
+                        ...payload,
+                        position: maxPosition + 1
+                      });
+                    } catch (error) {
+                      toast.error(`Erro ao guardar pontuação: ${error.message}`);
+                    }
                   }}
                   className="flex-1 bg-[#B8956A] hover:bg-[#8B7355]"
                   disabled={!currentScore.modality_id}
