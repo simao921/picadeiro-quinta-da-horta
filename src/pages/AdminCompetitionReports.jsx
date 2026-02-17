@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download, Search } from 'lucide-react';
+import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -66,7 +66,6 @@ export default function AdminCompetitionReports() {
   const [showScoreDialog, setShowScoreDialog] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [reportFile, setReportFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -109,15 +108,6 @@ export default function AdminCompetitionReports() {
     }),
     enabled: !!selectedCompetition && showManualDialog
   });
-
-  const filteredEntries = useMemo(() => {
-    const query = studentSearchQuery.trim().toLowerCase();
-    if (!query) return entries;
-    return entries.filter((entry) =>
-      String(entry.rider_name || '').toLowerCase().includes(query) ||
-      String(entry.horse_name || '').toLowerCase().includes(query)
-    );
-  }, [entries, studentSearchQuery]);
 
   const uploadFile = useMutation({
     mutationFn: async (file) => {
@@ -554,6 +544,72 @@ Estrutura no formato JSON especificado.
     return format(date, "d 'de' MMMM 'de' yyyy", { locale: pt });
   };
 
+  const loadImageAsDataUrl = async (url) => {
+    if (!url) return null;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Falha a carregar imagem (${response.status})`);
+    const blob = await response.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const recolorLogoToWhite = async (sourceDataUrl) => {
+    if (!sourceDataUrl) return null;
+    return await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        ctx.globalCompositeOperation = 'source-in';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(sourceDataUrl);
+      img.src = sourceDataUrl;
+    });
+  };
+
+  const drawAzulejoBadge = (doc, x, y, width, height) => {
+    doc.setFillColor(245, 249, 255);
+    doc.roundedRect(x, y, width, height, 2, 2, 'F');
+
+    doc.setDrawColor(178, 204, 232);
+    doc.setLineWidth(0.2);
+    const tileSize = 6;
+    for (let px = x; px <= x + width; px += tileSize) {
+      doc.line(px, y, px, y + height);
+    }
+    for (let py = y; py <= y + height; py += tileSize) {
+      doc.line(x, py, x + width, py);
+    }
+
+    doc.setDrawColor(40, 95, 160);
+    doc.setLineWidth(0.7);
+    // Cavalo estilizado (traço simples)
+    doc.line(x + 6, y + 22, x + 11, y + 18); // pescoço
+    doc.line(x + 11, y + 18, x + 15, y + 18.5); // cabeça topo
+    doc.line(x + 15, y + 18.5, x + 16.5, y + 20.5); // focinho
+    doc.line(x + 16.5, y + 20.5, x + 14, y + 22.5); // mandíbula
+    doc.line(x + 14, y + 22.5, x + 10.5, y + 23); // garganta
+    doc.line(x + 10.5, y + 23, x + 8.5, y + 25); // peito
+    doc.line(x + 11, y + 18.2, x + 10, y + 16.8); // orelha
+    doc.line(x + 13, y + 18.3, x + 12.2, y + 16.7); // orelha
+
+    doc.setTextColor(25, 76, 140);
+    doc.setFontSize(8.5);
+    doc.setFont(undefined, 'bold');
+    doc.text('Picadeiro da', x + 20, y + 19);
+    doc.text('Quinta da Horta', x + 20, y + 24);
+  };
+
   const generateResultsPDF = async () => {
     try {
       if (!selectedCompetition) {
@@ -576,24 +632,51 @@ Estrutura no formato JSON especificado.
       }
 
       const doc = new jsPDF();
-      const BRAND_GOLD = [184, 149, 106];
-      const BRAND_GOLD_SOFT = [205, 176, 140];
-      const BRAND_TEXT = [120, 92, 62];
+
+      const siteImages = await base44.entities.SiteImage.list().catch(() => []);
+      const customLeftLogo = siteImages.find(img => img.image_key === 'pdf_logo_left')?.image_url;
+      const customRightLogo = siteImages.find(img => img.image_key === 'pdf_logo_right')?.image_url;
+      const defaultRightLogo = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG';
+      let rightLogoWhite = null;
+      let leftLogo = null;
+      try {
+        const loaded = await loadImageAsDataUrl(customRightLogo || defaultRightLogo);
+        rightLogoWhite = await recolorLogoToWhite(loaded);
+      } catch {
+        rightLogoWhite = null;
+      }
+      try {
+        leftLogo = customLeftLogo ? await loadImageAsDataUrl(customLeftLogo) : null;
+      } catch {
+        leftLogo = null;
+      }
 
       const drawHeader = () => {
-        doc.setFillColor(...BRAND_GOLD);
+        doc.setFillColor(19, 82, 147);
         doc.rect(0, 0, 210, 38, 'F');
-        doc.setFillColor(255, 255, 255);
-        doc.rect(0, 34, 210, 4, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text('Picadeiro da Quinta da Horta', 12, 17);
-        doc.text('Relatório Oficial de Resultados', 12, 25);
+
+        if (leftLogo) {
+          doc.addImage(leftLogo, 'PNG', 8, 5.5, 30, 30);
+          doc.setTextColor(219, 234, 254);
+          doc.setFontSize(8.5);
+          doc.setFont(undefined, 'bold');
+          doc.text('Picadeiro da Quinta da Horta', 42, 21);
+        } else {
+          drawAzulejoBadge(doc, 8, 6, 68, 26);
+        }
+
+        if (rightLogoWhite) {
+          doc.addImage(rightLogoWhite, 'PNG', 150, 4.5, 52, 28);
+        } else {
+          doc.setFontSize(12);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text('Gilberto Filipe', 202, 18, { align: 'right' });
+        }
       };
 
       const drawFooter = () => {
-        doc.setDrawColor(...BRAND_GOLD);
+        doc.setDrawColor(19, 82, 147);
         doc.setLineWidth(0.3);
         doc.line(12, 282, 198, 282);
         doc.setFontSize(8);
@@ -603,7 +686,7 @@ Estrutura no formato JSON especificado.
       };
 
       const drawTableHeader = (y) => {
-        doc.setFillColor(...BRAND_GOLD);
+        doc.setFillColor(19, 82, 147);
         doc.rect(12, y - 5, 186, 8, 'F');
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
@@ -617,13 +700,13 @@ Estrutura no formato JSON especificado.
 
       drawHeader();
 
-      doc.setTextColor(...BRAND_TEXT);
+      doc.setTextColor(25, 25, 25);
       doc.setFontSize(17);
       doc.setFont(undefined, 'bold');
       doc.text('RESULTADOS FINAIS', 105, 51, { align: 'center' });
 
       doc.setFontSize(13);
-      doc.setTextColor(...BRAND_GOLD);
+      doc.setTextColor(19, 82, 147);
       doc.text(comp.name || 'Competição', 105, 59, { align: 'center' });
 
       doc.setFontSize(9);
@@ -649,19 +732,14 @@ Estrutura no formato JSON especificado.
         }
 
         if (result.position && result.position <= 3) {
-          doc.setFillColor(249, 240, 227);
+          doc.setFillColor(255, 246, 214);
           doc.rect(12, y - 5, 186, 7, 'F');
-          doc.setDrawColor(...BRAND_GOLD);
-          doc.setLineWidth(0.2);
-          doc.line(12, y - 5, 12, y + 2);
           doc.setFont(undefined, 'bold');
         } else if (index % 2 === 0) {
-          doc.setFillColor(...BRAND_GOLD_SOFT);
+          doc.setFillColor(247, 250, 254);
           doc.rect(12, y - 5, 186, 7, 'F');
           doc.setFont(undefined, 'normal');
         } else {
-          doc.setFillColor(255, 255, 255);
-          doc.rect(12, y - 5, 186, 7, 'F');
           doc.setFont(undefined, 'normal');
         }
 
@@ -771,13 +849,7 @@ Estrutura no formato JSON especificado.
           <div className="flex gap-2">
             <div>
               <Label className="text-xs text-stone-600 mb-1">Selecionar Prova</Label>
-              <Select
-                value={selectedCompetition}
-                onValueChange={(value) => {
-                  setSelectedCompetition(value);
-                  setStudentSearchQuery('');
-                }}
-              >
+              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Escolha a prova" />
                 </SelectTrigger>
@@ -864,10 +936,7 @@ Estrutura no formato JSON especificado.
           <div className="space-y-4">
             <div>
               <Label>1. Selecione a Competição</Label>
-              <Select value={selectedCompetition} onValueChange={(value) => {
-                setSelectedCompetition(value);
-                setStudentSearchQuery('');
-              }}>
+              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
                 <SelectTrigger>
                   <SelectValue placeholder="Escolha a prova" />
                 </SelectTrigger>
@@ -1185,17 +1254,8 @@ Estrutura no formato JSON especificado.
               <>
                 <div>
                   <h3 className="font-bold mb-3">Participantes ({entries.length})</h3>
-                  <div className="relative mb-3">
-                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <Input
-                      value={studentSearchQuery}
-                      onChange={(e) => setStudentSearchQuery(e.target.value)}
-                      placeholder="Pesquisar aluno para registar classificação..."
-                      className="pl-9"
-                    />
-                  </div>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {filteredEntries.map((entry) => (
+                    {entries.map((entry) => (
                       <Card key={entry.id} className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
@@ -1217,11 +1277,6 @@ Estrutura no formato JSON especificado.
                         </CardContent>
                       </Card>
                     ))}
-                    {filteredEntries.length === 0 && (
-                      <p className="text-center text-stone-500 py-6">
-                        Nenhum aluno encontrado para "{studentSearchQuery}".
-                      </p>
-                    )}
                   </div>
                 </div>
               </>
