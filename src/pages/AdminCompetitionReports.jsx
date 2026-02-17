@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download } from 'lucide-react';
+import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -66,6 +66,7 @@ export default function AdminCompetitionReports() {
   const [showScoreDialog, setShowScoreDialog] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [reportFile, setReportFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -108,6 +109,15 @@ export default function AdminCompetitionReports() {
     }),
     enabled: !!selectedCompetition && showManualDialog
   });
+
+  const filteredEntries = useMemo(() => {
+    const query = studentSearchQuery.trim().toLowerCase();
+    if (!query) return entries;
+    return entries.filter((entry) =>
+      String(entry.rider_name || '').toLowerCase().includes(query) ||
+      String(entry.horse_name || '').toLowerCase().includes(query)
+    );
+  }, [entries, studentSearchQuery]);
 
   const uploadFile = useMutation({
     mutationFn: async (file) => {
@@ -761,7 +771,13 @@ Estrutura no formato JSON especificado.
           <div className="flex gap-2">
             <div>
               <Label className="text-xs text-stone-600 mb-1">Selecionar Prova</Label>
-              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+              <Select
+                value={selectedCompetition}
+                onValueChange={(value) => {
+                  setSelectedCompetition(value);
+                  setStudentSearchQuery('');
+                }}
+              >
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Escolha a prova" />
                 </SelectTrigger>
@@ -848,7 +864,10 @@ Estrutura no formato JSON especificado.
           <div className="space-y-4">
             <div>
               <Label>1. Selecione a Competição</Label>
-              <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+              <Select value={selectedCompetition} onValueChange={(value) => {
+                setSelectedCompetition(value);
+                setStudentSearchQuery('');
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Escolha a prova" />
                 </SelectTrigger>
@@ -1166,8 +1185,17 @@ Estrutura no formato JSON especificado.
               <>
                 <div>
                   <h3 className="font-bold mb-3">Participantes ({entries.length})</h3>
+                  <div className="relative mb-3">
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Input
+                      value={studentSearchQuery}
+                      onChange={(e) => setStudentSearchQuery(e.target.value)}
+                      placeholder="Pesquisar aluno para registar classificação..."
+                      className="pl-9"
+                    />
+                  </div>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {entries.map((entry) => (
+                    {filteredEntries.map((entry) => (
                       <Card key={entry.id} className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
@@ -1189,6 +1217,11 @@ Estrutura no formato JSON especificado.
                         </CardContent>
                       </Card>
                     ))}
+                    {filteredEntries.length === 0 && (
+                      <p className="text-center text-stone-500 py-6">
+                        Nenhum aluno encontrado para "{studentSearchQuery}".
+                      </p>
+                    )}
                   </div>
                 </div>
               </>
