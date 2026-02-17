@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { GripVertical, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles, UserCheck, UserX, DollarSign } from 'lucide-react';
+import { GripVertical, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles, UserCheck, UserX, DollarSign, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -25,6 +25,7 @@ export default function AdminCompetitionOrder() {
   const [pdfFile, setPdfFile] = useState(null);
   const [isProcessingPDF, setIsProcessingPDF] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
+  const [entrySearchQuery, setEntrySearchQuery] = useState('');
   const [newEntry, setNewEntry] = useState({ rider_name: '', horse_name: '', grade: '', entry_time: '' });
   const queryClient = useQueryClient();
 
@@ -48,6 +49,16 @@ export default function AdminCompetitionOrder() {
   });
 
   const [orderedEntries, setOrderedEntries] = useState([]);
+
+  const filteredOrderedEntries = useMemo(() => {
+    const query = entrySearchQuery.trim().toLowerCase();
+    if (!query) return orderedEntries;
+    return orderedEntries.filter((entry) =>
+      String(entry.rider_name || '').toLowerCase().includes(query) ||
+      String(entry.horse_name || '').toLowerCase().includes(query) ||
+      String(entry.grade || '').toLowerCase().includes(query)
+    );
+  }, [orderedEntries, entrySearchQuery]);
 
   React.useEffect(() => {
     if (entries.length > 0) {
@@ -535,7 +546,13 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+            <Select
+              value={selectedCompetition}
+              onValueChange={(value) => {
+                setSelectedCompetition(value);
+                setEntrySearchQuery('');
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Escolha a prova" />
               </SelectTrigger>
@@ -576,131 +593,194 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
                   </Button>
                 </div>
               ) : (
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <Droppable droppableId="entries">
-                    {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                        {orderedEntries.map((entry, index) => (
-                          <Draggable key={entry.id} draggableId={entry.id} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className={`flex items-center gap-4 p-4 bg-white border-2 rounded-lg transition-all ${
-                                  snapshot.isDragging ? 'shadow-xl border-[#B8956A] scale-105' : 'border-stone-200'
-                                }`}
-                              >
-                                <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
-                                  <GripVertical className="w-5 h-5 text-stone-400" />
-                                </div>
-                                
-                                <div className="w-12 h-12 rounded-full bg-[#B8956A] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                                  {index + 1}
-                                </div>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Input
+                      value={entrySearchQuery}
+                      onChange={(e) => setEntrySearchQuery(e.target.value)}
+                      placeholder="Pesquisar cavaleiro, cavalo ou grau..."
+                      className="pl-9"
+                    />
+                  </div>
 
-                                <div className="flex-1 grid grid-cols-4 gap-3">
-                                  <div>
-                                    <div className="text-stone-600 text-xs mb-1">⏰ Horário</div>
-                                    <p className="font-bold text-[#B8956A]">
-                                      {(() => {
-                                        const timeMatch = entry.notes?.match(/Horário:\s*(\d{2}:\d{2})/);
-                                        return timeMatch?.[1] || '-';
-                                      })()}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <div className="flex items-center gap-2 text-stone-600 text-xs mb-1">
-                                      <User className="w-3 h-3" />
-                                      Cavaleiro
-                                    </div>
-                                    <p className="font-bold text-[#2D2D2D]">{entry.rider_name}</p>
-                                  </div>
-                                  <div>
-                                    <div className="text-stone-600 text-xs mb-1">Cavalo</div>
-                                    <p className="font-medium">{entry.horse_name}</p>
-                                  </div>
-                                  <div>
-                                    <div className="text-stone-600 text-xs mb-1">Grau</div>
-                                    <p className="font-medium">{entry.grade || '-'}</p>
-                                  </div>
-                                </div>
+                  {entrySearchQuery ? (
+                    <div className="space-y-2">
+                      {filteredOrderedEntries.map((entry) => (
+                        <div key={entry.id} className="flex items-center gap-4 p-4 bg-white border-2 border-stone-200 rounded-lg">
+                          <div className="w-12 h-12 rounded-full bg-[#B8956A] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                            {entry.order_number || '-'}
+                          </div>
 
-                                <div className="flex flex-col gap-2">
-                                  {entry.absent ? (
-                                    <div className="flex items-center gap-1">
-                                      <Badge className="bg-red-500 text-white px-2 py-1 text-xs font-bold">
-                                        <UserX className="w-3 h-3 mr-1" />
-                                        Ausente
-                                      </Badge>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-6 px-2 text-xs hover:bg-green-50"
-                                        onClick={() => toggleAbsent.mutate({ id: entry.id, absent: false })}
-                                        title="Marcar como presente"
-                                      >
-                                        ✓ Presente
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-bold">
-                                        <UserCheck className="w-3 h-3 mr-1" />
-                                        Presente
-                                      </Badge>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-6 px-2 text-xs hover:bg-red-50"
-                                        onClick={() => toggleAbsent.mutate({ id: entry.id, absent: true })}
-                                        title="Marcar como ausente"
-                                      >
-                                        ✕ Ausente
-                                      </Button>
-                                    </div>
-                                  )}
-
-                                  <Button
-                                    variant={entry.paid ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => togglePaid.mutate({ id: entry.id, paid: !entry.paid })}
-                                    className={entry.paid ? "bg-green-600 hover:bg-green-700 text-xs h-7 font-bold" : "text-xs h-7 border-stone-300"}
-                                  >
-                                    <DollarSign className="w-3 h-3 mr-1" />
-                                    {entry.paid ? 'Pago' : 'Não Pago'}
-                                  </Button>
-                                </div>
-
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleStartEdit(entry)}
-                                >
-                                  Editar
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    if (confirm('Remover este participante?')) {
-                                      deleteEntry.mutate(entry.id);
-                                    }
-                                  }}
-                                  className="text-red-600 hover:bg-red-50"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                          <div className="flex-1 grid grid-cols-4 gap-3">
+                            <div>
+                              <div className="text-stone-600 text-xs mb-1">⏰ Horário</div>
+                              <p className="font-bold text-[#B8956A]">
+                                {(() => {
+                                  const timeMatch = entry.notes?.match(/Horário:\s*(\d{2}:\d{2})/);
+                                  return timeMatch?.[1] || '-';
+                                })()}
+                              </p>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 text-stone-600 text-xs mb-1">
+                                <User className="w-3 h-3" />
+                                Cavaleiro
                               </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
+                              <p className="font-bold text-[#2D2D2D]">{entry.rider_name}</p>
+                            </div>
+                            <div>
+                              <div className="text-stone-600 text-xs mb-1">Cavalo</div>
+                              <p className="font-medium">{entry.horse_name}</p>
+                            </div>
+                            <div>
+                              <div className="text-stone-600 text-xs mb-1">Grau</div>
+                              <p className="font-medium">{entry.grade || '-'}</p>
+                            </div>
+                          </div>
+
+                          <Button variant="outline" size="sm" onClick={() => handleStartEdit(entry)}>
+                            Editar
+                          </Button>
                         </div>
+                      ))}
+                      {filteredOrderedEntries.length === 0 && (
+                        <p className="text-center text-stone-500 py-6">
+                          Nenhum participante encontrado para "{entrySearchQuery}".
+                        </p>
+                      )}
+                      <p className="text-xs text-blue-700 bg-blue-50 rounded-md px-3 py-2">
+                        Limpe a pesquisa para voltar a reordenar por arrastar.
+                      </p>
+                    </div>
+                  ) : (
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                      <Droppable droppableId="entries">
+                        {(provided) => (
+                          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+                            {orderedEntries.map((entry, index) => (
+                              <Draggable key={entry.id} draggableId={entry.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={`flex items-center gap-4 p-4 bg-white border-2 rounded-lg transition-all ${
+                                      snapshot.isDragging ? 'shadow-xl border-[#B8956A] scale-105' : 'border-stone-200'
+                                    }`}
+                                  >
+                                    <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                      <GripVertical className="w-5 h-5 text-stone-400" />
+                                    </div>
+                                    
+                                    <div className="w-12 h-12 rounded-full bg-[#B8956A] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                      {index + 1}
+                                    </div>
+
+                                    <div className="flex-1 grid grid-cols-4 gap-3">
+                                      <div>
+                                        <div className="text-stone-600 text-xs mb-1">⏰ Horário</div>
+                                        <p className="font-bold text-[#B8956A]">
+                                          {(() => {
+                                            const timeMatch = entry.notes?.match(/Horário:\s*(\d{2}:\d{2})/);
+                                            return timeMatch?.[1] || '-';
+                                          })()}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <div className="flex items-center gap-2 text-stone-600 text-xs mb-1">
+                                          <User className="w-3 h-3" />
+                                          Cavaleiro
+                                        </div>
+                                        <p className="font-bold text-[#2D2D2D]">{entry.rider_name}</p>
+                                      </div>
+                                      <div>
+                                        <div className="text-stone-600 text-xs mb-1">Cavalo</div>
+                                        <p className="font-medium">{entry.horse_name}</p>
+                                      </div>
+                                      <div>
+                                        <div className="text-stone-600 text-xs mb-1">Grau</div>
+                                        <p className="font-medium">{entry.grade || '-'}</p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                      {entry.absent ? (
+                                        <div className="flex items-center gap-1">
+                                          <Badge className="bg-red-500 text-white px-2 py-1 text-xs font-bold">
+                                            <UserX className="w-3 h-3 mr-1" />
+                                            Ausente
+                                          </Badge>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 px-2 text-xs hover:bg-green-50"
+                                            onClick={() => toggleAbsent.mutate({ id: entry.id, absent: false })}
+                                            title="Marcar como presente"
+                                          >
+                                            ✓ Presente
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1">
+                                          <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-bold">
+                                            <UserCheck className="w-3 h-3 mr-1" />
+                                            Presente
+                                          </Badge>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 px-2 text-xs hover:bg-red-50"
+                                            onClick={() => toggleAbsent.mutate({ id: entry.id, absent: true })}
+                                            title="Marcar como ausente"
+                                          >
+                                            ✕ Ausente
+                                          </Button>
+                                        </div>
+                                      )}
+
+                                      <Button
+                                        variant={entry.paid ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => togglePaid.mutate({ id: entry.id, paid: !entry.paid })}
+                                        className={entry.paid ? "bg-green-600 hover:bg-green-700 text-xs h-7 font-bold" : "text-xs h-7 border-stone-300"}
+                                      >
+                                        <DollarSign className="w-3 h-3 mr-1" />
+                                        {entry.paid ? 'Pago' : 'Não Pago'}
+                                      </Button>
+                                    </div>
+
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleStartEdit(entry)}
+                                    >
+                                      Editar
+                                    </Button>
+
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        if (confirm('Remover este participante?')) {
+                                          deleteEntry.mutate(entry.id);
+                                        }
+                                      }}
+                                      className="text-red-600 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
                         )}
-                        </Droppable>
-                        </DragDropContext>
-                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  )}
+                </div>
+              )}
 
                         {entries.length > 0 && (
                         <div className="mt-4 p-4 bg-blue-50 rounded-lg">
