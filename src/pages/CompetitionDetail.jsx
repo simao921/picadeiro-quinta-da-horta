@@ -61,9 +61,9 @@ export default function CompetitionDetail() {
     return statusMap[status] || statusMap.inscricoes_abertas;
   };
 
-  const statusInfo = getStatusInfo(competition.status);
-  const isFull = !!competition.max_entries && entries.length >= competition.max_entries;
-  const canEnroll = competition.status === 'inscricoes_abertas' && !isFull;
+  const statusInfo = getStatusInfo(competition?.status);
+  const isFull = !!competition?.max_entries && entries.length >= competition.max_entries;
+  const canEnroll = competition?.status === 'inscricoes_abertas' && !isFull;
   const hasResults = results.length > 0;
   
   const resultsWithGrade = useMemo(() => {
