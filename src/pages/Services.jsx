@@ -238,15 +238,15 @@ export default function Services() {
           <p className="text-stone-300 text-sm sm:text-base md:text-lg mb-6 sm:mb-8">
             {t('not_found_services_desc') || 'Entre em contacto connosco para soluções personalizadas.'}
           </p>
-          <Link to={createPageUrl('Contact')}>
+          <a href="tel:+351932111786">
             <Button 
               size="lg" 
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-6 sm:px-8 w-full sm:w-auto text-sm sm:text-base"
             >
-              {t('talk_to_us') || 'Fale Connosco'}
+              Ligar agora
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
             </Button>
-          </Link>
+          </a>
         </div>
       </section>
     </div>
