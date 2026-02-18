@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Award, Shield, Heart, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -109,14 +107,14 @@ export default function AboutSection() {
               ))}
             </div>
 
-            <Link to={createPageUrl('Contact')}>
+            <a href="tel:+351932111786">
               <Button 
                 size="lg" 
                 className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold"
               >
-                {t('about_cta')}
+                Ligar agora
               </Button>
-            </Link>
+            </a>
           </motion.div>
 
           {/* Right Image Grid */}
