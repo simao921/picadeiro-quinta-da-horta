@@ -77,6 +77,7 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       (scoringFormula.includes('tecn') || scoringFormula.includes('technical')) &&
       (scoringFormula.includes('qualit') || scoringFormula.includes('artistic')));
   const isInfantil1Or3 = /infantil\s*(1|i|3|iii)\b/.test(modalityName);
+  const isInfantil1 = /infantil\s*(1|i)\b/.test(modalityName);
   const isJuniorsTeam = /juniors?\s*team\b/.test(modalityName);
   const isFixedTechQualScale = isInfantil1Or3 || isJuniorsTeam;
   const averageModeByModalityName = isFixedTechQualScale;
@@ -165,6 +166,8 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     let technicalMax = 0;
     let qualitativePoints = 0;
     let qualitativeMax = 0;
+    let technicalScoredCount = 0;
+    let qualitativeScoredCount = 0;
     let hasTechnicalExercises = false;
     let hasQualitativeExercises = false;
 
@@ -208,8 +211,14 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
         const weighted = score * coef;
         totalPoints += weighted;
         scoredExercises++;
-        if (category === 'technical') technicalPoints += weighted;
-        if (category === 'qualitative') qualitativePoints += weighted;
+        if (category === 'technical') {
+          technicalPoints += weighted;
+          technicalScoredCount++;
+        }
+        if (category === 'qualitative') {
+          qualitativePoints += weighted;
+          qualitativeScoredCount++;
+        }
         if (coef !== 1) {
           details.push(`Ex${exercise.number}: ${score}×${coef}=${weighted}`);
         } else {
@@ -244,8 +253,14 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
 
         const technicalBaseForAverage = isFixedTechQualScale ? 100 : technicalMax;
         const qualitativeBaseForAverage = isFixedTechQualScale ? 40 : qualitativeMax;
-        const technicalPercentage = technicalBaseForAverage > 0 ? (technicalPoints / technicalBaseForAverage) * 100 : null;
-        const qualitativePercentage = qualitativeBaseForAverage > 0 ? (qualitativePoints / qualitativeBaseForAverage) * 100 : null;
+        const technicalPercentage =
+          technicalScoredCount > 0 && technicalBaseForAverage > 0
+            ? (technicalPoints / technicalBaseForAverage) * 100
+            : null;
+        const qualitativePercentage =
+          qualitativeScoredCount > 0 && qualitativeBaseForAverage > 0
+            ? (qualitativePoints / qualitativeBaseForAverage) * 100
+            : null;
 
         if (technicalPercentage !== null || qualitativePercentage !== null) {
           let weightedBase = basePercentage;
