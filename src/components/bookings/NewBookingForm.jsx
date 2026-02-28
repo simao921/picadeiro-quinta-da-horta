@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +34,7 @@ const saturdayTimeSlots = [
 // Componente para seleção de aula semanal
 function WeeklyLessonSelector({ 
   index, currentDate, currentTime, selectedDates, selectedTimes, 
-  setSelectedDates, setSelectedTimes, blockedSlots, getAvailableSlots, getLessonsForDate 
+  setSelectedDates, setSelectedTimes, blockedSlots, getAvailableSlots, getLessonsForDate, isOwnerService
 }) {
   const [dateLessons, setDateLessons] = useState([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -92,7 +92,7 @@ function WeeklyLessonSelector({
               disabled={(date) => {
                 if (date < new Date() || date.getDay() === 0) return true;
                 // Bloquear agosto EXCETO para serviço de Proprietários
-                if (date.getMonth() === 7 && selectedService?.title !== 'Proprietários') return true;
+                if (date.getMonth() === 7 && !isOwnerService) return true;
                 // Verificar se o dia está bloqueado
                 const dateStr = format(date, 'yyyy-MM-dd');
                 if (blockedSlots.some(b => b.date === dateStr && !b.time_slot)) return true;
@@ -163,6 +163,11 @@ function WeeklyLessonSelector({
                 })}
               </div>
             )}
+            {!isLoadingSlots && currentDate && availableSlots.length === 0 && (
+              <div className="text-center py-4 text-sm text-stone-500">
+                Sem horários disponíveis para este dia.
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -185,6 +190,12 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [wantsPhotoVideo, setWantsPhotoVideo] = useState(false);
 
   const queryClient = useQueryClient();
+  const stepMeta = [
+    { id: 1, label: 'Serviço' },
+    { id: 2, label: 'Plano' },
+    { id: 3, label: 'Data e Hora' },
+    { id: 4, label: 'Confirmação' }
+  ];
 
   // Reset selected time when date changes
   useEffect(() => {
@@ -201,6 +212,10 @@ export default function NewBookingForm({ user, isBlocked }) {
       setSelectedTimes(newTimes.slice(0, selectedDates.length));
     }
   }, [selectedDates]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   const defaultServices = [
     { id: '1', title: t('service_private_title'), price: 45, duration: 60, max_participants: 1, short_description: t('service_private_short') },
@@ -521,6 +536,9 @@ export default function NewBookingForm({ user, isBlocked }) {
       queryClient.invalidateQueries(['lessons']);
       setStep(5);
       toast.success('Reserva criada com sucesso!');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Não foi possível concluir a reserva. Tente novamente.');
     }
   });
 
@@ -540,8 +558,14 @@ export default function NewBookingForm({ user, isBlocked }) {
     // Usar as lições fornecidas ou as lições do dia selecionado
     const lessonsToCheck = dateLessons !== null ? dateLessons : lessons;
     
+    const selectedDay = new Date(date);
+    const now = new Date();
+    const isToday = format(selectedDay, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
+    const currentTime = format(now, 'HH:mm');
+
     if (!lessonsToCheck || lessonsToCheck.length === 0) {
       return timeSlots.filter(slot => {
+        if (isToday && slot <= currentTime) return false;
         // Verificar se o horário específico está bloqueado
         return !blockedSlots.some(b => b.date === dateStr && b.time_slot === slot);
       });
@@ -551,6 +575,7 @@ export default function NewBookingForm({ user, isBlocked }) {
     
     // Para serviços de 60 minutos, verificar se as duas meias horas estão disponíveis
     return timeSlots.filter(slot => {
+      if (isToday && slot <= currentTime) return false;
       // Verificar se o horário específico está bloqueado
       if (blockedSlots.some(b => b.date === dateStr && b.time_slot === slot)) {
         return false;
@@ -581,6 +606,66 @@ export default function NewBookingForm({ user, isBlocked }) {
       
       return true;
     });
+  };
+
+  const singleDayAvailableSlots = useMemo(
+    () => (selectedDate ? getAvailableSlots(selectedDate) : []),
+    [selectedDate, selectedService, selectedPlan, lessons, blockedSlots]
+  );
+
+  const selectedWeeklyCount = selectedTimes.filter(Boolean).length;
+  const needsWeeklySlots = selectedPlan?.frequency > 1;
+
+  const goToStep2 = () => {
+    if (!selectedService) {
+      toast.error('Selecione um serviço para continuar.');
+      return;
+    }
+    setStep(2);
+  };
+
+  const goToStep3 = () => {
+    if (!selectedService) {
+      toast.error('Selecione um serviço para continuar.');
+      return;
+    }
+
+    if (selectedService?.title === 'Hipoterapia') {
+      setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
+      setStep(3);
+      return;
+    }
+
+    if (selectedService?.title === 'Proprietários' && !selectedPlan) {
+      toast.error('Por favor selecione a duração da sessão.');
+      return;
+    }
+
+    if (!selectedPlan && selectedService) {
+      setSelectedPlan({ label: selectedService.title, price: selectedService.price });
+    }
+    setStep(3);
+  };
+
+  const goToStep4 = () => {
+    if (needsWeeklySlots) {
+      if (selectedWeeklyCount !== selectedPlan.frequency) {
+        toast.error(`Faltam ${selectedPlan.frequency - selectedWeeklyCount} horário(s) para completar o plano.`);
+        return;
+      }
+      setStep(4);
+      return;
+    }
+
+    if (!selectedDate) {
+      toast.error('Selecione uma data para continuar.');
+      return;
+    }
+    if (!selectedTime) {
+      toast.error('Selecione um horário para continuar.');
+      return;
+    }
+    setStep(4);
   };
 
   if (isBlocked) {
@@ -651,6 +736,34 @@ export default function NewBookingForm({ user, isBlocked }) {
           </div>
         ))}
       </div>
+      <p className="text-center text-sm text-stone-600 -mt-4 mb-4">
+        Passo {step} de 4: {stepMeta[step - 1].label}
+      </p>
+
+      <Card className="border-stone-200 bg-white/90">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div className="flex items-center justify-between sm:block">
+              <span className="text-stone-500">Serviço</span>
+              <p className="font-medium text-[#2C3E1F]">{selectedService?.title || 'Por selecionar'}</p>
+            </div>
+            <div className="flex items-center justify-between sm:block">
+              <span className="text-stone-500">Plano</span>
+              <p className="font-medium text-[#2C3E1F]">{selectedPlan?.label || 'Por selecionar'}</p>
+            </div>
+            <div className="flex items-center justify-between sm:block">
+              <span className="text-stone-500">Horário</span>
+              <p className="font-medium text-[#2C3E1F]">
+                {needsWeeklySlots
+                  ? `${selectedWeeklyCount}/${selectedPlan?.frequency || 0} selecionados`
+                  : selectedTime && selectedDate
+                    ? `${format(new Date(selectedDate), 'dd/MM', { locale: pt })} às ${selectedTime}`
+                    : 'Por selecionar'}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Step 1: Select Service */}
       {step === 1 && (
@@ -682,7 +795,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               </div>
               <div className="mt-6 flex justify-end">
                 <Button
-                  onClick={() => setStep(2)}
+                  onClick={goToStep2}
                   disabled={!selectedService}
                   className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
                 >
@@ -946,21 +1059,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">{t('back')}</Button>
             <Button
-              onClick={() => {
-               if (selectedService?.title === 'Hipoterapia') {
-                 setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
-                 setStep(3);
-               } else if (selectedService?.title === 'Proprietários' && !selectedPlan) {
-                 // Para proprietários, exigir seleção de plano
-                 toast.error('Por favor selecione a duração da sessão');
-               } else if (!selectedPlan && selectedService) {
-                 // Auto-selecionar plano para serviços genéricos
-                 setSelectedPlan({ label: selectedService.title, price: selectedService.price });
-                 setStep(3);
-               } else {
-                 setStep(3);
-               }
-              }}
+              onClick={goToStep3}
               disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia' && !selectedService?.price && selectedService?.title !== 'Proprietários'}
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
             >
@@ -1040,6 +1139,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     blockedSlots={blockedSlots}
                     getAvailableSlots={getAvailableSlots}
                     getLessonsForDate={getLessonsForDate}
+                    isOwnerService={selectedService?.title === 'Proprietários'}
                   />
                 );
               })}
@@ -1110,7 +1210,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   ) : (
                     <>
                       <div className="grid grid-cols-3 gap-2">
-                        {getAvailableSlots().map((slot) => {
+                        {singleDayAvailableSlots.map((slot) => {
                           const isSelected = selectedTime === slot;
                           return (
                             <Button
@@ -1135,7 +1235,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                           );
                         })}
                       </div>
-                      {getAvailableSlots().length === 0 && (
+                      {singleDayAvailableSlots.length === 0 && (
                         <div className="text-center py-8 text-stone-500">
                           <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
                           <p>Não há horários disponíveis para esta data.</p>
@@ -1151,7 +1251,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
             <Button
-              onClick={() => setStep(4)}
+              onClick={goToStep4}
               disabled={
                 selectedPlan?.frequency > 1
                   ? selectedTimes.filter(Boolean).length !== selectedPlan.frequency
