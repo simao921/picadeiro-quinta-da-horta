@@ -38,6 +38,8 @@ function WeeklyLessonSelector({
 }) {
   const [dateLessons, setDateLessons] = useState([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   // Buscar aulas quando a data muda
   useEffect(() => {
@@ -90,7 +92,7 @@ function WeeklyLessonSelector({
               }}
               locale={pt}
               disabled={(date) => {
-                if (date < new Date() || date.getDay() === 0) return true;
+                if (date < today || date.getDay() === 0) return true;
                 // Bloquear agosto EXCETO para serviço de Proprietários
                 if (date.getMonth() === 7 && !isOwnerService) return true;
                 // Verificar se o dia está bloqueado
@@ -190,6 +192,8 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [wantsPhotoVideo, setWantsPhotoVideo] = useState(false);
 
   const queryClient = useQueryClient();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const stepMeta = [
     { id: 1, label: 'Serviço' },
     { id: 2, label: 'Plano' },
@@ -559,8 +563,9 @@ export default function NewBookingForm({ user, isBlocked }) {
     const lessonsToCheck = dateLessons !== null ? dateLessons : lessons;
     
     const selectedDay = new Date(date);
+    selectedDay.setHours(0, 0, 0, 0);
     const now = new Date();
-    const isToday = format(selectedDay, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
+    const isToday = selectedDay.getTime() === today.getTime();
     const currentTime = format(now, 'HH:mm');
 
     if (!lessonsToCheck || lessonsToCheck.length === 0) {
@@ -1163,7 +1168,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     onSelect={setSelectedDate}
                     locale={pt}
                     disabled={(date) => {
-                      if (date < new Date() || date.getDay() === 0) return true;
+                      if (date < today || date.getDay() === 0) return true;
                       // Bloquear agosto EXCETO para serviço de Proprietários
                       if (date.getMonth() === 7 && selectedService?.title !== 'Proprietários') return true;
                       return false;
