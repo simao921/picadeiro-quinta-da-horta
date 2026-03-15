@@ -1,3 +1,9 @@
+/**
+ * Component: UserDashboard
+ * Author: Simão Januário
+ * Created: 2026
+ * Copyright (c) Simão Januário
+ */
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
