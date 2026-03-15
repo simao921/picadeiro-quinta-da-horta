@@ -32,10 +32,10 @@ export default function PageNotFound({}) {
                     {/* Main Message */}
                     <div className="space-y-3">
                         <h2 className="text-2xl font-medium text-slate-800">
-                            Page Not Found
+                            Oops! Página Perdida
                         </h2>
                         <p className="text-slate-600 leading-relaxed">
-                            The page <span className="font-medium text-slate-700">"{pageName}"</span> could not be found in this application.
+                            Não conseguimos encontrar o que procurava.
                         </p>
                     </div>
                     

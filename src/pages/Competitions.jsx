@@ -12,8 +12,10 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import MetaTags from '@/components/seo/MetaTags';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function Competitions() {
+  const { t } = useLanguage();
   const [modalityFilter, setModalityFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -39,11 +41,11 @@ export default function Competitions() {
 
   const getStatusInfo = (status) => {
     const statusMap = {
-      inscricoes_abertas: { label: 'Inscrições Abertas', color: 'bg-green-100 text-green-800' },
-      inscricoes_encerradas: { label: 'Inscrições Encerradas', color: 'bg-yellow-100 text-yellow-800' },
-      em_curso: { label: 'Em Curso', color: 'bg-blue-100 text-blue-800' },
-      concluida: { label: 'Concluída', color: 'bg-gray-100 text-gray-800' },
-      cancelada: { label: 'Cancelada', color: 'bg-red-100 text-red-800' }
+      inscricoes_abertas: { label: t('status_inscricoes_abertas'), color: 'bg-green-100 text-green-800' },
+      inscricoes_encerradas: { label: t('status_inscricoes_encerradas'), color: 'bg-yellow-100 text-yellow-800' },
+      em_curso: { label: t('status_em_curso'), color: 'bg-blue-100 text-blue-800' },
+      concluida: { label: t('status_concluida'), color: 'bg-gray-100 text-gray-800' },
+      cancelada: { label: t('status_cancelada'), color: 'bg-red-100 text-red-800' }
     };
     return statusMap[status] || statusMap.inscricoes_abertas;
   };
@@ -51,8 +53,8 @@ export default function Competitions() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100">
       <MetaTags
-        title="Competições Equestres - Picadeiro Quinta da Horta"
-        description="Próximas provas e competições equestres. Inscreva-se e acompanhe os resultados."
+        title={`${t('competitions_page_title')} - Picadeiro Quinta da Horta`}
+        description={t('competitions_page_subtitle')}
         keywords="competições equestres, provas, dressage, working equitation, inscrições"
       />
 
@@ -65,9 +67,9 @@ export default function Competitions() {
             transition={{ duration: 0.6 }}
           >
             <Trophy className="w-16 h-16 text-[#B8956A] mb-4" />
-            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">Competições</h1>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">{t('competitions_page_title')}</h1>
             <p className="text-xl text-stone-300 max-w-3xl">
-              Acompanhe as próximas provas equestres e consulte os resultados
+              {t('competitions_page_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -79,19 +81,19 @@ export default function Competitions() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              Filtros
+              {t('competitions_filters')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Modalidade</label>
+                <label className="text-sm font-medium mb-2 block">{t('competitions_filter_modality')}</label>
                 <Select value={modalityFilter} onValueChange={setModalityFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todas as modalidades" />
+                    <SelectValue placeholder={t('competitions_all_modalities')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as modalidades</SelectItem>
+                    <SelectItem value="all">{t('competitions_all_modalities')}</SelectItem>
                     {modalities.map(mod => (
                       <SelectItem key={mod.id} value={mod.name}>{mod.name}</SelectItem>
                     ))}
@@ -100,13 +102,13 @@ export default function Competitions() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Ano</label>
+                <label className="text-sm font-medium mb-2 block">{t('competitions_filter_year')}</label>
                 <Select value={yearFilter} onValueChange={setYearFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos os anos" />
+                    <SelectValue placeholder={t('competitions_all_years')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os anos</SelectItem>
+                    <SelectItem value="all">{t('competitions_all_years')}</SelectItem>
                     {years.map(year => (
                       <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                     ))}
@@ -115,17 +117,17 @@ export default function Competitions() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Estado</label>
+                <label className="text-sm font-medium mb-2 block">{t('competitions_filter_status')}</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos os estados" />
+                    <SelectValue placeholder={t('competitions_all_states')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os estados</SelectItem>
-                    <SelectItem value="inscricoes_abertas">Inscrições Abertas</SelectItem>
-                    <SelectItem value="inscricoes_encerradas">Inscrições Encerradas</SelectItem>
-                    <SelectItem value="em_curso">Em Curso</SelectItem>
-                    <SelectItem value="concluida">Concluída</SelectItem>
+                    <SelectItem value="all">{t('competitions_all_states')}</SelectItem>
+                    <SelectItem value="inscricoes_abertas">{t('status_inscricoes_abertas')}</SelectItem>
+                    <SelectItem value="inscricoes_encerradas">{t('status_inscricoes_encerradas')}</SelectItem>
+                    <SelectItem value="em_curso">{t('status_em_curso')}</SelectItem>
+                    <SelectItem value="concluida">{t('status_concluida')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -152,7 +154,7 @@ export default function Competitions() {
           <Card>
             <CardContent className="py-12 text-center">
               <Trophy className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-              <p className="text-stone-600 text-lg">Nenhuma competição encontrada com os filtros selecionados</p>
+              <p className="text-stone-600 text-lg">{t('competitions_none_found')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -183,7 +185,7 @@ export default function Competitions() {
                         </div>
                         {comp.grade && (
                           <div className="text-xs font-medium text-[#B8956A]">
-                            Grau: {comp.grade}
+                            {t('competitions_grade')}: {comp.grade}
                           </div>
                         )}
                       </div>
@@ -194,7 +196,7 @@ export default function Competitions() {
                       )}
                       <Link to={createPageUrl('CompetitionDetail') + `?id=${comp.id}`}>
                         <Button className="w-full bg-[#2D2D2D] hover:bg-[#1A1A1A] text-white">
-                          Ver Detalhes
+                          {t('competitions_see_details')}
                           <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                       </Link>
