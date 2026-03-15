@@ -295,6 +295,25 @@ export const translations = {
     others: 'Outros',
     no_images: 'Nenhuma imagem encontrada',
 
+    // Competitions page
+    competitions_page_title: 'Competições Equestres',
+    competitions_page_subtitle: 'Acompanhe as próximas provas equestres e consulte os resultados',
+    competitions_filters: 'Filtros',
+    competitions_filter_modality: 'Modalidade',
+    competitions_filter_year: 'Ano',
+    competitions_filter_status: 'Estado',
+    competitions_all_modalities: 'Todas as modalidades',
+    competitions_all_years: 'Todos os anos',
+    competitions_all_states: 'Todos os estados',
+    competitions_see_details: 'Ver Detalhes',
+    competitions_grade: 'Grau',
+    competitions_none_found: 'Nenhuma competição encontrada com os filtros selecionados',
+    status_inscricoes_abertas: 'Inscrições Abertas',
+    status_inscricoes_encerradas: 'Inscrições Encerradas',
+    status_em_curso: 'Em Curso',
+    status_concluida: 'Concluída',
+    status_cancelada: 'Cancelada',
+
     // Footer
     quick_links: 'Links Rápidos',
     footer_description: 'Centro equestre de excelência em Alcochete, oferecendo aulas de equitação e experiências únicas com cavalos.',
@@ -620,6 +639,25 @@ export const translations = {
     competitions: 'Competitions',
     others: 'Others',
     no_images: 'No images found',
+
+    // Competitions page
+    competitions_page_title: 'Equestrian Competitions',
+    competitions_page_subtitle: 'Follow the upcoming equestrian events and check results',
+    competitions_filters: 'Filters',
+    competitions_filter_modality: 'Modality',
+    competitions_filter_year: 'Year',
+    competitions_filter_status: 'Status',
+    competitions_all_modalities: 'All modalities',
+    competitions_all_years: 'All years',
+    competitions_all_states: 'All statuses',
+    competitions_see_details: 'See Details',
+    competitions_grade: 'Grade',
+    competitions_none_found: 'No competitions found with the selected filters',
+    status_inscricoes_abertas: 'Open Registrations',
+    status_inscricoes_encerradas: 'Closed Registrations',
+    status_em_curso: 'Ongoing',
+    status_concluida: 'Concluded',
+    status_cancelada: 'Cancelled',
 
     // Footer
     quick_links: 'Quick Links',
@@ -947,6 +985,25 @@ export const translations = {
     others: 'Otros',
     no_images: 'No se encontraron imágenes',
 
+    // Competitions page
+    competitions_page_title: 'Competiciones Ecuestres',
+    competitions_page_subtitle: 'Sigue las próximas pruebas ecuestres y consulta los resultados',
+    competitions_filters: 'Filtros',
+    competitions_filter_modality: 'Modalidad',
+    competitions_filter_year: 'Año',
+    competitions_filter_status: 'Estado',
+    competitions_all_modalities: 'Todas las modalidades',
+    competitions_all_years: 'Todos los años',
+    competitions_all_states: 'Todos los estados',
+    competitions_see_details: 'Ver Detalles',
+    competitions_grade: 'Grado',
+    competitions_none_found: 'Ninguna competición encontrada con los filtros seleccionados',
+    status_inscricoes_abertas: 'Inscripciones Abiertas',
+    status_inscricoes_encerradas: 'Inscripciones Cerradas',
+    status_em_curso: 'En Curso',
+    status_concluida: 'Concluida',
+    status_cancelada: 'Cancelada',
+
     // Footer
     quick_links: 'Enlaces Rápidos',
     footer_description: 'Centro ecuestre de excelencia en Alcochete, ofreciendo clases de equitación y experiencias únicas con caballos.',
@@ -1272,6 +1329,25 @@ export const translations = {
     competitions: 'Compétitions',
     others: 'Autres',
     no_images: 'Aucune image trouvée',
+
+    // Competitions page
+    competitions_page_title: 'Compétitions Équestres',
+    competitions_page_subtitle: 'Suivez les prochaines épreuves équestres et consultez les résultats',
+    competitions_filters: 'Filtres',
+    competitions_filter_modality: 'Modalité',
+    competitions_filter_year: 'Année',
+    competitions_filter_status: 'Statut',
+    competitions_all_modalities: 'Toutes les modalités',
+    competitions_all_years: 'Toutes les années',
+    competitions_all_states: 'Tous les statuts',
+    competitions_see_details: 'Voir les Détails',
+    competitions_grade: 'Grade',
+    competitions_none_found: 'Aucune compétition trouvée avec les filtres sélectionnés',
+    status_inscricoes_abertas: 'Inscriptions Ouvertes',
+    status_inscricoes_encerradas: 'Inscriptions Fermées',
+    status_em_curso: 'En Cours',
+    status_concluida: 'Terminée',
+    status_cancelada: 'Annulée',
 
     // Footer
     quick_links: 'Liens Rapides',
