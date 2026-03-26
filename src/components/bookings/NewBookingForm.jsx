@@ -204,6 +204,7 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [fixoFrequency, setFixoFrequency] = useState(1); // 1, 2 ou 3 vezes/semana
   const [fixoSchedules, setFixoSchedules] = useState([{ day: null, time: null }]); // array de {day, time}
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState(null); // para avulso
+  const [avulsoFrequency, setAvulsoFrequency] = useState(1); // 1, 2 ou 3 vezes/semana para avulso
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
   const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
   const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
@@ -1355,110 +1356,145 @@ export default function NewBookingForm({ user, isBlocked }) {
                 </div>
               ))}
             </div>
-          ) : selectedPlan?.frequency > 1 ? (
+          ) : (
             <div className="space-y-6">
-              <p className="text-stone-600">
-                Selecione {selectedPlan.frequency} horários diferentes para as suas aulas semanais
-              </p>
-              <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-[#B8956A]" />
-                    Data
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    locale={pt}
-                    disabled={(date) => {
-                      if (date < today || date.getDay() === 0) return true;
-                      // Bloquear agosto EXCETO para serviço de Proprietários
-                      if (date.getMonth() === 7 && selectedService?.title !== 'Proprietários') return true;
-                      return false;
-                    }}
-                    className="rounded-md border-0 mx-auto"
-                    classNames={{
-                      months: "flex flex-col space-y-4",
-                      month: "space-y-4",
-                      caption: "flex justify-center pt-1 relative items-center",
-                      caption_label: "text-sm font-semibold text-[#2C3E1F]",
-                      nav: "space-x-1 flex items-center",
-                      nav_button: "h-7 w-7 bg-transparent hover:bg-stone-100 rounded-md transition-colors",
-                      nav_button_previous: "absolute left-1",
-                      nav_button_next: "absolute right-1",
-                      table: "w-full border-collapse space-y-1",
-                      head_row: "flex justify-between",
-                      head_cell: "text-stone-500 rounded-md w-9 font-medium text-[0.8rem]",
-                      row: "flex w-full mt-2 justify-between",
-                      cell: "text-center text-sm p-0 relative",
-                      day: "h-9 w-9 p-0 font-normal hover:bg-[#B8956A]/10 rounded-md transition-colors",
-                      day_selected: "bg-[#B8956A] text-white hover:bg-[#8B7355] hover:text-white focus:bg-[#B8956A] focus:text-white",
-                      day_today: "bg-stone-100 text-[#2C3E1F] font-semibold",
-                      day_outside: "text-stone-400 opacity-50",
-                      day_disabled: "text-stone-300 opacity-50 hover:bg-transparent cursor-not-allowed",
-                      day_hidden: "invisible",
-                    }}
-                  />
-                </CardContent>
-              </Card>
+              {/* Seletor de vezes por semana para avulso */}
+              <div>
+                <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Quantas vezes por semana?</p>
+                <div className="flex gap-3">
+                  {[1, 2, 3].map(n => (
+                    <Button
+                      key={n}
+                      variant={avulsoFrequency === n ? 'default' : 'outline'}
+                      className={avulsoFrequency === n
+                        ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white'
+                        : 'border-stone-300 hover:border-[#B8956A]'
+                      }
+                      onClick={() => {
+                        setAvulsoFrequency(n);
+                        setSelectedDates(Array(n).fill(null));
+                        setSelectedTimes(Array(n).fill(null));
+                        if (n === 1) { setSelectedDate(new Date()); setSelectedTime(null); }
+                      }}
+                    >
+                      {n}x / semana
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
-              <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-[#B8956A]" />
-                    Horários Disponíveis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {!selectedDate ? (
-                    <div className="text-center py-8 text-stone-500">
-                      <CalendarDays className="w-12 h-12 mx-auto mb-2 text-stone-300" />
-                      <p>Por favor selecione uma data primeiro.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-3 gap-2">
-                        {singleDayAvailableSlots.map((slot) => {
-                          const isSelected = selectedTime === slot;
-                          return (
-                            <Button
-                              key={slot}
-                              variant={isSelected ? 'default' : 'outline'}
-                              size="sm"
-                              className={isSelected
-                                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md' 
-                                : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all'
-                              }
-                              onClick={() => {
-                                // Permitir deselecionar se já está selecionado
-                                if (isSelected) {
-                                  setSelectedTime(null);
-                                } else {
-                                  setSelectedTime(slot);
-                                }
-                              }}
-                            >
-                              {slot}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                      {singleDayAvailableSlots.length === 0 && (
+              {avulsoFrequency === 1 ? (
+                <>
+                  <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <CalendarDays className="w-5 h-5 text-[#B8956A]" />
+                        Data
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        locale={pt}
+                        disabled={(date) => {
+                          if (date < today || date.getDay() === 0) return true;
+                          if (date.getMonth() === 7 && selectedService?.title !== 'Proprietários') return true;
+                          const dateStr = format(date, 'yyyy-MM-dd');
+                          return blockedSlots.some(b => b.date === dateStr && !b.time_slot);
+                        }}
+                        className="rounded-md border-0 mx-auto"
+                        classNames={{
+                          months: "flex flex-col space-y-4",
+                          month: "space-y-4",
+                          caption: "flex justify-center pt-1 relative items-center",
+                          caption_label: "text-sm font-semibold text-[#2C3E1F]",
+                          nav: "space-x-1 flex items-center",
+                          nav_button: "h-7 w-7 bg-transparent hover:bg-stone-100 rounded-md transition-colors",
+                          nav_button_previous: "absolute left-1",
+                          nav_button_next: "absolute right-1",
+                          table: "w-full border-collapse space-y-1",
+                          head_row: "flex justify-between",
+                          head_cell: "text-stone-500 rounded-md w-9 font-medium text-[0.8rem]",
+                          row: "flex w-full mt-2 justify-between",
+                          cell: "text-center text-sm p-0 relative",
+                          day: "h-9 w-9 p-0 font-normal hover:bg-[#B8956A]/10 rounded-md transition-colors",
+                          day_selected: "bg-[#B8956A] text-white hover:bg-[#8B7355] hover:text-white focus:bg-[#B8956A] focus:text-white",
+                          day_today: "bg-stone-100 text-[#2C3E1F] font-semibold",
+                          day_outside: "text-stone-400 opacity-50",
+                          day_disabled: "text-stone-300 opacity-50 hover:bg-transparent cursor-not-allowed",
+                          day_hidden: "invisible",
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                  <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-[#B8956A]" />
+                        Horários Disponíveis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      {!selectedDate ? (
                         <div className="text-center py-8 text-stone-500">
-                          <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
-                          <p>Não há horários disponíveis para esta data.</p>
-                          <p className="text-sm mt-2">Por favor selecione outra data.</p>
+                          <CalendarDays className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+                          <p>Por favor selecione uma data primeiro.</p>
                         </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-3 gap-2">
+                            {singleDayAvailableSlots.map((slot) => {
+                              const isSelected = selectedTime === slot;
+                              return (
+                                <Button
+                                  key={slot}
+                                  variant={isSelected ? 'default' : 'outline'}
+                                  size="sm"
+                                  className={isSelected
+                                    ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md'
+                                    : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all'
+                                  }
+                                  onClick={() => setSelectedTime(isSelected ? null : slot)}
+                                >
+                                  {slot}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                          {singleDayAvailableSlots.length === 0 && (
+                            <div className="text-center py-8 text-stone-500">
+                              <Clock className="w-12 h-12 mx-auto mb-2 text-stone-300" />
+                              <p>Não há horários disponíveis para esta data.</p>
+                              <p className="text-sm mt-2">Por favor selecione outra data.</p>
+                            </div>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                Array.from({ length: avulsoFrequency }, (_, i) => (
+                  <WeeklyLessonSelector
+                    key={i}
+                    index={i}
+                    currentDate={selectedDates[i]}
+                    currentTime={selectedTimes[i]}
+                    selectedDates={selectedDates}
+                    selectedTimes={selectedTimes}
+                    setSelectedDates={setSelectedDates}
+                    setSelectedTimes={setSelectedTimes}
+                    blockedSlots={blockedSlots}
+                    getAvailableSlots={getAvailableSlots}
+                    getLessonsForDate={getLessonsForDate}
+                    isOwnerService={selectedService?.title === 'Proprietários'}
+                  />
+                ))
+              )}
             </div>
-          ) : null}
+          )}
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
             <Button
@@ -1466,7 +1502,9 @@ export default function NewBookingForm({ user, isBlocked }) {
               disabled={
                 (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo')
                   ? fixoSchedules.some(s => s.day === null || !s.time)
-                  : selectedPlan?.frequency > 1
+                  : avulsoFrequency > 1
+                    ? selectedTimes.filter(Boolean).length < avulsoFrequency
+                    : !selectedDate || !selectedTime
               }
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white disabled:bg-stone-300"
             >
