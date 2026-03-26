@@ -739,6 +739,11 @@ export default function NewBookingForm({ user, isBlocked }) {
     if (!selectedPlan && selectedService) {
       setSelectedPlan({ label: selectedService.title, price: selectedService.price });
     }
+    // Inicializar arrays para fixo
+    if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
+      setSelectedDates(Array(fixoFrequency).fill(null));
+      setSelectedTimes(Array(fixoFrequency).fill(null));
+    }
     setStep(3);
   };
 
@@ -1280,7 +1285,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             {t('select_date_time')}
           </h2>
 
-          {/* Aulas Fixas em Grupo: seletor de dia da semana + hora (1, 2 ou 3 vezes/semana) */}
+          {/* Aulas Fixas em Grupo: calendário por slot */}
           {selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo' ? (
             <div className="space-y-6">
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
@@ -1288,72 +1293,35 @@ export default function NewBookingForm({ user, isBlocked }) {
                   <strong>Como funciona:</strong> Escolhe o(s) dia(s) e horário(s). O admin aprova e as aulas ficam no horário fixo durante 3 meses.
                 </p>
               </div>
-              {fixoSchedules.map((sched, idx) => (
-                <div key={idx} className="border-2 border-stone-200 rounded-xl p-4 space-y-4">
-                  {fixoFrequency > 1 && (
-                    <p className="font-semibold text-[#2C3E1F]">Horário {idx + 1}</p>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-[#2C3E1F] mb-2">Dia da semana</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { day: 1, label: 'Segunda' },
-                        { day: 2, label: 'Terça' },
-                        { day: 3, label: 'Quarta' },
-                        { day: 4, label: 'Quinta' },
-                        { day: 5, label: 'Sexta' },
-                        { day: 6, label: 'Sábado' },
-                      ].map(({ day, label }) => {
-                        // Bloquear dias já escolhidos noutros slots
-                        const usedByOther = fixoSchedules.some((s, i) => i !== idx && s.day === day);
-                        return (
-                          <Button
-                            key={day}
-                            variant={sched.day === day ? 'default' : 'outline'}
-                            size="sm"
-                            disabled={usedByOther}
-                            className={sched.day === day
-                              ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white'
-                              : usedByOther ? 'opacity-30' : 'border-stone-300 hover:border-[#B8956A]'
-                            }
-                            onClick={() => {
-                              const updated = [...fixoSchedules];
-                              updated[idx] = { day, time: null };
-                              setFixoSchedules(updated);
-                            }}
-                          >
-                            {label}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {sched.day !== null && (
-                    <div>
-                      <p className="text-sm font-semibold text-[#2C3E1F] mb-2">Horário</p>
-                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        {getTimeSlotsForDay(sched.day).map((slot) => (
-                          <Button
-                            key={slot}
-                            variant={sched.time === slot ? 'default' : 'outline'}
-                            size="sm"
-                            className={sched.time === slot
-                              ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white'
-                              : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
-                            }
-                            onClick={() => {
-                              const updated = [...fixoSchedules];
-                              updated[idx] = { ...updated[idx], time: sched.time === slot ? null : slot };
-                              setFixoSchedules(updated);
-                            }}
-                          >
-                            {slot}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {Array.from({ length: fixoFrequency }, (_, i) => (
+                <WeeklyLessonSelector
+                  key={i}
+                  index={i}
+                  currentDate={selectedDates[i]}
+                  currentTime={selectedTimes[i]}
+                  selectedDates={selectedDates}
+                  selectedTimes={selectedTimes}
+                  setSelectedDates={(dates) => {
+                    setSelectedDates(dates);
+                    const updated = dates.map((d, di) => ({
+                      day: d ? new Date(d).getDay() : null,
+                      time: selectedTimes[di] || null
+                    }));
+                    setFixoSchedules(updated);
+                  }}
+                  setSelectedTimes={(times) => {
+                    setSelectedTimes(times);
+                    const updated = selectedDates.map((d, di) => ({
+                      day: d ? new Date(d).getDay() : null,
+                      time: times[di] || null
+                    }));
+                    setFixoSchedules(updated);
+                  }}
+                  blockedSlots={blockedSlots}
+                  getAvailableSlots={getAvailableSlots}
+                  getLessonsForDate={getLessonsForDate}
+                  isOwnerService={false}
+                />
               ))}
             </div>
           ) : (
@@ -1501,7 +1469,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               onClick={goToStep4}
               disabled={
                 (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo')
-                  ? fixoSchedules.some(s => s.day === null || !s.time)
+                  ? selectedTimes.filter(Boolean).length < fixoFrequency || selectedDates.filter(Boolean).length < fixoFrequency
                   : avulsoFrequency > 1
                     ? selectedTimes.filter(Boolean).length < avulsoFrequency
                     : !selectedDate || !selectedTime
