@@ -1315,6 +1315,29 @@ export default function NewBookingForm({ user, isBlocked }) {
           {/* Aulas Fixas em Grupo: calendário por slot */}
           {selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo' ? (
             <div className="space-y-6">
+              <div>
+                <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Quantas vezes por semana?</p>
+                <div className="flex gap-3">
+                  {[1, 2, 3].map(n => (
+                    <Button
+                      key={n}
+                      variant={fixoFrequency === n ? 'default' : 'outline'}
+                      className={fixoFrequency === n
+                        ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white'
+                        : 'border-stone-300 hover:border-[#B8956A]'
+                      }
+                      onClick={() => {
+                        setFixoFrequency(n);
+                        setFixoSchedules(Array.from({ length: n }, () => ({ day: null, time: null })));
+                        setSelectedDates(Array(n).fill(null));
+                        setSelectedTimes(Array(n).fill(null));
+                      }}
+                    >
+                      {n}x / semana
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-sm text-amber-800">
                   <strong>Como funciona:</strong> Escolhe o(s) dia(s) e horário(s). O admin aprova e as aulas ficam no horário fixo durante 3 meses.
