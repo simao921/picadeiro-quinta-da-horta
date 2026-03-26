@@ -201,6 +201,7 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectedModalidade, setSelectedModalidade] = useState(null); // 'avulso' | 'fixo'
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState(null); // 0-6
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
   const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
   const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
@@ -435,65 +436,62 @@ export default function NewBookingForm({ user, isBlocked }) {
         
         return bookingsToCreate;
       } else {
-        // Aulas fixas em grupo: criar aulas para os próximos 3 meses
+        // Aulas fixas em grupo: 1 única reserva + registo como aluno fixo
         if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
-          if (!selectedDate || !selectedTime) throw new Error('Por favor selecione data e hora');
+          if (selectedDayOfWeek === null || !selectedTime) throw new Error('Por favor selecione dia da semana e hora');
           
           const duration = selectedPlan?.duration || 30;
-          const dayOfWeek = selectedDate.getDay();
-          const bookingsCreated = [];
-          
-          // Gerar todas as datas para os próximos 3 meses no mesmo dia da semana
-          const endDate = new Date(selectedDate);
-          endDate.setMonth(endDate.getMonth() + 3);
-          
-          const allDates = [];
-          const current = new Date(selectedDate);
-          while (current <= endDate) {
-            allDates.push(new Date(current));
-            current.setDate(current.getDate() + 7);
-          }
-          
-          for (const lessonDate of allDates) {
-            const dateStr = format(lessonDate, 'yyyy-MM-dd');
-            const dateLessons = await base44.entities.Lesson.filter({ date: dateStr });
-            
-            let lesson = dateLessons.find(l => l.service_id === selectedService.id && l.start_time === selectedTime);
-            if (!lesson) {
-              const startTime = new Date(`2000-01-01T${selectedTime}:00`);
-              const endTime = new Date(startTime.getTime() + duration * 60000);
-              lesson = await base44.entities.Lesson.create({
-                service_id: selectedService.id,
-                date: dateStr,
-                start_time: selectedTime,
-                end_time: format(endTime, 'HH:mm'),
-                max_spots: 6,
-                booked_spots: 0
-              });
-            }
-            
-            const booking = await base44.entities.Booking.create({
-              lesson_id: lesson.id,
-              client_email: user.email,
-              client_name: user.full_name,
-              status: 'pending',
-              is_fixed_student: true
-            });
-            
-            await base44.entities.Lesson.update(lesson.id, {
-              booked_spots: (lesson.booked_spots || 0) + 1
-            });
-            
-            bookingsCreated.push(booking);
-          }
-          
-          // Registar como aluno fixo no picadeiro
           const dayNames = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+          const dayNamesDisplay = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+          
+          // Encontrar a próxima data futura com esse dia da semana
+          const nextDate = new Date();
+          nextDate.setHours(0, 0, 0, 0);
+          while (nextDate.getDay() !== selectedDayOfWeek) {
+            nextDate.setDate(nextDate.getDate() + 1);
+          }
+          // Se for hoje, avançar uma semana para garantir que é futura
+          if (nextDate <= new Date()) nextDate.setDate(nextDate.getDate() + 7);
+          
+          const dateStr = format(nextDate, 'yyyy-MM-dd');
+          const dateLessons = await base44.entities.Lesson.filter({ date: dateStr });
+          
+          let lesson = dateLessons.find(l => l.service_id === selectedService.id && l.start_time === selectedTime);
+          if (!lesson) {
+            const startTime = new Date(`2000-01-01T${selectedTime}:00`);
+            const endTime = new Date(startTime.getTime() + duration * 60000);
+            lesson = await base44.entities.Lesson.create({
+              service_id: selectedService.id,
+              date: dateStr,
+              start_time: selectedTime,
+              end_time: format(endTime, 'HH:mm'),
+              max_spots: 6,
+              booked_spots: 0
+            });
+          }
+          
+          // 1 única reserva pendente
+          const booking = await base44.entities.Booking.create({
+            lesson_id: lesson.id,
+            client_email: user.email,
+            client_name: user.full_name,
+            status: 'pending',
+            is_fixed_student: true,
+            notes: `Aula Fixa: ${dayNamesDisplay[selectedDayOfWeek]} às ${selectedTime} - ${duration}min - 3 meses`
+          });
+          
+          await base44.entities.Lesson.update(lesson.id, {
+            booked_spots: (lesson.booked_spots || 0) + 1
+          });
+          
+          // Registar como aluno fixo no picadeiro com dia da semana correto
           const existingStudents = await base44.entities.PicadeiroStudent.filter({ email: user.email });
           if (existingStudents.length > 0) {
             const existing = existingStudents[0];
             const schedule = existing.fixed_schedule || [];
-            schedule.push({ day: dayNames[dayOfWeek], time: selectedTime, duration });
+            // Evitar duplicados no mesmo dia/hora
+            const alreadyExists = schedule.some(s => s.day === dayNames[selectedDayOfWeek] && s.time === selectedTime);
+            if (!alreadyExists) schedule.push({ day: dayNames[selectedDayOfWeek], time: selectedTime, duration });
             await base44.entities.PicadeiroStudent.update(existing.id, {
               student_type: 'fixo',
               fixed_schedule: schedule,
@@ -504,12 +502,12 @@ export default function NewBookingForm({ user, isBlocked }) {
               name: user.full_name,
               email: user.email,
               student_type: 'fixo',
-              fixed_schedule: [{ day: dayNames[dayOfWeek], time: selectedTime, duration }],
+              fixed_schedule: [{ day: dayNames[selectedDayOfWeek], time: selectedTime, duration }],
               is_active: true
             });
           }
           
-          return bookingsCreated;
+          return booking;
         }
 
         // Reserva única
@@ -811,6 +809,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             setSelectedTimes([]);
             setSelectedDates([]);
             setSelectedModalidade(null);
+            setSelectedDayOfWeek(null);
           }}
           className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
         >
@@ -1258,38 +1257,71 @@ export default function NewBookingForm({ user, isBlocked }) {
             {t('select_date_time')}
           </h2>
 
-          {selectedPlan?.frequency > 1 ? (
+          {/* Aulas Fixas em Grupo: seletor de dia da semana + hora */}
+          {selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo' ? (
+            <div className="space-y-6">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  <strong>Como funciona:</strong> Escolhe o dia da semana e o horário. O admin irá aprovar o pedido e as aulas ficam registadas no horário fixo durante 3 meses.
+                </p>
+              </div>
+              {/* Seletor de dia da semana */}
+              <div>
+                <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Dia da semana</p>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {[
+                    { day: 1, label: 'Seg' },
+                    { day: 2, label: 'Ter' },
+                    { day: 3, label: 'Qua' },
+                    { day: 4, label: 'Qui' },
+                    { day: 5, label: 'Sex' },
+                    { day: 6, label: 'Sáb' },
+                  ].map(({ day, label }) => (
+                    <Button
+                      key={day}
+                      variant={selectedDayOfWeek === day ? 'default' : 'outline'}
+                      className={selectedDayOfWeek === day
+                        ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white'
+                        : 'border-stone-300 hover:border-[#B8956A]'
+                      }
+                      onClick={() => {
+                        setSelectedDayOfWeek(day);
+                        setSelectedTime(null);
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              {/* Horários para o dia selecionado */}
+              {selectedDayOfWeek !== null && (
+                <div>
+                  <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Horário</p>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {getTimeSlotsForDay(selectedDayOfWeek).map((slot) => (
+                      <Button
+                        key={slot}
+                        variant={selectedTime === slot ? 'default' : 'outline'}
+                        size="sm"
+                        className={selectedTime === slot
+                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white'
+                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A]'
+                        }
+                        onClick={() => setSelectedTime(selectedTime === slot ? null : slot)}
+                      >
+                        {slot}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : selectedPlan?.frequency > 1 ? (
             <div className="space-y-6">
               <p className="text-stone-600">
                 Selecione {selectedPlan.frequency} horários diferentes para as suas aulas semanais
               </p>
-{[...Array(selectedPlan.frequency)].map((_, index) => {
-                const currentTime = selectedTimes[index];
-                const currentDate = selectedDates[index];
-                
-                return (
-                  <WeeklyLessonSelector
-                    key={index}
-                    index={index}
-                    currentDate={currentDate}
-                    currentTime={currentTime}
-                    selectedDates={selectedDates}
-                    selectedTimes={selectedTimes}
-                    setSelectedDates={setSelectedDates}
-                    setSelectedTimes={setSelectedTimes}
-                    blockedSlots={blockedSlots}
-                    getAvailableSlots={getAvailableSlots}
-                    getLessonsForDate={getLessonsForDate}
-                    isOwnerService={selectedService?.title === 'Proprietários'}
-                  />
-                );
-              })}
-              <p className="text-sm text-stone-500 italic">
-                Nota: As aulas seguintes serão criadas automaticamente nas mesmas horas todas as semanas
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="bg-gradient-to-br from-stone-50 to-white border-b border-stone-200">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -1394,9 +1426,11 @@ export default function NewBookingForm({ user, isBlocked }) {
             <Button
               onClick={goToStep4}
               disabled={
-                selectedPlan?.frequency > 1
-                  ? selectedTimes.filter(Boolean).length !== selectedPlan.frequency
-                  : !selectedTime
+                (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo')
+                  ? (selectedDayOfWeek === null || !selectedTime)
+                  : selectedPlan?.frequency > 1
+                    ? selectedTimes.filter(Boolean).length !== selectedPlan.frequency
+                    : !selectedTime
               }
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white disabled:bg-stone-300"
             >
@@ -1449,6 +1483,18 @@ export default function NewBookingForm({ user, isBlocked }) {
                     </span>
                   </div>
                 )}
+                {selectedModalidade === 'fixo' && selectedDayOfWeek !== null && selectedTime && (() => {
+                  const dayNamesDisplay = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+                  return (
+                    <div className="py-3 border-b border-stone-200">
+                      <p className="text-stone-600 mb-2">Horário Fixo Semanal</p>
+                      <div className="p-3 bg-[#B8956A]/10 rounded-lg border border-[#B8956A]/30">
+                        <p className="font-semibold text-[#2C3E1F]">{dayNamesDisplay[selectedDayOfWeek]} às {selectedTime}</p>
+                        <p className="text-sm text-stone-600">{selectedPlan?.duration || 30} minutos · Durante 3 meses</p>
+                      </div>
+                    </div>
+                  );
+                })()}
                 
                 {selectedPlan?.frequency > 1 ? (
                   <div className="py-3 border-b border-stone-200">
@@ -1485,10 +1531,14 @@ export default function NewBookingForm({ user, isBlocked }) {
                   </div>
                 )}
                 
-                {selectedPlan?.frequency > 1 && (
+                {(selectedPlan?.frequency > 1 || selectedModalidade === 'fixo') && (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-sm text-amber-800">
-                      <strong>Nota:</strong> As suas reservas ficarão pendentes de aprovação pela administração.
+                      <strong>Nota:</strong>{' '}
+                      {selectedModalidade === 'fixo'
+                        ? 'Após aprovação pelo admin, as aulas semanais serão criadas automaticamente para os próximos 3 meses.'
+                        : 'As suas reservas ficarão pendentes de aprovação pela administração.'
+                      }
                     </p>
                   </div>
                 )}
