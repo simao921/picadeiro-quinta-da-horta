@@ -81,7 +81,7 @@ function WeeklyLessonSelector({
             <CalendarDays className="w-5 h-5 text-[#B8956A]" />
             Aula {index + 1}
           </span>
-          {currentTime && currentDate && (
+          {currentTime && currentDate && !isNaN(new Date(currentDate)) && (
             <span className="text-[#B8956A] text-sm font-normal bg-[#B8956A]/10 px-3 py-1 rounded-full">
               {format(new Date(currentDate), "EEE dd/MM", { locale: pt })} às {currentTime}
             </span>
@@ -1328,7 +1328,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                         <div key={index} className="flex items-center justify-between p-2 bg-stone-50 rounded">
                           <span className="text-sm font-medium text-[#2C3E1F]">Aula {index + 1}</span>
                           <span className="text-sm text-stone-700">
-                            {format(new Date(date), "EEEE, d 'de' MMMM", { locale: pt })} às {selectedTimes[index]}
+                            {date && !isNaN(new Date(date)) ? format(new Date(date), "EEEE, d 'de' MMMM", { locale: pt }) : ''} às {selectedTimes[index]}
                           </span>
                         </div>
                       ))}
@@ -1339,7 +1339,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     <div className="flex justify-between py-3 border-b border-stone-200">
                       <span className="text-stone-600">Data</span>
                       <span className="font-semibold text-[#2C3E1F]">
-                        {selectedDate ? format(new Date(selectedDate), "d 'de' MMMM 'de' yyyy", { locale: pt }) : '-'}
+                        {selectedDate && !isNaN(new Date(selectedDate)) ? format(new Date(selectedDate), "d 'de' MMMM 'de' yyyy", { locale: pt }) : '-'}
                       </span>
                     </div>
                     <div className="flex justify-between py-3 border-b border-stone-200">
