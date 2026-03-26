@@ -200,6 +200,7 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
+  const [selectedModalidade, setSelectedModalidade] = useState(null); // 'avulso' | 'fixo'
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
   const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
   const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
@@ -434,6 +435,83 @@ export default function NewBookingForm({ user, isBlocked }) {
         
         return bookingsToCreate;
       } else {
+        // Aulas fixas em grupo: criar aulas para os próximos 3 meses
+        if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
+          if (!selectedDate || !selectedTime) throw new Error('Por favor selecione data e hora');
+          
+          const duration = selectedPlan?.duration || 30;
+          const dayOfWeek = selectedDate.getDay();
+          const bookingsCreated = [];
+          
+          // Gerar todas as datas para os próximos 3 meses no mesmo dia da semana
+          const endDate = new Date(selectedDate);
+          endDate.setMonth(endDate.getMonth() + 3);
+          
+          const allDates = [];
+          const current = new Date(selectedDate);
+          while (current <= endDate) {
+            allDates.push(new Date(current));
+            current.setDate(current.getDate() + 7);
+          }
+          
+          for (const lessonDate of allDates) {
+            const dateStr = format(lessonDate, 'yyyy-MM-dd');
+            const dateLessons = await base44.entities.Lesson.filter({ date: dateStr });
+            
+            let lesson = dateLessons.find(l => l.service_id === selectedService.id && l.start_time === selectedTime);
+            if (!lesson) {
+              const startTime = new Date(`2000-01-01T${selectedTime}:00`);
+              const endTime = new Date(startTime.getTime() + duration * 60000);
+              lesson = await base44.entities.Lesson.create({
+                service_id: selectedService.id,
+                date: dateStr,
+                start_time: selectedTime,
+                end_time: format(endTime, 'HH:mm'),
+                max_spots: 6,
+                booked_spots: 0
+              });
+            }
+            
+            const booking = await base44.entities.Booking.create({
+              lesson_id: lesson.id,
+              client_email: user.email,
+              client_name: user.full_name,
+              status: 'pending',
+              is_fixed_student: true
+            });
+            
+            await base44.entities.Lesson.update(lesson.id, {
+              booked_spots: (lesson.booked_spots || 0) + 1
+            });
+            
+            bookingsCreated.push(booking);
+          }
+          
+          // Registar como aluno fixo no picadeiro
+          const dayNames = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+          const existingStudents = await base44.entities.PicadeiroStudent.filter({ email: user.email });
+          if (existingStudents.length > 0) {
+            const existing = existingStudents[0];
+            const schedule = existing.fixed_schedule || [];
+            schedule.push({ day: dayNames[dayOfWeek], time: selectedTime, duration });
+            await base44.entities.PicadeiroStudent.update(existing.id, {
+              student_type: 'fixo',
+              fixed_schedule: schedule,
+              is_active: true
+            });
+          } else {
+            await base44.entities.PicadeiroStudent.create({
+              name: user.full_name,
+              email: user.email,
+              student_type: 'fixo',
+              fixed_schedule: [{ day: dayNames[dayOfWeek], time: selectedTime, duration }],
+              is_active: true
+            });
+          }
+          
+          return bookingsCreated;
+        }
+
         // Reserva única
         if (!selectedTime) {
           throw new Error('Por favor selecione um horário');
@@ -655,6 +733,11 @@ export default function NewBookingForm({ user, isBlocked }) {
       return;
     }
 
+    if (selectedService?.title === 'Aulas em Grupo' && !selectedModalidade) {
+      toast.error('Por favor escolha entre Aula Avulso ou Aula Fixa.');
+      return;
+    }
+
     if (selectedService?.title === 'Proprietários' && !selectedPlan) {
       toast.error('Por favor selecione a duração da sessão.');
       return;
@@ -727,6 +810,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             setSelectedTime(null);
             setSelectedTimes([]);
             setSelectedDates([]);
+            setSelectedModalidade(null);
           }}
           className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
         >
@@ -900,6 +984,40 @@ export default function NewBookingForm({ user, isBlocked }) {
 
           {selectedService?.title === 'Aulas em Grupo' && (
             <div className="space-y-4">
+              {/* Escolha avulso ou fixo */}
+              <div>
+                <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Tipo de aula</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <Card
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedModalidade === 'avulso'
+                        ? 'border-[#B8956A] bg-[#B8956A]/5'
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedModalidade('avulso')}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Aula Avulso</h3>
+                      <p className="text-sm text-stone-600">Marca uma única aula à escolha</p>
+                    </CardContent>
+                  </Card>
+                  <Card
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedModalidade === 'fixo'
+                        ? 'border-[#B8956A] bg-[#B8956A]/5'
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedModalidade('fixo')}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Aula Fixa</h3>
+                      <p className="text-sm text-stone-600">Aulas semanais fixas durante 3 meses</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+              {/* Duração */}
+              {selectedModalidade && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card
                   className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
@@ -928,6 +1046,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   </CardContent>
                 </Card>
               </div>
+              )}
             </div>
           )}
 
@@ -1079,7 +1198,10 @@ export default function NewBookingForm({ user, isBlocked }) {
             <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">{t('back')}</Button>
             <Button
               onClick={goToStep3}
-              disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia' && !selectedService?.price && selectedService?.title !== 'Proprietários'}
+              disabled={
+                (selectedService?.title === 'Aulas em Grupo' && (!selectedModalidade || !selectedPlan)) ||
+                (!selectedPlan && selectedService?.title !== 'Hipoterapia' && !selectedService?.price && selectedService?.title !== 'Proprietários')
+              }
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
             >
               Continuar
@@ -1319,6 +1441,14 @@ export default function NewBookingForm({ user, isBlocked }) {
                   <span className="text-stone-600">Plano</span>
                   <span className="font-semibold text-[#2C3E1F]">{selectedPlan?.label}</span>
                 </div>
+                {selectedModalidade && (
+                  <div className="flex justify-between py-3 border-b border-stone-200">
+                    <span className="text-stone-600">Modalidade</span>
+                    <span className="font-semibold text-[#2C3E1F]">
+                      {selectedModalidade === 'fixo' ? 'Aula Fixa (3 meses)' : 'Aula Avulso'}
+                    </span>
+                  </div>
+                )}
                 
                 {selectedPlan?.frequency > 1 ? (
                   <div className="py-3 border-b border-stone-200">
