@@ -21,15 +21,29 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useLanguage } from '@/components/LanguageProvider';
 
-const weekdayTimeSlots = [
+// Segunda-feira: 09:00 - 19:00 (último slot 18:30)
+const mondayTimeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'
+  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30'
 ];
 
+// Terça a Sexta: 09:00 - 19:30 (último slot 19:00)
+const weekdayTimeSlots = [
+  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'
+];
+
+// Sábado: 09:00 - 16:00 (último slot 15:30)
 const saturdayTimeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00'
+  '14:30', '15:00', '15:30'
 ];
+
+const getTimeSlotsForDay = (dayOfWeek) => {
+  if (dayOfWeek === 6) return saturdayTimeSlots;
+  if (dayOfWeek === 1) return mondayTimeSlots;
+  return weekdayTimeSlots;
+};
 
 // Componente para seleção de aula semanal
 function WeeklyLessonSelector({ 
@@ -298,7 +312,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           
           // Se for 60 minutos, verificar próxima meia hora
           if (duration === 60) {
-            const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+            const timeSlots = getTimeSlotsForDay(date.getDay());
             const slotIndex = timeSlots.indexOf(time);
             const nextSlot = timeSlots[slotIndex + 1];
             
@@ -335,7 +349,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           
           // Se for 60 minutos, criar/atualizar próxima meia hora
           if (duration === 60) {
-            const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+            const timeSlots = getTimeSlotsForDay(date.getDay());
             const slotIndex = timeSlots.indexOf(time);
             const nextSlot = timeSlots[slotIndex + 1];
             
@@ -437,7 +451,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         }
         
         if (duration === 60) {
-          const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+          const timeSlots = getTimeSlotsForDay(selectedDate.getDay());
           const slotIndex = timeSlots.indexOf(selectedTime);
           const nextSlot = timeSlots[slotIndex + 1];
           
@@ -472,7 +486,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         }
 
         if (duration === 60) {
-          const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+          const timeSlots = getTimeSlotsForDay(selectedDate.getDay());
           const slotIndex = timeSlots.indexOf(selectedTime);
           const nextSlot = timeSlots[slotIndex + 1];
           
@@ -550,7 +564,7 @@ export default function NewBookingForm({ user, isBlocked }) {
     if (!date) return [];
     
     const dayOfWeek = date.getDay();
-    const timeSlots = dayOfWeek === 6 ? saturdayTimeSlots : weekdayTimeSlots;
+    const timeSlots = getTimeSlotsForDay(dayOfWeek);
     
     if (!selectedService) return timeSlots;
     
