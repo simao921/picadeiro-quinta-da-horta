@@ -1376,7 +1376,8 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Seletor de vezes por semana para avulso */}
+              {/* Seletor de vezes por semana — só para Proprietários */}
+              {selectedService?.title === 'Proprietários' && (
               <div>
                 <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Quantas vezes por semana?</p>
                 <div className="flex gap-3">
@@ -1400,6 +1401,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   ))}
                 </div>
               </div>
+              )}
 
               {avulsoFrequency === 1 ? (
                 <>
