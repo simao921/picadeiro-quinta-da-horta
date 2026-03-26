@@ -748,15 +748,37 @@ export default function NewBookingForm({ user, isBlocked }) {
   };
 
   const goToStep4 = () => {
-    if (needsWeeklySlots) {
-      if (selectedWeeklyCount !== selectedPlan.frequency) {
-        toast.error(`Faltam ${selectedPlan.frequency - selectedWeeklyCount} horário(s) para completar o plano.`);
+    // Aulas fixas: validar calendários
+    if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
+      const filledDates = selectedDates.filter(Boolean).length;
+      const filledTimes = selectedTimes.filter(Boolean).length;
+      if (filledDates < fixoFrequency || filledTimes < fixoFrequency) {
+        toast.error(`Por favor selecione data e horário para todas as ${fixoFrequency} aulas.`);
+        return;
+      }
+      // Sincronizar fixoSchedules
+      const updated = selectedDates.map((d, i) => ({
+        day: d ? new Date(d).getDay() : null,
+        time: selectedTimes[i] || null
+      }));
+      setFixoSchedules(updated);
+      setStep(4);
+      return;
+    }
+
+    // Avulso múltiplo
+    if (avulsoFrequency > 1) {
+      const filledTimes = selectedTimes.filter(Boolean).length;
+      const filledDates = selectedDates.filter(Boolean).length;
+      if (filledDates < avulsoFrequency || filledTimes < avulsoFrequency) {
+        toast.error(`Faltam ${avulsoFrequency - filledTimes} horário(s) para completar.`);
         return;
       }
       setStep(4);
       return;
     }
 
+    // Avulso simples
     if (!selectedDate) {
       toast.error('Selecione uma data para continuar.');
       return;
