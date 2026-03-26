@@ -1458,7 +1458,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 </CardContent>
               </Card>
             </div>
-          : null}
+          ) : null}
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
             <Button
