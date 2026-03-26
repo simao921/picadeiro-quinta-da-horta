@@ -1458,7 +1458,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 </CardContent>
               </Card>
             </div>
-          )}
+          : null}
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
             <Button
@@ -1467,6 +1467,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo')
                   ? fixoSchedules.some(s => s.day === null || !s.time)
                   : selectedPlan?.frequency > 1
+              }
               className="bg-[#B8956A] hover:bg-[#8B7355] text-white disabled:bg-stone-300"
             >
               {t('continue')}
