@@ -28,8 +28,7 @@ export default function CTASection() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
+        <div className="flex justify-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -65,54 +64,6 @@ export default function CTASection() {
                   {t('cta_call')}
                 </Button>
               </a>
-            </div>
-          </motion.div>
-
-          {/* Right - Quick Info Cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="space-y-4"
-          >
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10 
-                           hover:bg-white/20 transition-colors group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-white font-semibold text-lg mb-2">{t('cta_card_1')}</h3>
-                  <p className="text-stone-300 text-sm">
-                    {t('cta_card_1_desc')}
-                  </p>
-                </div>
-                <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10 
-                           hover:bg-white/20 transition-colors group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-white font-semibold text-lg mb-2">{t('cta_card_2')}</h3>
-                  <p className="text-stone-300 text-sm">
-                    {t('cta_card_2_desc')}
-                  </p>
-                </div>
-                <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10 
-                           hover:bg-white/20 transition-colors group">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-white font-semibold text-lg mb-2">{t('cta_card_3')}</h3>
-                  <p className="text-stone-300 text-sm">
-                    {t('cta_card_3_desc')}
-                  </p>
-                </div>
-                <ArrowRight className="w-6 h-6 text-[#B8956A] group-hover:translate-x-1 transition-transform" />
-              </div>
             </div>
           </motion.div>
         </div>
