@@ -274,7 +274,8 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       setPreview([]);
       if (onImportDone) onImportDone();
     } catch (e) {
-      setError(e.message);
+      console.error('handleConfirm error:', e);
+      setError(e.message || 'Erro desconhecido');
       setStep('preview');
     }
   };
@@ -365,6 +366,9 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
               ))}
             </div>
 
+            {error && (
+              <p className="text-xs text-red-600 font-medium bg-red-50 border border-red-200 rounded p-2">{error}</p>
+            )}
             {notFound.length > 0 && (
               <p className="text-xs text-amber-600">Os alunos a amarelo não existem ainda — serão criados automaticamente como alunos novos (nível iniciante, horário fixo).</p>
             )}
