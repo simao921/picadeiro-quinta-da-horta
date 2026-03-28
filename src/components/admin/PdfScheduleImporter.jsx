@@ -75,13 +75,13 @@ var DAY_OF_WEEK = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5,
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function bulkCreateInBatches(entity, items, batchSize = 20) {
+async function bulkCreateInBatches(entity, items, batchSize = 10) {
   const results = [];
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     const created = await entity.bulkCreate(batch);
     results.push(...(Array.isArray(created) ? created : []));
-    if (i + batchSize < items.length) await sleep(500);
+    if (i + batchSize < items.length) await sleep(3000);
   }
   return results;
 }
@@ -266,7 +266,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       const pendingLsnKeys = {};
 
       for (const entry of preview) {
-        const dates = getDatesForNextMonths(entry.dayEn, 3);
+        const dates = getDatesForNextMonths(entry.dayEn, 1);
         const parts = entry.time.split(':');
         const h = parseInt(parts[0], 10);
         const m = parseInt(parts[1], 10);
@@ -315,7 +315,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         if (!studentData) continue;
 
         const clientId = studentData.clientId || studentData.name;
-        const dates = getDatesForNextMonths(entry.dayEn, 3);
+        const dates = getDatesForNextMonths(entry.dayEn, 1);
 
         for (const date of dates) {
           const lsnKey = date + '_' + entry.time;
@@ -364,7 +364,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           <Sparkles className="w-5 h-5 text-[#4A5D23]" />
           <h3 className="font-semibold text-[#2C3E1F]">Importar Horários por IA (PDF)</h3>
         </div>
-        <p className="text-sm text-stone-500">Anexa o PDF da planificação e a IA extrai automaticamente todos os horários fixos e gera aulas para os próximos 3 meses.</p>
+        <p className="text-sm text-stone-500">Anexa o PDF da planificação e a IA extrai automaticamente todos os horários fixos e gera aulas para o próximo mês.</p>
       </CardHeader>
       <CardContent className="space-y-4">
 
