@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Edit, Trash2, Search } from 'lucide-react';
+import PdfScheduleImporter from '@/components/admin/PdfScheduleImporter';
 import { toast } from 'sonner';
 
 const horses = ["Vidre", "Borboleta", "Égua Louza", "U for me", "Faz de conta", "Domino", "Chá", "Árabe", "Floribela", "Joselito"];
@@ -140,6 +141,11 @@ export default function AdminPicadeiroStudents() {
             Criar Aluno
           </Button>
         </div>
+
+        <PdfScheduleImporter
+          students={students}
+          onImportDone={() => queryClient.invalidateQueries(['picadeiro-students'])}
+        />
 
         <Card>
           <CardHeader>
