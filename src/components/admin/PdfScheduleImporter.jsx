@@ -339,6 +339,18 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       if (bookingsToCreate.length > 0) {
         await bulkCreateInBatches(base44.entities.Booking, bookingsToCreate, 20);
         bookingsCreated = bookingsToCreate.length;
+
+        // Atualizar booked_spots em cada aula
+        const spotsByLesson = {};
+        for (const b of bookingsToCreate) {
+          spotsByLesson[b.lesson_id] = (spotsByLesson[b.lesson_id] || 0) + 1;
+        }
+        for (const [lessonId, count] of Object.entries(spotsByLesson)) {
+          const existing = existingLessons.find(l => l.id === lessonId);
+          const currentSpots = existing ? (existing.booked_spots || 0) : 0;
+          await base44.entities.Lesson.update(lessonId, { booked_spots: currentSpots + count });
+          await sleep(200);
+        }
       }
 
       toast.success(updates.length + ' alunos atualizados \u2022 ' + lessonsCreated + ' aulas criadas \u2022 ' + bookingsCreated + ' reservas geradas');
