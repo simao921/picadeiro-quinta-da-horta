@@ -297,11 +297,10 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       if (lessonsToCreate.length > 0) {
         const created = await bulkCreateInBatches(base44.entities.Lesson, lessonsToCreate, 20);
         lessonsCreated = created.length;
-        // Mapear os ids criados de volta ao lsnMap
-        // bulkCreate devolve os items na mesma ordem
-        for (const [lsnKey, idx] of Object.entries(pendingLsnKeys)) {
-          if (created[idx] && created[idx].id) {
-            lsnMap[lsnKey] = created[idx].id;
+        // Mapear os ids criados de volta ao lsnMap pelo date+start_time (não pelo índice)
+        for (const lesson of created) {
+          if (lesson && lesson.id && lesson.date && lesson.start_time) {
+            lsnMap[lesson.date + '_' + lesson.start_time] = lesson.id;
           }
         }
       }
