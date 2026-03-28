@@ -190,6 +190,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         }
       }
 
+      const newlyCreatedStudentIds = new Set();
       const updates = Object.values(byStudent);
       for (const s of updates) {
         if (!s.id) {
@@ -203,6 +204,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           });
           s.id = newStudent.id;
           s.email = newStudent.email || s.name;
+          newlyCreatedStudentIds.add(s.id);
         } else {
           await base44.entities.PicadeiroStudent.update(s.id, {
             fixed_schedule: s.schedules,
@@ -267,7 +269,8 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           // For unmatched students use name as identifier
           const clientId = studentData.email || studentData.name;
           const bKey = bookingKey(lessonId, clientId);
-          if (!existingBookingSet.has(bKey)) {
+          const isNew = newlyCreatedStudentIds.has(studentData.id);
+          if (isNew || !existingBookingSet.has(bKey)) {
             await base44.entities.Booking.create({
               lesson_id: lessonId,
               client_email: clientId,
