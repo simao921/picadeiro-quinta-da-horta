@@ -6,6 +6,47 @@ import { Badge } from '@/components/ui/badge';
 import { FileUp, Sparkles, CheckCircle, AlertCircle, Loader2, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Common Portuguese name abbreviation expansions
+const ABBREV_MAP = {
+  'mª': 'maria', 'ma': 'maria',
+  'jº': 'joao', 'jo': 'joao', 'joão': 'joao',
+  'aº': 'antonio', 'ant': 'antonio', 'antónio': 'antonio',
+  'fº': 'francisco', 'fco': 'francisco',
+  'mº': 'mario', 'má': 'mario',
+  'jª': 'josefa',
+  'dº': 'domingos',
+};
+
+function normalizeName(name) {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
+    .replace(/[^a-z0-9 ]/g, '') // remove special chars
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function expandAbbreviations(name) {
+  return name.split(' ').map(part => {
+    const norm = normalizeName(part);
+    return ABBREV_MAP[norm] || norm;
+  }).join(' ');
+}
+
+function nameMatch(studentName, entryName) {
+  const sNorm = expandAbbreviations(normalizeName(studentName));
+  const eNorm = expandAbbreviations(normalizeName(entryName));
+  if (sNorm === eNorm) return true;
+  // Check if all parts of the shorter name are in the longer one
+  const sParts = sNorm.split(' ').filter(Boolean);
+  const eParts = eNorm.split(' ').filter(Boolean);
+  const shorter = sParts.length < eParts.length ? sParts : eParts;
+  const longer = sParts.length < eParts.length ? eParts : sParts;
+  // All parts of the shorter name must match a part of the longer
+  return shorter.every(part => longer.some(lp => lp.startsWith(part) || part.startsWith(lp)));
+}
+
 const DAY_MAP = {
   'segunda': 'monday',
   'terca': 'tuesday',
@@ -108,12 +149,8 @@ Retorna um JSON com a estrutura:
       // 3. Match with existing students
       const matched = schedules.map(entry => {
         const dayEn = DAY_MAP[entry.day] || entry.day;
-        // Try to find student by name (fuzzy match)
-        const found = students.find(s => {
-          const sName = (s.name || '').toLowerCase().trim();
-          const eName = (entry.name || '').toLowerCase().trim();
-          return sName === eName || sName.includes(eName) || eName.includes(sName);
-        });
+        // Try to find student by name with abbreviation expansion
+        const found = students.find(s => nameMatch(s.name, entry.name));
         return {
           ...entry,
           dayEn,
