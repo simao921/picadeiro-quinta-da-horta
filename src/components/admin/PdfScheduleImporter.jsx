@@ -122,7 +122,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           properties: {
             schedules: {
               type: 'array',
-              description: 'Lista de todas as entradas de alunos na tabela de planificação semanal do picadeiro. Percorre TODAS as células da tabela sem excepção.',
+              description: 'Lista de todas as entradas de ALUNOS na tabela de planificacao semanal. ATENCAO: os nomes dos INSTRUTORES (ex: Junior, Angelo, Tiago) aparecem como cabecalhos de coluna - NAO os incluir. So incluir nomes que estao nas celulas como marcacoes de aulas de alunos. Percorre TODAS as celulas sem excepcao.',
               items: {
                 type: 'object',
                 properties: {
