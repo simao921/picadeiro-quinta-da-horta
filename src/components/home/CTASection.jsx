@@ -16,7 +16,7 @@ export default function CTASection() {
     getSiteImage('cta', DEFAULT_IMAGES.cta).then(setCtaImage);
   }, []);
   return (
-    <section className="py-24 relative overflow-hidden">
+    <section className="py-14 sm:py-24 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
         <LazyImage
@@ -43,7 +43,7 @@ export default function CTASection() {
               {t('cta_subtitle')}
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Link to={createPageUrl('Bookings')}>
                 <Button 
                   size="lg" 

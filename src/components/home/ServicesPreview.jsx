@@ -48,7 +48,7 @@ export default function ServicesPreview() {
   // Get only first 3 services for homepage preview
   const displayServices = filteredServices.slice(0, 3);
   return (
-    <section className="py-24 bg-gradient-to-b from-stone-50 to-white relative overflow-hidden">
+    <section className="py-14 sm:py-24 bg-gradient-to-b from-stone-50 to-white relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-full h-full" 
@@ -58,7 +58,7 @@ export default function ServicesPreview() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -75,7 +75,7 @@ export default function ServicesPreview() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#2C3E1F] mb-4 text-left max-w-4xl mx-auto"
+            className="font-serif text-xl sm:text-3xl lg:text-4xl font-bold text-[#2C3E1F] mb-3 sm:mb-4 text-center sm:text-left max-w-4xl mx-auto"
           >
             {t('services_preview_title')}
           </motion.h2>

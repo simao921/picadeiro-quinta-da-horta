@@ -51,7 +51,7 @@ export default function AboutSection() {
     }
   ];
   return (
-    <section className="py-24 bg-[#1A1A1A] relative overflow-hidden">
+    <section className="py-14 sm:py-24 bg-[#1A1A1A] relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-1/3 h-full opacity-10 hidden lg:block">
         <LazyImage
@@ -62,7 +62,7 @@ export default function AboutSection() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}

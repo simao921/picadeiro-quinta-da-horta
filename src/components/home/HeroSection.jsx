@@ -21,7 +21,7 @@ export default function HeroSection() {
   }, []);
   
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <section className="relative min-h-[75vh] sm:min-h-[90vh] flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <LazyImage
@@ -38,7 +38,7 @@ export default function HeroSection() {
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
 
       {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
         <div className="max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -56,7 +56,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6"
+            className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4 sm:mb-6"
           >
             {t('hero_title')}
             <span className="block text-[#B8956A]">{t('hero_title_highlight')}</span>
@@ -66,7 +66,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base text-stone-300 leading-relaxed mb-8 max-w-lg"
+            className="text-sm sm:text-base text-stone-300 leading-relaxed mb-6 sm:mb-8 max-w-lg"
           >
             {t('hero_description')}
           </motion.p>
@@ -75,7 +75,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap gap-4"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4"
           >
             <Link to={createPageUrl('Bookings')}>
               <Button 
@@ -103,7 +103,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-wrap gap-6 sm:gap-8 mt-12 pt-8 border-t border-white/20"
+            className="flex gap-6 sm:gap-8 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/20"
           >
             <div className="min-w-[80px]">
               <p className="text-3xl font-bold text-[#B8956A]">15+</p>
