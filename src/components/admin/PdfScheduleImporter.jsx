@@ -109,7 +109,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       const result = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
-        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas: "Júnior" e "Ângelo". Extrai os alunos de AMBAS as colunas. Para cada entrada que contenha nomes de alunos (pessoas reais), extrai: o nome (incluindo o asterisco * se existir), o dia (segunda|terca|quarta|quinta|sexta|sabado), o horário (HH:MM), e o instrutor (junior|angelo). Um asterisco junto ao nome significa aula de 60 minutos — preserva-o no nome. Ignora tarefas/atividades e nomes que são apenas monitores sem asterisco. Sé exaustivo.',
+        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas por instrutor (ex: Júnior e Ângelo). REGRAS IMPORTANTES: 1) Extrai TODOS os nomes de alunos, incluindo os que têm asterisco (*). 2) Um asterisco junto ao nome (ex: "Maria*" ou "*Maria") significa que a aula é de 60 minutos — inclui o asterisco no campo name para que o sistema saiba. 3) Ignora apenas linhas que são tarefas/atividades genéricas sem nome de pessoa. Para cada entrada extrai: name (com asterisco se existir), day (segunda|terca|quarta|quinta|sexta|sabado), time (HH:MM), instructor. Sé completamente exaustivo e não omitas nenhum aluno.',
         response_json_schema: {
           type: 'object',
           properties: {
