@@ -53,23 +53,24 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       // 2. Ask AI to extract schedules from Angelo's column only
       const result = await base44.integrations.Core.InvokeLLM({
-        model: 'claude_sonnet_4_6',
+        model: 'gemini_3_flash',
+        add_context_from_internet: false,
         prompt: `Analisa este PDF de planificação de um picadeiro/centro equestre.
         
 O PDF tem uma tabela com colunas por dia da semana (Segunda-Feira, Terça-Feira, Quarta-Feira, Quinta-Feira, Sexta-Feira, Sábado) e linhas por horário.
 Cada coluna de dia está dividida em sub-colunas: "Júnior" e "Ângelo".
 
 INSTRUÇÕES MUITO IMPORTANTES:
-- IGNORA COMPLETAMENTE a coluna "Júnior". Só me interessa a coluna "Ângelo".
-- Extrai TODOS os alunos que estão na coluna do "Ângelo" (não do Júnior).
-- Para cada entrada na coluna Ângelo que contenha nomes de alunos (pessoas reais, não tarefas como "Limpar Baias", "Máquinas", "Regar Picadeiro", etc.), extrai:
+- Extrai os alunos de AMBAS as colunas: tanto "Júnior" como "Ângelo".
+- Para cada entrada que contenha nomes de alunos (pessoas reais), extrai:
   - O nome(s) do(s) aluno(s)
   - O dia da semana
   - O horário (hora de início, formato HH:MM)
-- Ignora entradas que sejam tarefas/atividades (limpeza, máquinas, etc.) e não nomes de pessoas
-- Para o Sábado, trata como coluna única (não tem divisão Júnior/Ângelo da mesma forma)
-- Nomes com * são monitores/ajudantes - IGNORA-OS também (ex: Maria Pinheiro *, Emília Borges *, João Rasquinho *, etc.)
-- Extrai apenas alunos reais
+  - O instrutor: "junior" ou "angelo"
+- Ignora entradas que sejam tarefas/atividades (limpeza, máquinas, regar, etc.) e não nomes de pessoas.
+- Nomes com * são monitores/ajudantes - IGNORA-OS (ex: Maria Pinheiro *, Emília Borges *, João Rasquinho *).
+- Para o Sábado, extrai igualmente todos os alunos.
+- Sê exaustivo - extrai TODOS os alunos de TODOS os horários de ambas as colunas.
 
 Retorna um JSON com a estrutura:
 {
@@ -77,12 +78,11 @@ Retorna um JSON com a estrutura:
     {
       "name": "Nome Apelido",
       "day": "segunda|terca|quarta|quinta|sexta|sabado",
-      "time": "HH:MM"
+      "time": "HH:MM",
+      "instructor": "junior|angelo"
     }
   ]
-}
-
-Sê exaustivo - extrai TODOS os alunos de TODOS os horários da coluna Ângelo.`,
+}`,
         file_urls: [file_url],
         response_json_schema: {
           type: 'object',
@@ -94,7 +94,8 @@ Sê exaustivo - extrai TODOS os alunos de TODOS os horários da coluna Ângelo.`
                 properties: {
                   name: { type: 'string' },
                   day: { type: 'string' },
-                  time: { type: 'string' }
+                  time: { type: 'string' },
+                  instructor: { type: 'string' }
                 }
               }
             }
@@ -251,6 +252,7 @@ Sê exaustivo - extrai TODOS os alunos de TODOS os horários da coluna Ângelo.`
                 <div key={i} className="flex items-center gap-2 py-1.5 px-3 rounded bg-green-50 border border-green-100">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                   <span className="text-sm font-medium flex-1">{entry.studentName}</span>
+                  <Badge variant="outline" className="text-xs capitalize">{entry.instructor || '-'}</Badge>
                   <Badge variant="outline" className="text-xs">{DAY_LABELS[entry.dayEn] || entry.day}</Badge>
                   <Badge variant="outline" className="text-xs">{entry.time}</Badge>
                 </div>
@@ -260,6 +262,7 @@ Sê exaustivo - extrai TODOS os alunos de TODOS os horários da coluna Ângelo.`
                 <div key={i} className="flex items-center gap-2 py-1.5 px-3 rounded bg-amber-50 border border-amber-100">
                   <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
                   <span className="text-sm text-amber-800 flex-1">{entry.name} <span className="text-xs">(não encontrado)</span></span>
+                  <Badge variant="outline" className="text-xs capitalize">{entry.instructor || '-'}</Badge>
                   <Badge variant="outline" className="text-xs">{DAY_LABELS[entry.dayEn] || entry.day}</Badge>
                   <Badge variant="outline" className="text-xs">{entry.time}</Badge>
                 </div>
