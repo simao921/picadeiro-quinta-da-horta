@@ -109,8 +109,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       const result = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
-        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas: "Júnior" e "Ângelo". Extrai os alunos de AMBAS as colunas. Para cada entrada que contenha nomes de alunos (pessoas reais), extrai: o nome, o dia (segunda|terca|quarta|quinta|sexta|sabado), o horário (HH:MM), e o instrutor (junior|angelo). Ignora tarefas/atividades e nomes com * (monitores). Sé exaustivo.',
-        file_urls: [file_url],
+        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas: "Júnior" e "Ângelo". Extrai os alunos de AMBAS as colunas. Para cada entrada que contenha nomes de alunos (pessoas reais), extrai: o nome (incluindo o asterisco * se existir), o dia (segunda|terca|quarta|quinta|sexta|sabado), o horário (HH:MM), e o instrutor (junior|angelo). Um asterisco junto ao nome significa aula de 60 minutos — preserva-o no nome. Ignora tarefas/atividades e nomes que são apenas monitores sem asterisco. Sé exaustivo.',
         response_json_schema: {
           type: 'object',
           properties: {
@@ -134,12 +133,17 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       const matched = schedules.map(entry => {
         const dayEn = DAY_MAP[entry.day] || entry.day;
-        const found = students.find(s => nameMatch(s.name, entry.name));
+        const hasAsterisk = entry.name && entry.name.includes('*');
+        const cleanName = entry.name ? entry.name.replace(/\*/g, '').trim() : entry.name;
+        const duration = hasAsterisk ? 60 : 30;
+        const found = students.find(s => nameMatch(s.name, cleanName));
         return {
           ...entry,
+          name: cleanName,
           dayEn,
+          duration,
           studentId: found ? found.id : null,
-          studentName: found ? found.name : entry.name,
+          studentName: found ? found.name : cleanName,
           existingSchedule: found ? (found.fixed_schedule || []) : [],
           found: !!found
         };
@@ -174,7 +178,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           s => s.day === entry.dayEn && s.time === entry.time
         );
         if (!exists) {
-          byStudent[key].schedules.push({ day: entry.dayEn, time: entry.time, duration: 30 });
+          byStudent[key].schedules.push({ day: entry.dayEn, time: entry.time, duration: entry.duration || 30 });
         }
       }
 
@@ -232,7 +236,8 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
             const parts = entry.time.split(':');
             const h = parseInt(parts[0], 10);
             const m = parseInt(parts[1], 10);
-            const endDate = new Date(2000, 0, 1, h, m + 30);
+            const lessonDuration = entry.duration || 30;
+            const endDate = new Date(2000, 0, 1, h, m + lessonDuration);
             const endTime = String(endDate.getHours()).padStart(2, '0') + ':' + String(endDate.getMinutes()).padStart(2, '0');
 
             const newLesson = await base44.entities.Lesson.create({
@@ -349,7 +354,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
               {found.map((entry, i) => (
                 <div key={i} className="flex items-center gap-2 py-1.5 px-3 rounded bg-green-50 border border-green-100">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                  <span className="text-sm font-medium flex-1">{entry.studentName}</span>
+                  <span className="text-sm font-medium flex-1">{entry.studentName}{entry.duration === 60 && <span className="ml-1 text-xs text-blue-600 font-bold">60min</span>}</span>
                   <Badge variant="outline" className="text-xs capitalize">{entry.instructor || '-'}</Badge>
                   <Badge variant="outline" className="text-xs">{DAY_LABELS[entry.dayEn] || entry.day}</Badge>
                   <Badge variant="outline" className="text-xs">{entry.time}</Badge>
@@ -358,7 +363,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
               {notFound.map((entry, i) => (
                 <div key={i} className="flex items-center gap-2 py-1.5 px-3 rounded bg-amber-50 border border-amber-100">
                   <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                  <span className="text-sm text-amber-800 flex-1">{entry.name} <span className="text-xs">(não encontrado)</span></span>
+                  <span className="text-sm text-amber-800 flex-1">{entry.name}{entry.duration === 60 && <span className="ml-1 text-xs text-blue-600 font-bold">60min</span>} <span className="text-xs">(não encontrado)</span></span>
                   <Badge variant="outline" className="text-xs capitalize">{entry.instructor || '-'}</Badge>
                   <Badge variant="outline" className="text-xs">{DAY_LABELS[entry.dayEn] || entry.day}</Badge>
                   <Badge variant="outline" className="text-xs">{entry.time}</Badge>
