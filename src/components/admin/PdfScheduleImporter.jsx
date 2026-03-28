@@ -73,13 +73,49 @@ var DAY_LABELS = {
 
 var DAY_OF_WEEK = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
-async function bulkCreateInBatches(entity, items, batchSize = 10) {
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function bulkCreateInBatchesWithRetry(entity, items, batchSize = 10) {
   const results = [];
+  const maxRetries = 3;
+  let delayMs = 500; // Começa com 500ms entre batches
+  
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
-    const created = await entity.bulkCreate(batch);
-    results.push(...(Array.isArray(created) ? created : []));
+    let retries = 0;
+    let success = false;
+    
+    while (retries < maxRetries && !success) {
+      try {
+        // Delay antes de cada batch
+        if (i > 0) await sleep(delayMs);
+        
+        const created = await entity.bulkCreate(batch);
+        results.push(...(Array.isArray(created) ? created : []));
+        success = true;
+        
+        // Aumenta delay progressivamente se estamos perto do limite
+        if (results.length > 50) delayMs = Math.min(delayMs + 200, 2000);
+      } catch (error) {
+        retries++;
+        if (error.message && error.message.includes('Rate limit')) {
+          // Backoff exponencial para rate limit
+          const backoffMs = delayMs * Math.pow(2, retries);
+          console.warn(`Rate limit hit. Retrying after ${backoffMs}ms (attempt ${retries}/${maxRetries})`);
+          await sleep(backoffMs);
+        } else {
+          throw error; // Relança erros que não são rate limit
+        }
+      }
+    }
+    
+    if (!success) {
+      throw new Error(`Falha ao criar batch após ${maxRetries} tentativas`);
+    }
   }
+  
   return results;
 }
 
@@ -209,10 +245,13 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         }
       }
 
-      // 2. Criar/atualizar alunos do picadeiro
+      // 2. Criar/atualizar alunos do picadeiro (com delay entre cada um)
       const newlyCreatedStudentIds = new Set();
       const updates = Object.values(byStudent);
-      for (const s of updates) {
+      for (let idx = 0; idx < updates.length; idx++) {
+        const s = updates[idx];
+        if (idx > 0) await sleep(100); // Pequeno delay entre operações de alunos
+        
         if (!s.id) {
           const newStudent = await base44.entities.PicadeiroStudent.create({
             name: s.name,
@@ -290,9 +329,9 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         }
       }
 
-      // Criar todas as aulas em lotes
+      // Criar todas as aulas em lotes com retry e delay
       if (lessonsToCreate.length > 0) {
-        const created = await bulkCreateInBatches(base44.entities.Lesson, lessonsToCreate, 20);
+        const created = await bulkCreateInBatchesWithRetry(base44.entities.Lesson, lessonsToCreate, 15);
         lessonsCreated = created.length;
         // Mapear os ids criados de volta ao lsnMap pelo date+start_time (não pelo índice)
         for (const lesson of created) {
@@ -332,9 +371,9 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         }
       }
 
-      // Criar todas as reservas em lotes
+      // Criar todas as reservas em lotes com retry e delay
       if (bookingsToCreate.length > 0) {
-        await bulkCreateInBatches(base44.entities.Booking, bookingsToCreate, 20);
+        await bulkCreateInBatchesWithRetry(base44.entities.Booking, bookingsToCreate, 15);
         bookingsCreated = bookingsToCreate.length;
 
         // Atualizar booked_spots e fixed_students_count em lotes paralelos
@@ -346,8 +385,9 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         for (const l of existingLessons) existingLessonById[l.id] = l;
 
         const lessonUpdateEntries = Object.entries(spotsByLesson);
-        for (let i = 0; i < lessonUpdateEntries.length; i += 20) {
-          const batch = lessonUpdateEntries.slice(i, i + 20);
+        for (let i = 0; i < lessonUpdateEntries.length; i += 15) {
+          const batch = lessonUpdateEntries.slice(i, i + 15);
+          if (i > 0) await sleep(300); // Delay entre batches de atualização
           await Promise.all(batch.map(([lessonId, count]) => {
             const lesson = existingLessonById[lessonId];
             const currentSpots = lesson ? (lesson.booked_spots || 0) : 0;
@@ -417,7 +457,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         {step === 'saving' && (
           <div className="flex items-center gap-3 py-4">
             <Loader2 className="w-5 h-5 animate-spin text-[#4A5D23]" />
-            <span className="text-sm text-stone-600">A guardar horários e gerar aulas...</span>
+            <span className="text-sm text-stone-600">A guardar horários e gerar aulas (com delays inteligentes para evitar limites)...</span>
           </div>
         )}
 
