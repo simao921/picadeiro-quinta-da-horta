@@ -340,16 +340,25 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         await bulkCreateInBatches(base44.entities.Booking, bookingsToCreate, 20);
         bookingsCreated = bookingsToCreate.length;
 
-        // Atualizar booked_spots em cada aula
+        // Atualizar booked_spots e fixed_students_count em cada aula
         const spotsByLesson = {};
         for (const b of bookingsToCreate) {
           spotsByLesson[b.lesson_id] = (spotsByLesson[b.lesson_id] || 0) + 1;
         }
+        // Buscar aulas atualizadas (inclui as recém criadas)
+        const allLessonsAfter = await base44.entities.Lesson.list('-date', 5000);
+        const lessonById = {};
+        for (const l of allLessonsAfter) lessonById[l.id] = l;
+
         for (const [lessonId, count] of Object.entries(spotsByLesson)) {
-          const existing = existingLessons.find(l => l.id === lessonId);
-          const currentSpots = existing ? (existing.booked_spots || 0) : 0;
-          await base44.entities.Lesson.update(lessonId, { booked_spots: currentSpots + count });
-          await sleep(200);
+          const lesson = lessonById[lessonId];
+          const currentSpots = lesson ? (lesson.booked_spots || 0) : 0;
+          const currentFixed = lesson ? (lesson.fixed_students_count || 0) : 0;
+          await base44.entities.Lesson.update(lessonId, {
+            booked_spots: currentSpots + count,
+            fixed_students_count: currentFixed + count
+          });
+          await sleep(300);
         }
       }
 
