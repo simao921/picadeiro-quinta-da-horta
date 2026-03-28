@@ -441,7 +441,9 @@ export default function NewBookingForm({ user, isBlocked }) {
       } else {
         // Aulas fixas em grupo: criar todas as reservas para os proximos 3 meses
         if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
-          if (fixoSchedules.some(s => s.day === null || !s.time)) throw new Error('Por favor selecione todos os dias e horários');
+          if (!fixoSchedules || fixoSchedules.length === 0 || fixoSchedules.some(s => s.day === null || s.time === null)) {
+            throw new Error('Por favor selecione todos os dias e horários');
+          }
           
           const duration = selectedPlan?.duration || 30;
           const dayNames = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
@@ -449,10 +451,13 @@ export default function NewBookingForm({ user, isBlocked }) {
           // Gerar todas as datas para os proximos 3 meses
           const allDatesToCreate = [];
           for (const sched of fixoSchedules) {
+            if (sched.day === null || sched.day === undefined) continue;
+
             const start = new Date();
             start.setHours(0, 0, 0, 0);
-            while (start.getDay() !== sched.day) start.setDate(start.getDate() + 1);
-            if (start <= new Date()) start.setDate(start.getDate() + 7);
+            // Garantir que o dia é um número entre 0 e 6
+            const targetDay = typeof sched.day === 'number' ? sched.day : 0;
+            while (start.getDay() !== targetDay) start.setDate(start.getDate() + 1);
 
             const end = new Date();
             end.setMonth(end.getMonth() + 3);
