@@ -73,15 +73,12 @@ var DAY_LABELS = {
 
 var DAY_OF_WEEK = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
-async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
 async function bulkCreateInBatches(entity, items, batchSize = 10) {
   const results = [];
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     const created = await entity.bulkCreate(batch);
     results.push(...(Array.isArray(created) ? created : []));
-    if (i + batchSize < items.length) await sleep(3000);
   }
   return results;
 }
@@ -363,7 +360,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         }
       }
 
-      toast.success(updates.length + ' alunos atualizados \u2022 ' + lessonsCreated + ' aulas criadas \u2022 ' + bookingsCreated + ' reservas geradas');
+      toast.success(updates.length + ' alunos atualizados • ' + lessonsCreated + ' aulas criadas • ' + bookingsCreated + ' reservas geradas');
       setStep('idle');
       setFile(null);
       setPreview([]);
@@ -428,7 +425,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-stone-700">
-                {found.length} correspondidos &bull; {notFound.length} não encontrados (também serão criados)
+                {found.length} correspondidos • {notFound.length} não encontrados (também serão criados)
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => { setStep('idle'); setPreview([]); }}>
