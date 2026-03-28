@@ -178,32 +178,32 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
     setStep('saving');
 
     try {
+      // 1. Agrupar horários por aluno
       const byStudent = {};
       for (const entry of preview) {
-        // Use studentId for matched, or a synthetic key from name for unmatched
-        const key = entry.studentId || ('unmatched_' + entry.name);
-        if (!byStudent[key]) {
+        const studentKey = entry.studentId || ('new_' + normalizeName(entry.name));
+        if (!byStudent[studentKey]) {
           const st = entry.studentId ? students.find(s => s.id === entry.studentId) : null;
-          byStudent[key] = {
+          byStudent[studentKey] = {
             id: entry.studentId || null,
             name: entry.studentName,
             email: st ? (st.email || '') : '',
-            schedules: entry.existingSchedule.slice()
+            schedules: entry.existingSchedule ? entry.existingSchedule.slice() : []
           };
         }
-        const exists = byStudent[key].schedules.some(
+        const exists = byStudent[studentKey].schedules.some(
           s => s.day === entry.dayEn && s.time === entry.time
         );
         if (!exists) {
-          byStudent[key].schedules.push({ day: entry.dayEn, time: entry.time, duration: entry.duration || 30 });
+          byStudent[studentKey].schedules.push({ day: entry.dayEn, time: entry.time, duration: entry.duration || 30 });
         }
       }
 
+      // 2. Criar/atualizar alunos do picadeiro
       const newlyCreatedStudentIds = new Set();
       const updates = Object.values(byStudent);
       for (const s of updates) {
         if (!s.id) {
-          // Criar aluno novo do zero
           const newStudent = await base44.entities.PicadeiroStudent.create({
             name: s.name,
             student_type: 'fixo',
@@ -212,7 +212,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
             fixed_schedule: s.schedules
           });
           s.id = newStudent.id;
-          s.email = newStudent.email || s.name;
+          s.clientId = s.name; // usar nome como identificador de booking
           newlyCreatedStudentIds.add(s.id);
         } else {
           await base44.entities.PicadeiroStudent.update(s.id, {
@@ -220,45 +220,47 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
             student_type: 'fixo',
             is_active: true
           });
+          const st = students.find(x => x.id === s.id);
+          s.clientId = (st && st.email) ? st.email : s.name;
         }
       }
 
-      const existingLessons = await base44.entities.Lesson.list('-date', 500);
-      const lessonKey = (date, time) => date + '_' + time;
-      const existingLessonMap = {};
+      // 3. Carregar aulas e reservas existentes
+      const existingLessons = await base44.entities.Lesson.list('-date', 2000);
+      const lsnMap = {}; // 'date_time' -> lessonId
       for (const l of existingLessons) {
-        existingLessonMap[lessonKey(l.date, l.start_time)] = l.id;
+        lsnMap[l.date + '_' + l.start_time] = l.id;
       }
 
-      const existingBookings = await base44.entities.Booking.list('-created_date', 1000);
-      const bookingKey = (lessonId, email) => lessonId + '_' + email;
-      const existingBookingSet = new Set(existingBookings.map(b => bookingKey(b.lesson_id, b.client_email)));
+      const existingBookings = await base44.entities.Booking.list('-created_date', 2000);
+      const bkgSet = new Set(existingBookings.map(b => b.lesson_id + '_' + b.client_email));
 
       const services = await base44.entities.Service.list();
       const defaultService = services.find(s => s.is_active) || services[0];
-      const serviceId = defaultService ? defaultService.id : 'default';
+      const serviceId = defaultService ? defaultService.id : 'default_service';
 
+      // 4. Para cada entrada do preview, gerar aulas + reservas
       let lessonsCreated = 0;
       let bookingsCreated = 0;
 
       for (const entry of preview) {
-        const key = entry.studentId || ('unmatched_' + entry.name);
-        const studentData = byStudent[key];
+        const studentKey = entry.studentId || ('new_' + normalizeName(entry.name));
+        const studentData = byStudent[studentKey];
         if (!studentData) continue;
 
         const dates = getDatesForNextMonths(entry.dayEn, 3);
+        const parts = entry.time.split(':');
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const lessonDuration = entry.duration || 30;
+        const endDate = new Date(2000, 0, 1, h, m + lessonDuration);
+        const endTime = String(endDate.getHours()).padStart(2, '0') + ':' + String(endDate.getMinutes()).padStart(2, '0');
+
         for (const date of dates) {
-          const key = lessonKey(date, entry.time);
-          let lessonId = existingLessonMap[key];
+          const lsnKey = date + '_' + entry.time;
+          let lessonId = lsnMap[lsnKey];
 
           if (!lessonId) {
-            const parts = entry.time.split(':');
-            const h = parseInt(parts[0], 10);
-            const m = parseInt(parts[1], 10);
-            const lessonDuration = entry.duration || 30;
-            const endDate = new Date(2000, 0, 1, h, m + lessonDuration);
-            const endTime = String(endDate.getHours()).padStart(2, '0') + ':' + String(endDate.getMinutes()).padStart(2, '0');
-
             const newLesson = await base44.entities.Lesson.create({
               service_id: serviceId,
               date: date,
@@ -271,15 +273,13 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
               is_auto_generated: true
             });
             lessonId = newLesson.id;
-            existingLessonMap[key] = lessonId;
+            lsnMap[lsnKey] = lessonId;
             lessonsCreated++;
           }
 
-          // For unmatched students use name as identifier
-          const clientId = studentData.email || studentData.name;
-          const bKey = bookingKey(lessonId, clientId);
-          const isNew = newlyCreatedStudentIds.has(studentData.id);
-          if (isNew || !existingBookingSet.has(bKey)) {
+          const clientId = studentData.clientId || studentData.name;
+          const bkgKey = lessonId + '_' + clientId;
+          if (!bkgSet.has(bkgKey)) {
             await base44.entities.Booking.create({
               lesson_id: lessonId,
               client_email: clientId,
@@ -287,7 +287,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
               status: 'approved',
               is_fixed_student: true
             });
-            existingBookingSet.add(bKey);
+            bkgSet.add(bkgKey);
             bookingsCreated++;
           }
         }
