@@ -33,17 +33,24 @@ function expandAbbreviations(name) {
   }).join(' ');
 }
 
+function firstLast(name) {
+  var parts = name.split(' ').filter(Boolean);
+  if (parts.length <= 1) return parts;
+  return [parts[0], parts[parts.length - 1]];
+}
+
 function nameMatch(studentName, entryName) {
   var sNorm = expandAbbreviations(normalizeName(studentName));
   var eNorm = expandAbbreviations(normalizeName(entryName));
   if (sNorm === eNorm) return true;
-  var sParts = sNorm.split(' ').filter(Boolean);
-  var eParts = eNorm.split(' ').filter(Boolean);
-  var shorter = sParts.length < eParts.length ? sParts : eParts;
-  var longer = sParts.length < eParts.length ? eParts : sParts;
-  return shorter.every(function(part) {
-    return longer.some(function(lp) { return lp.startsWith(part) || part.startsWith(lp); });
-  });
+  // Compare first+last name
+  var sFL = firstLast(sNorm);
+  var eFL = firstLast(eNorm);
+  if (sFL.length >= 2 && eFL.length >= 2) {
+    return sFL[0] === eFL[0] && sFL[sFL.length-1] === eFL[eFL.length-1];
+  }
+  // Fallback: first name only
+  return sFL[0] === eFL[0];
 }
 
 var DAY_MAP = {
@@ -109,7 +116,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       const result = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
-        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas por instrutor (ex: Júnior e Ângelo). REGRAS IMPORTANTES: 1) Extrai TODOS os nomes de alunos, incluindo os que têm asterisco (*). 2) Um asterisco junto ao nome (ex: "Maria*" ou "*Maria") significa que a aula é de 60 minutos — inclui o asterisco no campo name para que o sistema saiba. 3) Ignora apenas linhas que são tarefas/atividades genéricas sem nome de pessoa. Para cada entrada extrai: name (com asterisco se existir), day (segunda|terca|quarta|quinta|sexta|sabado), time (HH:MM), instructor. Sé completamente exaustivo e não omitas nenhum aluno.',
+        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas por instrutor (ex: Júnior e Ângelo). Extrai ABSOLUTAMENTE TODOS os nomes de alunos (pessoas reais) de TODAS as colunas e TODOS os dias. Para cada entrada extrai: name (nome limpo SEM asterisco), day (segunda|terca|quarta|quinta|sexta|sabado), time (HH:MM), instructor, duration (se o nome tiver asterisco * junto usa 60, caso contrário usa 30). Não omitas nenhum aluno. Sé completamente exaustivo.',
         response_json_schema: {
           type: 'object',
           properties: {
@@ -121,7 +128,8 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
                   name: { type: 'string' },
                   day: { type: 'string' },
                   time: { type: 'string' },
-                  instructor: { type: 'string' }
+                  instructor: { type: 'string' },
+                  duration: { type: 'number', description: '30 or 60 minutes' }
                 }
               }
             }
@@ -133,9 +141,8 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       const matched = schedules.map(entry => {
         const dayEn = DAY_MAP[entry.day] || entry.day;
-        const hasAsterisk = entry.name && entry.name.includes('*');
         const cleanName = entry.name ? entry.name.replace(/\*/g, '').trim() : entry.name;
-        const duration = hasAsterisk ? 60 : 30;
+        const duration = entry.duration === 60 ? 60 : 30;
         const found = students.find(s => nameMatch(s.name, cleanName));
         return {
           ...entry,
