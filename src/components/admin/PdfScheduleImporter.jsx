@@ -27,24 +27,26 @@ function normalizeName(name) {
 }
 
 function expandAbbreviations(name) {
-  return name.split(' ').map(part => {
-    const norm = normalizeName(part);
+  return name.split(' ').map(function(part) {
+    var norm = normalizeName(part);
     return ABBREV_MAP[norm] || norm;
   }).join(' ');
 }
 
 function nameMatch(studentName, entryName) {
-  const sNorm = expandAbbreviations(normalizeName(studentName));
-  const eNorm = expandAbbreviations(normalizeName(entryName));
+  var sNorm = expandAbbreviations(normalizeName(studentName));
+  var eNorm = expandAbbreviations(normalizeName(entryName));
   if (sNorm === eNorm) return true;
-  const sParts = sNorm.split(' ').filter(Boolean);
-  const eParts = eNorm.split(' ').filter(Boolean);
-  const shorter = sParts.length < eParts.length ? sParts : eParts;
-  const longer = sParts.length < eParts.length ? eParts : sParts;
-  return shorter.every(part => longer.some(lp => lp.startsWith(part) || part.startsWith(lp)));
+  var sParts = sNorm.split(' ').filter(Boolean);
+  var eParts = eNorm.split(' ').filter(Boolean);
+  var shorter = sParts.length < eParts.length ? sParts : eParts;
+  var longer = sParts.length < eParts.length ? eParts : sParts;
+  return shorter.every(function(part) {
+    return longer.some(function(lp) { return lp.startsWith(part) || part.startsWith(lp); });
+  });
 }
 
-const DAY_MAP = {
+var DAY_MAP = {
   'segunda': 'monday',
   'terca': 'tuesday',
   'quarta': 'wednesday',
@@ -53,7 +55,7 @@ const DAY_MAP = {
   'sabado': 'saturday',
 };
 
-const DAY_LABELS = {
+var DAY_LABELS = {
   monday: 'Segunda-feira',
   tuesday: 'Terça-feira',
   wednesday: 'Quarta-feira',
@@ -62,16 +64,16 @@ const DAY_LABELS = {
   saturday: 'Sábado',
 };
 
-const DAY_OF_WEEK = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+var DAY_OF_WEEK = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
-function getDatesForNextMonths(dayEn, months = 3) {
-  const dates = [];
-  const today = new Date();
-  const end = new Date();
+function getDatesForNextMonths(dayEn, months) {
+  var dates = [];
+  var today = new Date();
+  var end = new Date();
   end.setMonth(end.getMonth() + months);
-  const targetDow = DAY_OF_WEEK[dayEn];
+  var targetDow = DAY_OF_WEEK[dayEn];
   if (targetDow === undefined) return dates;
-  const cur = new Date(today);
+  var cur = new Date(today);
   while (cur.getDay() !== targetDow) cur.setDate(cur.getDate() + 1);
   while (cur <= end) {
     dates.push(cur.toISOString().slice(0, 10));
@@ -107,34 +109,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       const result = await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_flash',
-        prompt: `Analisa este PDF de planificação de um picadeiro/centro equestre.
-        
-O PDF tem uma tabela com colunas por dia da semana (Segunda-Feira, Terça-Feira, Quarta-Feira, Quinta-Feira, Sexta-Feira, Sábado) e linhas por horário.
-Cada coluna de dia está dividida em sub-colunas: "Júnior" e "Ângelo".
-
-INSTRUÇÕES MUITO IMPORTANTES:
-- Extrai os alunos de AMBAS as colunas: tanto "Júnior" como "Ângelo".
-- Para cada entrada que contenha nomes de alunos (pessoas reais), extrai:
-  - O nome(s) do(s) aluno(s)
-  - O dia da semana
-  - O horário (hora de início, formato HH:MM)
-  - O instrutor: "junior" ou "angelo"
-- Ignora entradas que sejam tarefas/atividades (limpeza, máquinas, regar, etc.) e não nomes de pessoas.
-- Nomes com * são monitores/ajudantes - IGNORA-OS (ex: Maria Pinheiro *, Emília Borges *, João Rasquinho *).
-- Para o Sábado, extrai igualmente todos os alunos.
-- Sê exaustivo - extrai TODOS os alunos de TODOS os horários de ambas as colunas.
-
-Retorna um JSON com a estrutura:
-{
-  "schedules": [
-    {
-      "name": "Nome Apelido",
-      "day": "segunda|terca|quarta|quinta|sexta|sabado",
-      "time": "HH:MM",
-      "instructor": "junior|angelo"
-    }
-  ]
-}`,
+        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas: "Júnior" e "Ângelo". Extrai os alunos de AMBAS as colunas. Para cada entrada que contenha nomes de alunos (pessoas reais), extrai: o nome, o dia (segunda|terca|quarta|quinta|sexta|sabado), o horário (HH:MM), e o instrutor (junior|angelo). Ignora tarefas/atividades e nomes com * (monitores). Sé exaustivo.',
         file_urls: [file_url],
         response_json_schema: {
           type: 'object',
@@ -163,9 +138,9 @@ Retorna um JSON com a estrutura:
         return {
           ...entry,
           dayEn,
-          studentId: found?.id || null,
-          studentName: found?.name || entry.name,
-          existingSchedule: found?.fixed_schedule || [],
+          studentId: found ? found.id : null,
+          studentName: found ? found.name : entry.name,
+          existingSchedule: found ? (found.fixed_schedule || []) : [],
           found: !!found
         };
       });
@@ -182,16 +157,16 @@ Retorna um JSON com a estrutura:
     setStep('saving');
 
     try {
-      // 1. Group schedules by student
       const byStudent = {};
       for (const entry of preview) {
         if (!entry.studentId) continue;
         if (!byStudent[entry.studentId]) {
+          const st = students.find(s => s.id === entry.studentId);
           byStudent[entry.studentId] = {
             id: entry.studentId,
             name: entry.studentName,
-            email: students.find(s => s.id === entry.studentId)?.email || '',
-            schedules: [...entry.existingSchedule]
+            email: st ? (st.email || '') : '',
+            schedules: entry.existingSchedule.slice()
           };
         }
         const exists = byStudent[entry.studentId].schedules.some(
@@ -202,7 +177,6 @@ Retorna um JSON com a estrutura:
         }
       }
 
-      // 2. Update each student
       const updates = Object.values(byStudent);
       for (const s of updates) {
         await base44.entities.PicadeiroStudent.update(s.id, {
@@ -212,27 +186,24 @@ Retorna um JSON com a estrutura:
         });
       }
 
-      // 3. Fetch existing lessons + bookings to avoid duplicates
       const existingLessons = await base44.entities.Lesson.list('-date', 500);
-      const lessonKey = (date, time) => `${date}_${time}`;
+      const lessonKey = (date, time) => date + '_' + time;
       const existingLessonMap = {};
       for (const l of existingLessons) {
         existingLessonMap[lessonKey(l.date, l.start_time)] = l.id;
       }
 
       const existingBookings = await base44.entities.Booking.list('-created_date', 1000);
-      const bookingKey = (lessonId, email) => `${lessonId}_${email}`;
+      const bookingKey = (lessonId, email) => lessonId + '_' + email;
       const existingBookingSet = new Set(existingBookings.map(b => bookingKey(b.lesson_id, b.client_email)));
 
-      // 4. Fetch first active service
       const services = await base44.entities.Service.list();
       const defaultService = services.find(s => s.is_active) || services[0];
-      const serviceId = defaultService?.id || 'default';
+      const serviceId = defaultService ? defaultService.id : 'default';
 
       let lessonsCreated = 0;
       let bookingsCreated = 0;
 
-      // 5. Generate lessons + bookings for next 3 months
       for (const entry of preview) {
         if (!entry.studentId) continue;
         const studentData = byStudent[entry.studentId];
@@ -244,13 +215,15 @@ Retorna um JSON com a estrutura:
           let lessonId = existingLessonMap[key];
 
           if (!lessonId) {
-            const [h, m] = entry.time.split(':').map(Number);
+            const parts = entry.time.split(':');
+            const h = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10);
             const endDate = new Date(2000, 0, 1, h, m + 30);
-            const endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+            const endTime = String(endDate.getHours()).padStart(2, '0') + ':' + String(endDate.getMinutes()).padStart(2, '0');
 
             const newLesson = await base44.entities.Lesson.create({
               service_id: serviceId,
-              date,
+              date: date,
               start_time: entry.time,
               end_time: endTime,
               max_spots: 6,
@@ -264,11 +237,12 @@ Retorna um JSON com a estrutura:
             lessonsCreated++;
           }
 
-          const bKey = bookingKey(lessonId, studentData.email || studentData.name);
+          const clientId = studentData.email || studentData.name;
+          const bKey = bookingKey(lessonId, clientId);
           if (!existingBookingSet.has(bKey)) {
             await base44.entities.Booking.create({
               lesson_id: lessonId,
-              client_email: studentData.email || studentData.name,
+              client_email: clientId,
               client_name: studentData.name,
               status: 'approved',
               is_fixed_student: true
@@ -279,11 +253,11 @@ Retorna um JSON com a estrutura:
         }
       }
 
-      toast.success(`${updates.length} alunos atualizados • ${lessonsCreated} aulas criadas • ${bookingsCreated} reservas geradas`);
+      toast.success(updates.length + ' alunos atualizados \u2022 ' + lessonsCreated + ' aulas criadas \u2022 ' + bookingsCreated + ' reservas geradas');
       setStep('idle');
       setFile(null);
       setPreview([]);
-      onImportDone?.();
+      if (onImportDone) onImportDone();
     } catch (e) {
       setError(e.message);
       setStep('preview');
@@ -300,7 +274,7 @@ Retorna um JSON com a estrutura:
           <Sparkles className="w-5 h-5 text-[#4A5D23]" />
           <h3 className="font-semibold text-[#2C3E1F]">Importar Horários por IA (PDF)</h3>
         </div>
-        <p className="text-sm text-stone-500">Anexa o PDF da planificação e a IA extrai automaticamente todos os horários fixos (Ângelo e Júnior) e gera aulas para os próximos 3 meses.</p>
+        <p className="text-sm text-stone-500">Anexa o PDF da planificação e a IA extrai automaticamente todos os horários fixos e gera aulas para os próximos 3 meses.</p>
       </CardHeader>
       <CardContent className="space-y-4">
 
@@ -343,7 +317,7 @@ Retorna um JSON com a estrutura:
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-stone-700">
-                {found.length} horários encontrados • {notFound.length} alunos não encontrados no sistema
+                {found.length} horários encontrados &bull; {notFound.length} alunos não encontrados
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => { setStep('idle'); setPreview([]); }}>
@@ -377,7 +351,7 @@ Retorna um JSON com a estrutura:
             </div>
 
             {notFound.length > 0 && (
-              <p className="text-xs text-amber-600">⚠️ Os alunos a amarelo não foram encontrados no sistema e não serão atualizados.</p>
+              <p className="text-xs text-amber-600">Os alunos a amarelo não foram encontrados no sistema e não serão atualizados.</p>
             )}
           </div>
         )}
