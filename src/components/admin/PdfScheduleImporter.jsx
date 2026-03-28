@@ -266,7 +266,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       const pendingLsnKeys = {};
 
       for (const entry of preview) {
-        const dates = getDatesForNextMonths(entry.dayEn, 1);
+        const dates = getDatesForNextMonths(entry.dayEn, 2);
         const parts = entry.time.split(':');
         const h = parseInt(parts[0], 10);
         const m = parseInt(parts[1], 10);
@@ -315,7 +315,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         if (!studentData) continue;
 
         const clientId = studentData.clientId || studentData.name;
-        const dates = getDatesForNextMonths(entry.dayEn, 1);
+        const dates = getDatesForNextMonths(entry.dayEn, 2);
 
         for (const date of dates) {
           const lsnKey = date + '_' + entry.time;
@@ -364,7 +364,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           <Sparkles className="w-5 h-5 text-[#4A5D23]" />
           <h3 className="font-semibold text-[#2C3E1F]">Importar Horários por IA (PDF)</h3>
         </div>
-        <p className="text-sm text-stone-500">Anexa o PDF da planificação e a IA extrai automaticamente todos os horários fixos e gera aulas para o próximo mês.</p>
+        <p className="text-sm text-stone-500">Anexa o PDF da planificação e a IA extrai automaticamente todos os horários fixos e gera aulas para os próximos 2 meses.</p>
       </CardHeader>
       <CardContent className="space-y-4">
 
