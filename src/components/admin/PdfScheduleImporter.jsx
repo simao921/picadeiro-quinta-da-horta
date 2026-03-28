@@ -159,26 +159,28 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
     try {
       const byStudent = {};
       for (const entry of preview) {
-        if (!entry.studentId) continue;
-        if (!byStudent[entry.studentId]) {
-          const st = students.find(s => s.id === entry.studentId);
-          byStudent[entry.studentId] = {
-            id: entry.studentId,
+        // Use studentId for matched, or a synthetic key from name for unmatched
+        const key = entry.studentId || ('unmatched_' + entry.name);
+        if (!byStudent[key]) {
+          const st = entry.studentId ? students.find(s => s.id === entry.studentId) : null;
+          byStudent[key] = {
+            id: entry.studentId || null,
             name: entry.studentName,
             email: st ? (st.email || '') : '',
             schedules: entry.existingSchedule.slice()
           };
         }
-        const exists = byStudent[entry.studentId].schedules.some(
+        const exists = byStudent[key].schedules.some(
           s => s.day === entry.dayEn && s.time === entry.time
         );
         if (!exists) {
-          byStudent[entry.studentId].schedules.push({ day: entry.dayEn, time: entry.time, duration: 30 });
+          byStudent[key].schedules.push({ day: entry.dayEn, time: entry.time, duration: 30 });
         }
       }
 
       const updates = Object.values(byStudent);
       for (const s of updates) {
+        if (!s.id) continue;
         await base44.entities.PicadeiroStudent.update(s.id, {
           fixed_schedule: s.schedules,
           student_type: 'fixo',
@@ -205,8 +207,8 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       let bookingsCreated = 0;
 
       for (const entry of preview) {
-        if (!entry.studentId) continue;
-        const studentData = byStudent[entry.studentId];
+        const key = entry.studentId || ('unmatched_' + entry.name);
+        const studentData = byStudent[key];
         if (!studentData) continue;
 
         const dates = getDatesForNextMonths(entry.dayEn, 3);
@@ -237,6 +239,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
             lessonsCreated++;
           }
 
+          // For unmatched students use name as identifier
           const clientId = studentData.email || studentData.name;
           const bKey = bookingKey(lessonId, clientId);
           if (!existingBookingSet.has(bKey)) {
@@ -317,7 +320,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-stone-700">
-                {found.length} horários encontrados &bull; {notFound.length} alunos não encontrados
+                {found.length} correspondidos &bull; {notFound.length} não encontrados (também serão criados)
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => { setStep('idle'); setPreview([]); }}>
@@ -351,7 +354,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
             </div>
 
             {notFound.length > 0 && (
-              <p className="text-xs text-amber-600">Os alunos a amarelo não foram encontrados no sistema e não serão atualizados.</p>
+              <p className="text-xs text-amber-600">Os alunos a amarelo não existem no sistema — as aulas e reservas serão criadas com o nome do PDF, mas o perfil de aluno não será atualizado.</p>
             )}
           </div>
         )}
