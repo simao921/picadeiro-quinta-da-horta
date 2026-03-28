@@ -73,19 +73,17 @@ var DAY_LABELS = {
 
 var DAY_OF_WEEK = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
-async function withRetry(fn, retries = 4, delay = 2000) {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      const isRateLimit = e.message && (e.message.includes('rate') || e.message.includes('429') || e.message.includes('limit'));
-      if (i < retries && isRateLimit) {
-        await new Promise(r => setTimeout(r, delay * (i + 1)));
-      } else {
-        throw e;
-      }
-    }
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function bulkCreateInBatches(entity, items, batchSize = 20) {
+  const results = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const created = await entity.bulkCreate(batch);
+    results.push(...(Array.isArray(created) ? created : []));
+    if (i + batchSize < items.length) await sleep(500);
   }
+  return results;
 }
 
 function getDatesForNextMonths(dayEn, months) {
@@ -258,15 +256,16 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         || services[0];
       const serviceId = defaultService ? defaultService.id : 'default_service';
 
-      // 4. Para cada entrada do preview, gerar aulas + reservas
+      // 4. Preparar todas as aulas e reservas a criar
       let lessonsCreated = 0;
       let bookingsCreated = 0;
 
-      for (const entry of preview) {
-        const studentKey = entry.studentId || ('new_' + normalizeName(entry.name));
-        const studentData = byStudent[studentKey];
-        if (!studentData) continue;
+      // Primeiro: descobrir quais aulas precisam ser criadas
+      const lessonsToCreate = [];
+      // mapa provisório: lsnKey -> índice em lessonsToCreate (para depois associar o id)
+      const pendingLsnKeys = {};
 
+      for (const entry of preview) {
         const dates = getDatesForNextMonths(entry.dayEn, 3);
         const parts = entry.time.split(':');
         const h = parseInt(parts[0], 10);
@@ -277,12 +276,11 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
         for (const date of dates) {
           const lsnKey = date + '_' + entry.time;
-          let lessonId = lsnMap[lsnKey];
-
-          if (!lessonId) {
-            const newLesson = await withRetry(() => base44.entities.Lesson.create({
+          if (!lsnMap[lsnKey] && !(lsnKey in pendingLsnKeys)) {
+            pendingLsnKeys[lsnKey] = lessonsToCreate.length;
+            lessonsToCreate.push({
               service_id: serviceId,
-              date: date,
+              date,
               start_time: entry.time,
               end_time: endTime,
               max_spots: 6,
@@ -290,26 +288,58 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
               fixed_students_count: 0,
               status: 'scheduled',
               is_auto_generated: true
-            }));
-            lessonId = newLesson.id;
-            lsnMap[lsnKey] = lessonId;
-            lessonsCreated++;
+            });
           }
+        }
+      }
 
-          const clientId = studentData.clientId || studentData.name;
+      // Criar todas as aulas em lotes
+      if (lessonsToCreate.length > 0) {
+        const created = await bulkCreateInBatches(base44.entities.Lesson, lessonsToCreate, 20);
+        lessonsCreated = created.length;
+        // Mapear os ids criados de volta ao lsnMap
+        // bulkCreate devolve os items na mesma ordem
+        for (const [lsnKey, idx] of Object.entries(pendingLsnKeys)) {
+          if (created[idx] && created[idx].id) {
+            lsnMap[lsnKey] = created[idx].id;
+          }
+        }
+      }
+
+      // Segundo: preparar reservas
+      const bookingsToCreate = [];
+
+      for (const entry of preview) {
+        const studentKey = entry.studentId || ('new_' + normalizeName(entry.name));
+        const studentData = byStudent[studentKey];
+        if (!studentData) continue;
+
+        const clientId = studentData.clientId || studentData.name;
+        const dates = getDatesForNextMonths(entry.dayEn, 3);
+
+        for (const date of dates) {
+          const lsnKey = date + '_' + entry.time;
+          const lessonId = lsnMap[lsnKey];
+          if (!lessonId) continue;
+
           const bkgKey = lessonId + '_' + clientId;
           if (!bkgSet.has(bkgKey)) {
-            await withRetry(() => base44.entities.Booking.create({
+            bkgSet.add(bkgKey);
+            bookingsToCreate.push({
               lesson_id: lessonId,
               client_email: clientId,
               client_name: studentData.name,
               status: 'approved',
               is_fixed_student: true
-            }));
-            bkgSet.add(bkgKey);
-            bookingsCreated++;
+            });
           }
         }
+      }
+
+      // Criar todas as reservas em lotes
+      if (bookingsToCreate.length > 0) {
+        await bulkCreateInBatches(base44.entities.Booking, bookingsToCreate, 20);
+        bookingsCreated = bookingsToCreate.length;
       }
 
       toast.success(updates.length + ' alunos atualizados \u2022 ' + lessonsCreated + ' aulas criadas \u2022 ' + bookingsCreated + ' reservas geradas');
