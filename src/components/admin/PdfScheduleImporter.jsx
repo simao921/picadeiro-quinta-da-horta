@@ -180,12 +180,24 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       const updates = Object.values(byStudent);
       for (const s of updates) {
-        if (!s.id) continue;
-        await base44.entities.PicadeiroStudent.update(s.id, {
-          fixed_schedule: s.schedules,
-          student_type: 'fixo',
-          is_active: true
-        });
+        if (!s.id) {
+          // Criar aluno novo do zero
+          const newStudent = await base44.entities.PicadeiroStudent.create({
+            name: s.name,
+            student_type: 'fixo',
+            student_level: 'iniciante',
+            is_active: true,
+            fixed_schedule: s.schedules
+          });
+          s.id = newStudent.id;
+          s.email = newStudent.email || s.name;
+        } else {
+          await base44.entities.PicadeiroStudent.update(s.id, {
+            fixed_schedule: s.schedules,
+            student_type: 'fixo',
+            is_active: true
+          });
+        }
       }
 
       const existingLessons = await base44.entities.Lesson.list('-date', 500);
@@ -326,8 +338,8 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
                 <Button variant="outline" size="sm" onClick={() => { setStep('idle'); setPreview([]); }}>
                   <X className="w-4 h-4 mr-1" /> Cancelar
                 </Button>
-                <Button size="sm" className="bg-[#4A5D23] hover:bg-[#3A4A1B]" onClick={handleConfirm} disabled={found.length === 0}>
-                  <Check className="w-4 h-4 mr-1" /> Confirmar ({found.length})
+                <Button size="sm" className="bg-[#4A5D23] hover:bg-[#3A4A1B]" onClick={handleConfirm} disabled={preview.length === 0}>
+                  <Check className="w-4 h-4 mr-1" /> Confirmar ({preview.length})
                 </Button>
               </div>
             </div>
@@ -354,7 +366,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
             </div>
 
             {notFound.length > 0 && (
-              <p className="text-xs text-amber-600">Os alunos a amarelo não existem no sistema — as aulas e reservas serão criadas com o nome do PDF, mas o perfil de aluno não será atualizado.</p>
+              <p className="text-xs text-amber-600">Os alunos a amarelo não existem ainda — serão criados automaticamente como alunos novos (nível iniciante, horário fixo).</p>
             )}
           </div>
         )}
