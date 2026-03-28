@@ -115,8 +115,9 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       setStep('analyzing');
 
       const result = await base44.integrations.Core.InvokeLLM({
-        model: 'gemini_3_flash',
-        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. O PDF tem uma tabela com colunas por dia da semana e linhas por horário. Cada coluna de dia está dividida em sub-colunas por instrutor (ex: Júnior e Ângelo). Extrai ABSOLUTAMENTE TODOS os nomes de alunos (pessoas reais) de TODAS as colunas e TODOS os dias. Para cada entrada extrai: name (nome limpo SEM asterisco), day (segunda|terca|quarta|quinta|sexta|sabado), time (HH:MM), instructor, duration (se o nome tiver asterisco * junto usa 60, caso contrário usa 30). Não omitas nenhum aluno. Sé completamente exaustivo.',
+        model: 'gemini_3_pro',
+        prompt: 'Analisa este PDF de planificação de um picadeiro/centro equestre. TAREFA CRITICA: Extrai TODOS E CADA UM dos nomes de alunos sem excepção. O PDF é uma tabela semanal onde cada coluna de dia está dividida por instrutor (ex: Júnior, Ângelo). Percorre LINHA A LINHA e COLUNA A COLUNA toda a tabela. Para cada célula que contenha um nome de pessoa: extrai name (limpo, sem asterisco), day (segunda|terca|quarta|quinta|sexta|sabado), time (HH:MM do horário da linha), instructor, duration (60 se o nome original tinha *, senão 30). IMPORTANTE: não omitas NENHUMA entrada. Se a tabela tem 30 alunos, devolve 30. Se tem 50, devolve 50. Sê completamente exaustivo e não faças resumos nem cortes.',
+        file_urls: [file_url],
         response_json_schema: {
           type: 'object',
           properties: {
