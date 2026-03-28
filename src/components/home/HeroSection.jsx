@@ -21,7 +21,7 @@ export default function HeroSection() {
   }, []);
   
   return (
-    <section className="relative min-h-[75vh] sm:min-h-[90vh] flex items-center overflow-hidden bg-[#1A1A1A]">
+    <section className="relative min-h-[75vh] sm:min-h-[90vh] flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <LazyImage
@@ -30,7 +30,7 @@ export default function HeroSection() {
           className="w-full h-full object-cover"
           priority={true}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/95 via-[#1A1A1A]/80 to-[#1A1A1A]/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/90 via-[#1A1A1A]/70 to-transparent" />
       </div>
 
       {/* Decorative Elements */}
