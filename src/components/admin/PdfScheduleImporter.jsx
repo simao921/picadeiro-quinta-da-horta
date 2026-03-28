@@ -340,24 +340,27 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         await bulkCreateInBatches(base44.entities.Booking, bookingsToCreate, 20);
         bookingsCreated = bookingsToCreate.length;
 
-        // Atualizar booked_spots e fixed_students_count em cada aula (em paralelo)
+        // Atualizar booked_spots e fixed_students_count em lotes paralelos
         const spotsByLesson = {};
         for (const b of bookingsToCreate) {
           spotsByLesson[b.lesson_id] = (spotsByLesson[b.lesson_id] || 0) + 1;
         }
-        // Para aulas existentes: usar existingLessons. Para novas: booked_spots começa em 0.
         const existingLessonById = {};
         for (const l of existingLessons) existingLessonById[l.id] = l;
 
-        await Promise.all(Object.entries(spotsByLesson).map(([lessonId, count]) => {
-          const lesson = existingLessonById[lessonId];
-          const currentSpots = lesson ? (lesson.booked_spots || 0) : 0;
-          const currentFixed = lesson ? (lesson.fixed_students_count || 0) : 0;
-          return base44.entities.Lesson.update(lessonId, {
-            booked_spots: currentSpots + count,
-            fixed_students_count: currentFixed + count
-          });
-        }));
+        const lessonUpdateEntries = Object.entries(spotsByLesson);
+        for (let i = 0; i < lessonUpdateEntries.length; i += 20) {
+          const batch = lessonUpdateEntries.slice(i, i + 20);
+          await Promise.all(batch.map(([lessonId, count]) => {
+            const lesson = existingLessonById[lessonId];
+            const currentSpots = lesson ? (lesson.booked_spots || 0) : 0;
+            const currentFixed = lesson ? (lesson.fixed_students_count || 0) : 0;
+            return base44.entities.Lesson.update(lessonId, {
+              booked_spots: currentSpots + count,
+              fixed_students_count: currentFixed + count
+            });
+          }));
+        }
       }
 
       toast.success(updates.length + ' alunos atualizados \u2022 ' + lessonsCreated + ' aulas criadas \u2022 ' + bookingsCreated + ' reservas geradas');
