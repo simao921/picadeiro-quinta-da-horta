@@ -128,6 +128,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       const pdfText = extracted?.output?.raw_text || JSON.stringify(extracted?.output || '');
 
       const result = await base44.integrations.Core.InvokeLLM({
+        model: 'claude_sonnet_4_6',
         prompt: 'Analisa este texto de uma planificação de um picadeiro/centro equestre. TAREFA CRITICA: Extrai TODOS E CADA UM dos nomes de alunos sem excepção. O texto é de uma tabela semanal onde cada coluna de dia está dividida por instrutor (ex: Júnior, Ângelo). Para cada entrada que contenha um nome de pessoa: extrai name (limpo, sem asterisco), day (segunda|terca|quarta|quinta|sexta|sabado), time (HH:MM do horário), instructor, duration (60 se o nome original tinha *, senão 30). Não omitas NENHUMA entrada. Texto do PDF:\n\n' + pdfText,
         response_json_schema: {
           type: 'object',
