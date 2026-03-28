@@ -73,6 +73,21 @@ var DAY_LABELS = {
 
 var DAY_OF_WEEK = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
+async function withRetry(fn, retries = 4, delay = 2000) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const isRateLimit = e.message && (e.message.includes('rate') || e.message.includes('429') || e.message.includes('limit'));
+      if (i < retries && isRateLimit) {
+        await new Promise(r => setTimeout(r, delay * (i + 1)));
+      } else {
+        throw e;
+      }
+    }
+  }
+}
+
 function getDatesForNextMonths(dayEn, months) {
   var dates = [];
   var today = new Date();
@@ -236,7 +251,11 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       const bkgSet = new Set(existingBookings.map(b => b.lesson_id + '_' + b.client_email));
 
       const services = await base44.entities.Service.list();
-      const defaultService = services.find(s => s.is_active) || services[0];
+      // Preferir servico de aulas em grupo
+      const defaultService = services.find(s => s.is_active && s.title && s.title.toLowerCase().includes('grupo'))
+        || services.find(s => s.is_active && s.title && s.title.toLowerCase().includes('aula'))
+        || services.find(s => s.is_active && !s.is_owner_service)
+        || services[0];
       const serviceId = defaultService ? defaultService.id : 'default_service';
 
       // 4. Para cada entrada do preview, gerar aulas + reservas
@@ -261,7 +280,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           let lessonId = lsnMap[lsnKey];
 
           if (!lessonId) {
-            const newLesson = await base44.entities.Lesson.create({
+            const newLesson = await withRetry(() => base44.entities.Lesson.create({
               service_id: serviceId,
               date: date,
               start_time: entry.time,
@@ -271,7 +290,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
               fixed_students_count: 0,
               status: 'scheduled',
               is_auto_generated: true
-            });
+            }));
             lessonId = newLesson.id;
             lsnMap[lsnKey] = lessonId;
             lessonsCreated++;
@@ -280,13 +299,13 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           const clientId = studentData.clientId || studentData.name;
           const bkgKey = lessonId + '_' + clientId;
           if (!bkgSet.has(bkgKey)) {
-            await base44.entities.Booking.create({
+            await withRetry(() => base44.entities.Booking.create({
               lesson_id: lessonId,
               client_email: clientId,
               client_name: studentData.name,
               status: 'approved',
               is_fixed_student: true
-            });
+            }));
             bkgSet.add(bkgKey);
             bookingsCreated++;
           }
