@@ -157,7 +157,16 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         };
       });
 
-      setPreview(matched);
+      // Dedup: same student + day + time = keep only first
+      const seen = new Set();
+      const deduped = matched.filter(entry => {
+        const key = (entry.studentId || normalizeName(entry.name)) + '_' + entry.dayEn + '_' + entry.time;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      setPreview(deduped);
       setStep('preview');
     } catch (e) {
       setError(e.message || 'Erro ao analisar PDF');
