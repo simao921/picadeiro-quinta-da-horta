@@ -1200,15 +1200,6 @@ export default function NewBookingForm({ user, isBlocked }) {
             {t('select_date_time')}
           </h2>
 
-          {/* Aulas Fixas em Grupo: seletor de dias da semana */}
-          {selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo' ? (
-            <div className="space-y-6">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-800">
-                  <strong>Como funciona:</strong> Seleciona a frequência (1, 2 ou 3 vezes/semana), os dias e horário. O admin aprova e as aulas ficam fixas durante 3 meses.
-                </p>
-                </div>
-
           {/* Aviso Proprietários */}
           {selectedService?.title === 'Proprietários' && (
             <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
@@ -1312,6 +1303,49 @@ export default function NewBookingForm({ user, isBlocked }) {
               </div>
             </CardContent>
           </Card>
+          <div className="mt-6 flex justify-between">
+            <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
+            <Button
+              onClick={goToStep4}
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white"
+            >
+              {t('continue')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Confirmation */}
+      {step === 4 && (
+        <div>
+          <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">Confirmar Reserva</h2>
+          
+          <Card className="border-stone-200 overflow-hidden mb-6">
+            <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
+              <CardTitle className="text-xl">Resumo Final</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="space-y-4">
+                <div className="flex justify-between py-3 border-b border-stone-200">
+                  <span className="text-stone-600">Serviço</span>
+                  <span className="font-semibold text-[#2C3E1F]">{selectedService?.title}</span>
+                </div>
+                <div className="flex justify-between py-3 border-b border-stone-200">
+                  <span className="text-stone-600">Plano</span>
+                  <span className="font-semibold text-[#2C3E1F]">{selectedPlan?.label}</span>
+                </div>
+                {selectedModalidade && (
+                  <div className="flex justify-between py-3 border-b border-stone-200">
+                    <span className="text-stone-600">Modalidade</span>
+                    <span className="font-semibold text-[#2C3E1F]">
+                      {selectedModalidade === 'fixo' ? 'Aula Fixa (3 meses)' : 'Aula Avulso'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(3)} className="border-stone-300">{t('back')}</Button>
             <Button
