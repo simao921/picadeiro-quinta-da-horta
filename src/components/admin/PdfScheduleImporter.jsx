@@ -122,15 +122,15 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
           properties: {
             schedules: {
               type: 'array',
-              description: 'Lista de todas as entradas de ALUNOS na tabela de planificacao semanal. ATENCAO: os nomes dos INSTRUTORES (ex: Junior, Angelo, Tiago) aparecem como cabecalhos de coluna - NAO os incluir. So incluir nomes que estao nas celulas como marcacoes de aulas de alunos. Percorre TODAS as celulas sem excepcao.',
+              description: 'Extrai TODOS os nomes de alunos da tabela de horarios. A tabela tem linhas com horas (ex: 8:00, 8:30, 9:00...) e colunas com instrutores (ex: Junior, Angelo, Tiago). Cada celula pode conter um ou mais nomes de alunos. Para CADA celula que contenha um nome: cria uma entrada com o nome, o dia da semana dessa coluna, a hora dessa linha, e o instrutor dessa coluna. Se uma celula tiver 2 nomes, cria 2 entradas separadas. NUNCA incluas os nomes dos instrutores (Junior, Angelo, Tiago, etc.) como alunos - esses sao cabecalhos de coluna. Nao saltes nenhuma celula preenchida.',
               items: {
                 type: 'object',
                 properties: {
-                  name: { type: 'string', description: 'Nome do aluno, limpo sem asterisco ou símbolos' },
-                  day: { type: 'string', description: 'Dia da semana em português minúsculas sem acento: segunda, terca, quarta, quinta, sexta, sabado' },
+                  name: { type: 'string', description: 'Nome do aluno exatamente como aparece na celula, sem asterisco' },
+                  day: { type: 'string', description: 'Dia da semana em portugues minusculas sem acento: segunda, terca, quarta, quinta, sexta, sabado' },
                   time: { type: 'string', description: 'Hora no formato HH:MM' },
-                  instructor: { type: 'string', description: 'Nome do instrutor responsável por essa coluna/sub-coluna' },
-                  duration: { type: 'number', description: '60 se o nome do aluno tinha asterisco (*), caso contrário 30' }
+                  instructor: { type: 'string', description: 'Nome do instrutor responsavel por essa coluna' },
+                  duration: { type: 'number', description: '60 se o nome tinha asterisco (*), caso contrario 30' }
                 }
               }
             }
