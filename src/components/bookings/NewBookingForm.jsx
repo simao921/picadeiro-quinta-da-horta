@@ -439,53 +439,102 @@ export default function NewBookingForm({ user, isBlocked }) {
         
         return bookingsToCreate;
       } else {
-        // Aulas fixas em grupo: 1 reserva por horario + registo como aluno fixo
+        // Aulas fixas em grupo: criar todas as reservas para os proximos 3 meses
         if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
           if (fixoSchedules.some(s => s.day === null || !s.time)) throw new Error('Por favor selecione todos os dias e horários');
           
           const duration = selectedPlan?.duration || 30;
           const dayNames = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
-          const dayNamesDisplay = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-          const createdBookings = [];
 
+          // Gerar todas as datas para os proximos 3 meses
+          const allDatesToCreate = [];
           for (const sched of fixoSchedules) {
-            // Próxima data futura com esse dia da semana
-            const nextDate = new Date();
-            nextDate.setHours(0, 0, 0, 0);
-            while (nextDate.getDay() !== sched.day) nextDate.setDate(nextDate.getDate() + 1);
-            if (nextDate <= new Date()) nextDate.setDate(nextDate.getDate() + 7);
+            const start = new Date();
+            start.setHours(0, 0, 0, 0);
+            while (start.getDay() !== sched.day) start.setDate(start.getDate() + 1);
+            if (start <= new Date()) start.setDate(start.getDate() + 7);
 
-            const dateStr = format(nextDate, 'yyyy-MM-dd');
-            const dateLessons = await base44.entities.Lesson.filter({ date: dateStr });
+            const end = new Date();
+            end.setMonth(end.getMonth() + 3);
 
-            let lesson = dateLessons.find(l => l.service_id === selectedService.id && l.start_time === sched.time);
-            if (!lesson) {
-              const st = new Date(`2000-01-01T${sched.time}:00`);
+            const cur = new Date(start);
+            while (cur <= end) {
+              allDatesToCreate.push({ date: format(cur, 'yyyy-MM-dd'), time: sched.time, day: sched.day });
+              cur.setDate(cur.getDate() + 7);
+            }
+          }
+
+          // Buscar aulas ja existentes para evitar duplicados
+          const existingLessonsForFixo = await base44.entities.Lesson.list('-date', 3000);
+          const lsnMapFixo = {};
+          for (const l of existingLessonsForFixo) lsnMapFixo[l.date + '_' + l.start_time] = l;
+
+          // Buscar reservas ja existentes
+          const existingBookingsFixo = await base44.entities.Booking.filter({ client_email: user.email });
+          const bkgSetFixo = new Set(existingBookingsFixo.map(b => b.lesson_id));
+
+          // Criar aulas em falta
+          const lessonsToMake = [];
+          const pendingKeys = {};
+          for (const item of allDatesToCreate) {
+            const key = item.date + '_' + item.time;
+            if (!lsnMapFixo[key] && !(key in pendingKeys)) {
+              pendingKeys[key] = lessonsToMake.length;
+              const st = new Date(`2000-01-01T${item.time}:00`);
               const et = new Date(st.getTime() + duration * 60000);
-              lesson = await base44.entities.Lesson.create({
+              lessonsToMake.push({
                 service_id: selectedService.id,
-                date: dateStr,
-                start_time: sched.time,
+                date: item.date,
+                start_time: item.time,
                 end_time: format(et, 'HH:mm'),
                 max_spots: 6,
-                booked_spots: 0
+                booked_spots: 0,
+                is_auto_generated: true
               });
             }
+          }
 
-            const booking = await base44.entities.Booking.create({
+          // Criar em lotes
+          for (let i = 0; i < lessonsToMake.length; i += 10) {
+            const batch = lessonsToMake.slice(i, i + 10);
+            const created = await base44.entities.Lesson.bulkCreate(batch);
+            for (const l of (Array.isArray(created) ? created : [])) {
+              if (l && l.id) lsnMapFixo[l.date + '_' + l.start_time] = l;
+            }
+            if (i + 10 < lessonsToMake.length) await new Promise(r => setTimeout(r, 2000));
+          }
+
+          // Criar reservas
+          const bookingsToMake = [];
+          for (const item of allDatesToCreate) {
+            const lesson = lsnMapFixo[item.date + '_' + item.time];
+            if (!lesson) continue;
+            if (bkgSetFixo.has(lesson.id)) continue;
+            bkgSetFixo.add(lesson.id);
+            bookingsToMake.push({
               lesson_id: lesson.id,
               client_email: user.email,
               client_name: user.full_name,
               status: 'pending',
-              is_fixed_student: true,
-              notes: `Aula Fixa: ${dayNamesDisplay[sched.day]} às ${sched.time} - ${duration}min - 3 meses`
+              is_fixed_student: true
             });
-
-            await base44.entities.Lesson.update(lesson.id, { booked_spots: (lesson.booked_spots || 0) + 1 });
-            createdBookings.push(booking);
           }
 
-          // Registar como aluno fixo com todos os horários
+          for (let i = 0; i < bookingsToMake.length; i += 10) {
+            const batch = bookingsToMake.slice(i, i + 10);
+            await base44.entities.Booking.bulkCreate(batch);
+            if (i + 10 < bookingsToMake.length) await new Promise(r => setTimeout(r, 2000));
+          }
+
+          // Atualizar booked_spots em paralelo
+          const spotsByLesson = {};
+          for (const b of bookingsToMake) spotsByLesson[b.lesson_id] = (spotsByLesson[b.lesson_id] || 0) + 1;
+          await Promise.all(Object.entries(spotsByLesson).map(([lessonId, count]) => {
+            const l = lsnMapFixo[Object.keys(lsnMapFixo).find(k => lsnMapFixo[k].id === lessonId)];
+            return base44.entities.Lesson.update(lessonId, { booked_spots: (l?.booked_spots || 0) + count });
+          }));
+
+          // Registar como aluno fixo
           const newSchedule = fixoSchedules.map(s => ({ day: dayNames[s.day], time: s.time, duration }));
           const existingStudents = await base44.entities.PicadeiroStudent.filter({ email: user.email });
           if (existingStudents.length > 0) {
@@ -502,7 +551,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             });
           }
 
-          return createdBookings;
+          return bookingsToMake;
         }
 
         // Reserva única
