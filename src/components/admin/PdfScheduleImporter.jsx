@@ -77,45 +77,37 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function bulkCreateInBatchesWithRetry(entity, items, batchSize = 10) {
-  const results = [];
-  const maxRetries = 3;
-  let delayMs = 500; // Começa com 500ms entre batches
-  
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    let retries = 0;
-    let success = false;
-    
-    while (retries < maxRetries && !success) {
-      try {
-        // Delay antes de cada batch
-        if (i > 0) await sleep(delayMs);
-        
-        const created = await entity.bulkCreate(batch);
-        results.push(...(Array.isArray(created) ? created : []));
-        success = true;
-        
-        // Aumenta delay progressivamente se estamos perto do limite
-        if (results.length > 50) delayMs = Math.min(delayMs + 200, 2000);
-      } catch (error) {
-        retries++;
-        if (error.message && error.message.includes('Rate limit')) {
-          // Backoff exponencial para rate limit
-          const backoffMs = delayMs * Math.pow(2, retries);
-          console.warn(`Rate limit hit. Retrying after ${backoffMs}ms (attempt ${retries}/${maxRetries})`);
-          await sleep(backoffMs);
-        } else {
-          throw error; // Relança erros que não são rate limit
-        }
+async function retryWithBackoff(fn, maxRetries = 4) {
+  let delay = 1000;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const isRateLimit = error.message && (
+        error.message.includes('Rate limit') ||
+        error.message.includes('rate limit') ||
+        error.message.includes('429') ||
+        error.message.includes('Too Many')
+      );
+      if (isRateLimit && attempt < maxRetries) {
+        console.warn(`Rate limit - aguardando ${delay}ms antes de retry ${attempt + 1}/${maxRetries}`);
+        await sleep(delay);
+        delay *= 2; // backoff exponencial
+      } else {
+        throw error;
       }
     }
-    
-    if (!success) {
-      throw new Error(`Falha ao criar batch após ${maxRetries} tentativas`);
-    }
   }
-  
+}
+
+async function bulkCreateInBatchesWithRetry(entity, items, batchSize = 10) {
+  const results = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    if (i > 0) await sleep(600); // delay fixo entre batches
+    const created = await retryWithBackoff(() => entity.bulkCreate(batch));
+    results.push(...(Array.isArray(created) ? created : []));
+  }
   return results;
 }
 
@@ -245,30 +237,30 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         }
       }
 
-      // 2. Criar/atualizar alunos do picadeiro (com delay entre cada um)
+      // 2. Criar/atualizar alunos do picadeiro (com delay e retry)
       const newlyCreatedStudentIds = new Set();
       const updates = Object.values(byStudent);
       for (let idx = 0; idx < updates.length; idx++) {
         const s = updates[idx];
-        if (idx > 0) await sleep(100); // Pequeno delay entre operações de alunos
+        if (idx > 0) await sleep(300); // delay entre operações de alunos
         
         if (!s.id) {
-          const newStudent = await base44.entities.PicadeiroStudent.create({
+          const newStudent = await retryWithBackoff(() => base44.entities.PicadeiroStudent.create({
             name: s.name,
             student_type: 'fixo',
             student_level: 'iniciante',
             is_active: true,
             fixed_schedule: s.schedules
-          });
+          }));
           s.id = newStudent.id;
-          s.clientId = s.name; // usar nome como identificador de booking
+          s.clientId = s.name;
           newlyCreatedStudentIds.add(s.id);
         } else {
-          await base44.entities.PicadeiroStudent.update(s.id, {
+          await retryWithBackoff(() => base44.entities.PicadeiroStudent.update(s.id, {
             fixed_schedule: s.schedules,
             student_type: 'fixo',
             is_active: true
-          });
+          }));
           const st = students.find(x => x.id === s.id);
           s.clientId = (st && st.email) ? st.email : s.name;
         }
@@ -331,9 +323,9 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       // Criar todas as aulas em lotes com retry e delay
       if (lessonsToCreate.length > 0) {
-        const created = await bulkCreateInBatchesWithRetry(base44.entities.Lesson, lessonsToCreate, 15);
+        const created = await bulkCreateInBatchesWithRetry(base44.entities.Lesson, lessonsToCreate, 8);
         lessonsCreated = created.length;
-        // Mapear os ids criados de volta ao lsnMap pelo date+start_time (não pelo índice)
+        // Mapear os ids criados de volta ao lsnMap pelo date+start_time
         for (const lesson of created) {
           if (lesson && lesson.id && lesson.date && lesson.start_time) {
             lsnMap[lesson.date + '_' + lesson.start_time] = lesson.id;
@@ -373,7 +365,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
 
       // Criar todas as reservas em lotes com retry e delay
       if (bookingsToCreate.length > 0) {
-        await bulkCreateInBatchesWithRetry(base44.entities.Booking, bookingsToCreate, 15);
+        await bulkCreateInBatchesWithRetry(base44.entities.Booking, bookingsToCreate, 8);
         bookingsCreated = bookingsToCreate.length;
 
         // Atualizar booked_spots e fixed_students_count em lotes paralelos
@@ -385,17 +377,17 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         for (const l of existingLessons) existingLessonById[l.id] = l;
 
         const lessonUpdateEntries = Object.entries(spotsByLesson);
-        for (let i = 0; i < lessonUpdateEntries.length; i += 15) {
-          const batch = lessonUpdateEntries.slice(i, i + 15);
-          if (i > 0) await sleep(300); // Delay entre batches de atualização
+        for (let i = 0; i < lessonUpdateEntries.length; i += 10) {
+          const batch = lessonUpdateEntries.slice(i, i + 10);
+          if (i > 0) await sleep(500); // Delay entre batches de atualização
           await Promise.all(batch.map(([lessonId, count]) => {
             const lesson = existingLessonById[lessonId];
             const currentSpots = lesson ? (lesson.booked_spots || 0) : 0;
             const currentFixed = lesson ? (lesson.fixed_students_count || 0) : 0;
-            return base44.entities.Lesson.update(lessonId, {
+            return retryWithBackoff(() => base44.entities.Lesson.update(lessonId, {
               booked_spots: currentSpots + count,
               fixed_students_count: currentFixed + count
-            });
+            }));
           }));
         }
       }
