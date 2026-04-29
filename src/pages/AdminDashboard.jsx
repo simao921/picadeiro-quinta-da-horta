@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, Euro, 
-  TrendingUp, Clock, CheckCircle, Bell, Package, MessageSquare, Eye
+  TrendingUp, Clock, CheckCircle, Bell, MessageSquare, Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -27,12 +27,6 @@ export default function AdminDashboard() {
     initialData: []
   });
 
-  const { data: orders } = useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: () => base44.entities.Order.list('-created_date', 100),
-    initialData: []
-  });
-
   const { data: messages } = useQuery({
     queryKey: ['admin-messages'],
     queryFn: () => base44.entities.ContactMessage.filter({ is_read: false }),
@@ -47,20 +41,10 @@ export default function AdminDashboard() {
 
   const pendingBookings = bookings.filter(b => b.status === 'pending');
   const pendingPayments = payments.filter(p => p.status === 'pending' || p.status === 'overdue');
-  const pendingOrders = orders.filter(o => o.status === 'pending');
 
-  // Receita de pagamentos (mensalidades, etc)
-  const paymentsRevenue = payments
+  const totalRevenue = payments
     .filter(p => p.status === 'paid')
     .reduce((sum, p) => sum + (p.total || p.amount), 0);
-  
-  // Receita de encomendas da loja
-  const ordersRevenue = orders
-    .filter(o => o.status === 'entregue' || o.status === 'enviada')
-    .reduce((sum, o) => sum + (o.total || 0), 0);
-
-  // Receita total interligada
-  const totalRevenue = paymentsRevenue + ordersRevenue;
 
   const stats = [
     { 
@@ -86,14 +70,6 @@ export default function AdminDashboard() {
       color: 'bg-purple-500',
       bgLight: 'bg-purple-50',
       link: 'AdminMessages'
-    },
-    { 
-      label: 'Encomendas Pendentes', 
-      value: pendingOrders.length, 
-      icon: Package, 
-      color: 'bg-orange-500',
-      bgLight: 'bg-orange-50',
-      link: 'AdminOrders'
     },
     { 
       label: 'Pagamentos Pendentes', 
@@ -123,7 +99,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Notifications Banner */}
-        {(pendingBookings.length > 0 || pendingOrders.length > 0 || messages.length > 0) && (
+        {(pendingBookings.length > 0 || messages.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -139,17 +115,9 @@ export default function AdminDashboard() {
                       {pendingBookings.length} reserva{pendingBookings.length > 1 ? 's' : ''} pendente{pendingBookings.length > 1 ? 's' : ''}
                     </Link>
                   )}
-                  {pendingOrders.length > 0 && (
-                    <>
-                      {pendingBookings.length > 0 && <span>•</span>}
-                      <Link to={createPageUrl('AdminOrders')} className="hover:underline">
-                        {pendingOrders.length} encomenda{pendingOrders.length > 1 ? 's' : ''} pendente{pendingOrders.length > 1 ? 's' : ''}
-                      </Link>
-                    </>
-                  )}
                   {messages.length > 0 && (
                     <>
-                      {(pendingBookings.length > 0 || pendingOrders.length > 0) && <span>•</span>}
+                      {pendingBookings.length > 0 && <span>•</span>}
                       <Link to={createPageUrl('AdminMessages')} className="hover:underline">
                         {messages.length} mensagem{messages.length > 1 ? 'ns' : ''} não lida{messages.length > 1 ? 's' : ''}
                       </Link>
@@ -273,33 +241,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Pending Orders */}
-          <Card className="border-0 shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Encomendas Pendentes</CardTitle>
-              <Badge className="bg-purple-100 text-purple-800">{pendingOrders.length}</Badge>
-            </CardHeader>
-            <CardContent>
-              {pendingOrders.length === 0 ? (
-                <div className="text-center py-8 text-stone-500">
-                  <CheckCircle className="w-10 h-10 mx-auto mb-2 text-green-500" />
-                  <p>Todas as encomendas estão processadas!</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {pendingOrders.slice(0, 5).map((order) => (
-                    <div key={order.id} className="p-3 bg-stone-50 rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-[#2C3E1F]">{order.client_name}</p>
-                        <p className="text-sm text-stone-500">{order.items?.length || 0} produtos</p>
-                      </div>
-                      <p className="font-bold text-[#4A5D23]">{order.total?.toFixed(2)}€</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </AdminLayout>
