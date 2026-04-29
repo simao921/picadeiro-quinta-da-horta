@@ -6,15 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Calendar, MapPin, Trophy, Download, Users, FileText, Award, Calculator } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-import CompetitionEntryForm from '@/components/competitions/CompetitionEntryForm';
+
 
 export default function CompetitionDetail() {
-  const [showEntryDialog, setShowEntryDialog] = useState(false);
   const [selectedResultGrade, setSelectedResultGrade] = useState('all');
   const urlParams = new URLSearchParams(window.location.search);
   const competitionId = urlParams.get('id');
@@ -62,8 +60,6 @@ export default function CompetitionDetail() {
   };
 
   const statusInfo = getStatusInfo(competition?.status);
-  const isFull = !!competition?.max_entries && entries.length >= competition.max_entries;
-  const canEnroll = competition?.status === 'inscricoes_abertas' && !isFull;
   const hasResults = results.length > 0;
   
   const resultsWithGrade = useMemo(() => {
@@ -424,41 +420,6 @@ export default function CompetitionDetail() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {(competition.status === 'inscricoes_abertas' || isFull) && (
-              <Card className="border-[#B8956A] border-2">
-                <CardHeader>
-                  <CardTitle className="text-center">Inscrições</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center space-y-2">
-                  <p className="text-stone-700">
-                    {isFull
-                      ? 'As inscrições estão lotadas para esta prova.'
-                      : 'Pode submeter a sua inscrição online e acompanhar o estado da aprovação.'}
-                  </p>
-                  <Button
-                    className="w-full bg-[#B8956A] hover:bg-[#8B7355]"
-                    onClick={() => setShowEntryDialog(true)}
-                    disabled={!canEnroll}
-                  >
-                    Submeter Inscrição
-                  </Button>
-                  {competition.entry_deadline && (
-                    <p className="text-xs text-stone-600">
-                      Inscrições até {format(new Date(competition.entry_deadline), "d/MM/yyyy")}
-                    </p>
-                  )}
-                  <div className="pt-2 space-y-2 text-sm text-stone-600">
-                    <a href="tel:+351932111786" className="block hover:text-[#B8956A]">
-                      📞 +351 932 111 786
-                    </a>
-                    <a href="mailto:picadeiroquintadahorta.gf@gmail.com" className="block hover:text-[#B8956A]">
-                      ✉️ picadeiroquintadahorta.gf@gmail.com
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Informações Rápidas</CardTitle>
@@ -495,15 +456,6 @@ export default function CompetitionDetail() {
         </div>
       </div>
 
-      <Dialog open={showEntryDialog} onOpenChange={setShowEntryDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <CompetitionEntryForm
-            competitionId={competition.id}
-            competitionName={competition.name}
-            onClose={() => setShowEntryDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
