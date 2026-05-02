@@ -1168,6 +1168,43 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
+          {/* Serviços genéricos (ex: Aulas Particulares, Seções Fotográficas, etc.) */}
+          {selectedService && 
+           selectedService.title !== 'Aulas em Grupo' && 
+           selectedService.title !== 'Proprietários' && 
+           selectedService.title !== 'Hipoterapia' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card
+                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                    selectedPlan?.duration === 30 
+                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                      : 'border-stone-200 hover:border-[#B8956A]/50'
+                  }`}
+                  onClick={() => setSelectedPlan({ label: '30 minutos', duration: 30, frequency: 1 })}
+                >
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">30 minutos</h3>
+                    <p className="text-sm text-stone-600">Sessão de meia hora</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                    selectedPlan?.duration === 60 
+                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                      : 'border-stone-200 hover:border-[#B8956A]/50'
+                  }`}
+                  onClick={() => setSelectedPlan({ label: '60 minutos', duration: 60, frequency: 1 })}
+                >
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">60 minutos</h3>
+                    <p className="text-sm text-stone-600">Sessão de uma hora</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
           {selectedService?.title === 'Hipoterapia' && (
             <div className="space-y-4">
               <Card className="border-[#B8956A] bg-[#B8956A]/5">
