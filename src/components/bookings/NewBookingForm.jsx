@@ -1204,105 +1204,206 @@ export default function NewBookingForm({ user, isBlocked }) {
           {selectedService?.title === 'Proprietários' && (
             <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <p className="text-sm text-amber-800">
-                <strong>Nota para Proprietários:</strong> O cavalo deve apresentar-se limpo e equipado antes da aula.
+                <strong>Nota para Proprietários:</strong> O cavalo deve apresentar-se limpo e equipado antes da aula. Os horários estão sujeitos à disponibilidade após as aulas em grupo.
               </p>
             </div>
           )}
 
-          <Card className="border-stone-200 overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-[#B8956A] to-[#8B7355] text-white">
-              <CardTitle className="text-xl">Resumo da Reserva</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="space-y-4">
-                <div className="flex justify-between py-3 border-b border-stone-200">
-                  <span className="text-stone-600">Serviço</span>
-                  <span className="font-semibold text-[#2C3E1F]">{selectedService?.title}</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-stone-200">
-                  <span className="text-stone-600">Plano</span>
-                  <span className="font-semibold text-[#2C3E1F]">{selectedPlan?.label}</span>
-                </div>
-                {selectedModalidade && (
-                  <div className="flex justify-between py-3 border-b border-stone-200">
-                    <span className="text-stone-600">Modalidade</span>
-                    <span className="font-semibold text-[#2C3E1F]">
-                      {selectedModalidade === 'fixo' ? 'Aula Fixa (3 meses)' : 'Aula Avulso'}
-                    </span>
-                  </div>
-                )}
-                {selectedModalidade === 'fixo' && fixoDaysSelected.length > 0 && fixoDaysSelected.some(s => s.time) && (() => {
-                  const dayNamesDisplay = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+          {/* Aulas em Grupo - Fixo: selecionar dia(s) da semana */}
+          {selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo' && (
+            <div className="space-y-4">
+              <p className="text-sm text-stone-600">Selecione os dias da semana e horários para as suas aulas fixas (durante 3 meses).</p>
+              {['Segunda','Terça','Quarta','Quinta','Sexta','Sábado'].map((dayLabel, idx) => {
+                const dayNum = idx + 1; // 1=Segunda...6=Sábado
+                const selected = fixoDaysSelected.find(s => s.day === dayNum);
+                const daySlots = getTimeSlotsForDay(dayNum);
+                return (
+                  <Card key={dayNum} className={`border-2 transition-all ${selected ? 'border-[#B8956A] bg-[#B8956A]/5' : 'border-stone-200'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <input
+                          type="checkbox"
+                          id={`day-${dayNum}`}
+                          checked={!!selected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFixoDaysSelected(prev => [...prev, { day: dayNum, time: null }]);
+                            } else {
+                              setFixoDaysSelected(prev => prev.filter(s => s.day !== dayNum));
+                            }
+                          }}
+                          className="w-4 h-4 accent-[#B8956A]"
+                        />
+                        <label htmlFor={`day-${dayNum}`} className="font-semibold text-[#2C3E1F] cursor-pointer">{dayLabel}</label>
+                      </div>
+                      {selected && (
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                          {daySlots.map(slot => (
+                            <Button
+                              key={slot}
+                              size="sm"
+                              variant={selected.time === slot ? 'default' : 'outline'}
+                              className={selected.time === slot
+                                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] text-xs'
+                                : 'border-stone-300 hover:border-[#B8956A] text-xs'
+                              }
+                              onClick={() => {
+                                setFixoDaysSelected(prev => prev.map(s => s.day === dayNum ? { ...s, time: slot } : s));
+                              }}
+                            >
+                              {slot}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Proprietários Fixo: selecionar dia da semana + horário */}
+          {selectedService?.title === 'Proprietários' && selectedModalidade === 'fixo' && (
+            <div className="space-y-4">
+              <p className="text-sm text-stone-600">Selecione o dia da semana e o horário para as suas sessões fixas (durante 3 meses).</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                {['Segunda','Terça','Quarta','Quinta','Sexta','Sábado'].map((dayLabel, idx) => {
+                  const dayNum = idx + 1;
                   return (
-                    <div className="py-3 border-b border-stone-200">
-                      <p className="text-stone-600 mb-2">Horários Fixos</p>
-                      <div className="space-y-2">
-                        {fixoDaysSelected.map((s, i) => s.time && (
-                          <div key={i} className="p-3 bg-[#B8956A]/10 rounded-lg border border-[#B8956A]/30">
-                            <p className="font-semibold text-[#2C3E1F]">{dayNamesDisplay[s.day]} às {s.time}</p>
-                            <p className="text-sm text-stone-600">{selectedPlan?.duration || 30} minutos · Durante 3 meses</p>
-                          </div>
+                    <Button
+                      key={dayNum}
+                      variant={selectedDayOfWeek === dayNum ? 'default' : 'outline'}
+                      className={selectedDayOfWeek === dayNum
+                        ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]'
+                        : 'border-stone-300 hover:border-[#B8956A]'
+                      }
+                      onClick={() => { setSelectedDayOfWeek(dayNum); setSelectedTime(null); }}
+                    >
+                      {dayLabel}
+                    </Button>
+                  );
+                })}
+              </div>
+              {selectedDayOfWeek !== null && (
+                <div>
+                  <Label className="mb-2 block font-semibold text-[#2C3E1F]">Horário</Label>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {getTimeSlotsForDay(selectedDayOfWeek).map(slot => (
+                      <Button
+                        key={slot}
+                        size="sm"
+                        variant={selectedTime === slot ? 'default' : 'outline'}
+                        className={selectedTime === slot
+                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] text-xs'
+                          : 'border-stone-300 hover:border-[#B8956A] text-xs'
+                        }
+                        onClick={() => setSelectedTime(slot)}
+                      >
+                        {slot}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Avulso múltiplo (frequency > 1) */}
+          {selectedPlan?.frequency > 1 && (
+            <div className="space-y-4">
+              {Array.from({ length: selectedPlan.frequency }).map((_, index) => (
+                <WeeklyLessonSelector
+                  key={index}
+                  index={index}
+                  currentDate={selectedDates[index]}
+                  currentTime={selectedTimes[index]}
+                  selectedDates={selectedDates}
+                  selectedTimes={selectedTimes}
+                  setSelectedDates={setSelectedDates}
+                  setSelectedTimes={setSelectedTimes}
+                  blockedSlots={blockedSlots}
+                  getAvailableSlots={getAvailableSlots}
+                  getLessonsForDate={getLessonsForDate}
+                  isOwnerService={selectedService?.title === 'Proprietários'}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Avulso simples OU Proprietários avulso */}
+          {(!selectedModalidade || selectedModalidade === 'avulso') && (!selectedPlan?.frequency || selectedPlan?.frequency === 1) && (
+            <Card className="border-2 border-stone-200 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="mb-3 block font-semibold text-[#2C3E1F]">Data</Label>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      locale={pt}
+                      disabled={(date) => {
+                        if (date < today || date.getDay() === 0) return true;
+                        if (date.getMonth() === 7 && selectedService?.title !== 'Proprietários') return true;
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        return blockedSlots.some(b => b.date === dateStr && !b.time_slot);
+                      }}
+                      className="rounded-md border-0 mx-auto"
+                      classNames={{
+                        months: "flex flex-col space-y-4",
+                        month: "space-y-4",
+                        caption: "flex justify-center pt-1 relative items-center",
+                        caption_label: "text-sm font-semibold text-[#2C3E1F]",
+                        nav: "space-x-1 flex items-center",
+                        nav_button: "h-7 w-7 bg-transparent hover:bg-stone-100 rounded-md transition-colors",
+                        nav_button_previous: "absolute left-1",
+                        nav_button_next: "absolute right-1",
+                        table: "w-full border-collapse space-y-1",
+                        head_row: "flex justify-between",
+                        head_cell: "text-stone-500 rounded-md w-9 font-medium text-[0.8rem]",
+                        row: "flex w-full mt-2 justify-between",
+                        cell: "text-center text-sm p-0 relative",
+                        day: "h-9 w-9 p-0 font-normal hover:bg-[#B8956A]/10 rounded-md transition-colors",
+                        day_selected: "bg-[#B8956A] text-white hover:bg-[#8B7355] hover:text-white focus:bg-[#B8956A] focus:text-white",
+                        day_today: "bg-stone-100 text-[#2C3E1F] font-semibold",
+                        day_outside: "text-stone-400 opacity-50",
+                        day_disabled: "text-stone-300 opacity-50 hover:bg-transparent cursor-not-allowed",
+                        day_hidden: "invisible",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-3 block font-semibold text-[#2C3E1F]">Horário</Label>
+                    {singleDayAvailableSlots.length === 0 ? (
+                      <div className="text-center py-8 text-sm text-stone-500">
+                        {selectedDate ? 'Sem horários disponíveis para este dia.' : 'Selecione uma data primeiro.'}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 bg-stone-50 rounded-lg">
+                        {singleDayAvailableSlots.map((slot) => (
+                          <Button
+                            key={slot}
+                            variant={selectedTime === slot ? 'default' : 'outline'}
+                            size="sm"
+                            className={
+                              selectedTime === slot
+                                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md'
+                                : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all bg-white'
+                            }
+                            onClick={() => setSelectedTime(selectedTime === slot ? null : slot)}
+                          >
+                            {slot}
+                          </Button>
                         ))}
                       </div>
-                    </div>
-                  );
-                })()}
-                {selectedModalidade === 'fixo' && selectedService?.title === 'Proprietários' && selectedDayOfWeek !== null && selectedTime && (() => {
-                  const dayNamesDisplay = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-                  return (
-                    <div className="py-3 border-b border-stone-200">
-                      <p className="text-stone-600 mb-2">Horário Fixo</p>
-                      <div className="p-3 bg-[#B8956A]/10 rounded-lg border border-[#B8956A]/30">
-                        <p className="font-semibold text-[#2C3E1F]">{dayNamesDisplay[selectedDayOfWeek]} às {selectedTime}</p>
-                        <p className="text-sm text-stone-600">{selectedPlan?.duration || 30} minutos · Durante 3 meses</p>
-                      </div>
-                    </div>
-                  );
-                })()}
-                
-                {selectedPlan?.frequency > 1 ? (
-                  <div className="py-3 border-b border-stone-200">
-                    <p className="text-stone-600 mb-3">Horários Selecionados</p>
-                    <div className="space-y-2">
-                      {selectedDates.map((date, index) => selectedTimes[index] && date && (
-                        <div key={index} className="flex items-center justify-between p-2 bg-stone-50 rounded">
-                          <span className="text-sm font-medium text-[#2C3E1F]">Aula {index + 1}</span>
-                          <span className="text-sm text-stone-700">
-                            {date && !isNaN(new Date(date)) ? format(new Date(date), "EEEE, d 'de' MMMM", { locale: pt }) : ''} às {selectedTimes[index]}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                    )}
                   </div>
-                ) : !selectedModalidade || selectedModalidade === 'avulso' ? (
-                  <>
-                    <div className="flex justify-between py-3 border-b border-stone-200">
-                      <span className="text-stone-600">Data</span>
-                      <span className="font-semibold text-[#2C3E1F]">
-                        {selectedDate && !isNaN(new Date(selectedDate)) ? format(new Date(selectedDate), "d 'de' MMMM 'de' yyyy", { locale: pt }) : '-'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-3 border-b border-stone-200">
-                      <span className="text-stone-600">Horário</span>
-                      <span className="font-semibold text-[#2C3E1F]">{selectedTime || '-'}</span>
-                    </div>
-                  </>
-                ) : null}
-                
-                {(selectedPlan?.frequency > 1 || selectedModalidade === 'fixo') && (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800">
-                      <strong>Nota:</strong>{' '}
-                      {selectedModalidade === 'fixo'
-                        ? 'Após aprovação pelo admin, as aulas semanais serão criadas automaticamente para os próximos 3 meses.'
-                        : 'As suas reservas ficarão pendentes de aprovação pela administração.'
-                      }
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} className="border-stone-300">{t('back')}</Button>
             <Button
@@ -1342,6 +1443,54 @@ export default function NewBookingForm({ user, isBlocked }) {
                     </span>
                   </div>
                 )}
+                {/* Datas/horários selecionados */}
+                {selectedModalidade === 'fixo' && fixoDaysSelected.some(s => s.time) && (() => {
+                  const dayNamesDisplay = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+                  return (
+                    <div className="py-3 border-b border-stone-200">
+                      <p className="text-stone-600 mb-2">Horários Fixos</p>
+                      {fixoDaysSelected.filter(s => s.time).map((s, i) => (
+                        <p key={i} className="font-semibold text-[#2C3E1F]">{dayNamesDisplay[s.day]} às {s.time}</p>
+                      ))}
+                    </div>
+                  );
+                })()}
+                {selectedModalidade === 'fixo' && selectedService?.title === 'Proprietários' && selectedDayOfWeek !== null && selectedTime && (() => {
+                  const dayNamesDisplay = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+                  return (
+                    <div className="flex justify-between py-3 border-b border-stone-200">
+                      <span className="text-stone-600">Horário Fixo</span>
+                      <span className="font-semibold text-[#2C3E1F]">{dayNamesDisplay[selectedDayOfWeek]} às {selectedTime}</span>
+                    </div>
+                  );
+                })()}
+                {(!selectedModalidade || selectedModalidade === 'avulso') && selectedDate && selectedTime && (
+                  <>
+                    <div className="flex justify-between py-3 border-b border-stone-200">
+                      <span className="text-stone-600">Data</span>
+                      <span className="font-semibold text-[#2C3E1F]">{format(new Date(selectedDate), "d 'de' MMMM 'de' yyyy", { locale: pt })}</span>
+                    </div>
+                    <div className="flex justify-between py-3 border-b border-stone-200">
+                      <span className="text-stone-600">Horário</span>
+                      <span className="font-semibold text-[#2C3E1F]">{selectedTime}</span>
+                    </div>
+                  </>
+                )}
+                {selectedPlan?.frequency > 1 && selectedDates.filter(Boolean).length > 0 && (
+                  <div className="py-3 border-b border-stone-200">
+                    <p className="text-stone-600 mb-2">Aulas Selecionadas</p>
+                    {selectedDates.map((date, i) => date && selectedTimes[i] && (
+                      <p key={i} className="font-semibold text-[#2C3E1F]">
+                        {format(new Date(date), "EEEE, d 'de' MMMM", { locale: pt })} às {selectedTimes[i]}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    A reserva ficará <strong>pendente de aprovação</strong> pela administração. Receberá confirmação por email.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
