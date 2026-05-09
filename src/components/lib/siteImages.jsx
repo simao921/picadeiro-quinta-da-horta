@@ -6,7 +6,7 @@ export const DEFAULT_IMAGES = {
   hero_gallery: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1920&q=80',
   hero_bookings: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
   about_section: 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?auto=format&fit=crop&w=1200&q=80',
-  about_grid_1: 'https://www.image2url.com/r2/default/images/1778336895303-972e3964-2dd8-45de-b91f-432635c1f8dd.jpeg',
+  about_grid_1: 'https://www.image2url.com/r2/default/images/1778336317638-1f9a2d9b-b407-4310-8966-491e164a040d.jpeg',
   about_grid_2: 'https://www.image2url.com/r2/default/images/1778336372916-4a48fbd9-1fec-4852-ad75-a2d30fb4556b.jpeg',
   about_grid_3: 'https://www.image2url.com/r2/default/images/1778336895303-972e3964-2dd8-45de-b91f-432635c1f8dd.jpeg',
   about_grid_4: 'https://www.image2url.com/r2/default/images/1778336317638-1f9a2d9b-b407-4310-8966-491e164a040d.jpeg',
