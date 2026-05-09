@@ -112,9 +112,9 @@ export default function Bookings() {
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
               {t('hello')}, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
             </h1>
-            <p className="text-stone-300 hidden">
-              {t('manage_bookings_subtitle')}
-            </p>
+            
+
+            
           </motion.div>
         </div>
       </section>
