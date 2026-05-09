@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import FeedbackModal from '@/components/FeedbackModal';
 import {
   CalendarDays, Clock, CheckCircle, XCircle, 
-  AlertCircle, Euro, LogOut, Plus,
+  AlertCircle, Euro, LogOut, Plus, Trophy,
   Calendar as CalendarIcon, FileText, Eye, X, Star, Trash2
 } from 'lucide-react';
 import {
@@ -94,6 +94,26 @@ export default function ClientDashboard() {
         return [];
       }
     }
+  });
+
+  const { data: competitionEntries = [], isLoading: entriesLoading } = useQuery({
+    queryKey: ['my-competition-entries', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        const entries = await base44.entities.CompetitionEntry.filter({ rider_email: user.email });
+        // Carregar competições relacionadas
+        const comps = await base44.entities.Competition.list();
+        return entries.map(entry => {
+          const competition = comps.find(c => c.id === entry.competition_id);
+          return { ...entry, competition };
+        });
+      } catch (error) {
+        console.error('Error loading competition entries:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email
   });
 
   const { data: regulations = [] } = useQuery({
@@ -259,7 +279,7 @@ export default function ClientDashboard() {
         )}
 
         {/* Stats Cards - Premium Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           <motion.div whileHover={{ y: -5 }} className="premium-card bg-white p-8 border border-stone-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.03)]">
             <div className="flex items-center gap-6">
               <div className="w-16 h-16 bg-[#2C3E1F]/5 rounded-[1.5rem] flex items-center justify-center">
@@ -297,6 +317,20 @@ export default function ClientDashboard() {
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-1">Balanço</p>
                 <p className={`text-4xl font-serif font-black ${totalDebt > 0 ? 'text-red-500' : 'text-green-500'}`}>
                   {totalDebt.toFixed(2)}€
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-[#B8956A] p-8 shadow-[0_30px_60px_-15px_rgba(184,149,106,0.3)]">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Provas</p>
+                <p className="text-4xl font-serif font-black text-white">
+                  {competitionEntries.length}
                 </p>
               </div>
             </div>
@@ -355,6 +389,12 @@ export default function ClientDashboard() {
                 className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
               >
                 Histórico Financeiro
+              </TabsTrigger>
+              <TabsTrigger 
+                value="competitions" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Inscrições em Provas
               </TabsTrigger>
             </TabsList>
           </div>
@@ -518,6 +558,62 @@ export default function ClientDashboard() {
                             )}
                           </div>
                           {getPaymentStatusBadge(payment.status)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="competitions" className="mt-0">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="p-10 px-12 border-b border-stone-50">
+                <h3 className="text-2xl font-serif font-black text-[#2C3E1F]">Minhas Provas</h3>
+              </div>
+              <div className="p-12">
+                {entriesLoading ? (
+                  <div className="space-y-8">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-24 rounded-3xl bg-stone-50 animate-pulse" />
+                    ))}
+                  </div>
+                ) : competitionEntries.length === 0 ? (
+                  <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
+                    <Trophy className="w-20 h-20 text-stone-200 mx-auto mb-6" />
+                    <p className="text-xl font-serif font-black text-stone-400">Sem inscrições em provas</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {competitionEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-8 transition-all hover:bg-white hover:shadow-xl hover:border-white group"
+                      >
+                        <div className="space-y-2">
+                          <p className="font-serif text-3xl font-black text-[#2C3E1F]">
+                            {entry.competition?.name || 'Competição'}
+                          </p>
+                          <div className="flex flex-wrap gap-4 text-sm font-bold text-stone-400">
+                            <span className="flex items-center gap-2">
+                              <CalendarIcon className="w-4 h-4" />
+                              {entry.competition?.date ? format(new Date(entry.competition.date), 'dd/MM/yyyy') : 'Data TBD'}
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <Trophy className="w-4 h-4 text-[#B8956A]" />
+                              {entry.horse_name}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <Badge className={`${
+                            entry.status === 'aprovada' ? 'bg-green-100 text-green-700' :
+                            entry.status === 'pendente' ? 'bg-amber-100 text-amber-700' :
+                            'bg-red-100 text-red-700'
+                          } border-none px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest`}>
+                            {entry.status || 'Pendente'}
+                          </Badge>
                         </div>
                       </div>
                     ))}
