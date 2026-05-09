@@ -1,1352 +1,651 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  CalendarDays, Clock,
-  CheckCircle, Loader2, AlertCircle, Camera
+import { 
+  Menu, X, Phone, Mail, MapPin, Facebook, Instagram, 
+  ChevronUp, User, LogOut
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from '@/components/ui/label';
-import { format } from 'date-fns';
-import { pt } from 'date-fns/locale';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LanguageProvider, useLanguage } from '@/components/LanguageProvider';
+import LanguageSelector from '@/components/LanguageSelector';
+import LazyImage from '@/components/ui/LazyImage';
+import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
+import CookieBanner from '@/components/CookieBanner';
+import { Home as HomeIcon, Calendar as CalendarIcon, User as UserIcon, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
-import { useLanguage } from '@/components/LanguageProvider';
 
-const weekdayTimeSlots = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'
-];
 
-const saturdayTimeSlots = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00'
-];
+const LayoutContent = React.memo(({ children, currentPageName }) => {
+  const { t } = useLanguage();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const touchStart = React.useRef(0);
+  const isPulling = React.useRef(false);
+  const mainContentRef = React.useRef(null);
 
-const weekDays = [
-  { id: 1, label: 'Segunda-feira' },
-  { id: 2, label: 'Terça-feira' },
-  { id: 3, label: 'Quarta-feira' },
-  { id: 4, label: 'Quinta-feira' },
-  { id: 5, label: 'Sexta-feira' },
-  { id: 6, label: 'Sábado' },
-];
+  const [logoUrl, setLogoUrl] = useState('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG');
 
-const getNextDayOfWeek = (dayIndex) => {
-  const result = new Date();
-  const currentDay = result.getDay(); // 0 is Sunday, 1 is Monday...
-  let daysUntil = (dayIndex - currentDay + 7) % 7;
-  // Se for hoje, agendar para a próxima semana para garantir disponibilidade
-  if (daysUntil === 0) daysUntil = 7;
-  result.setDate(result.getDate() + daysUntil);
-  result.setHours(0, 0, 0, 0);
-  return result;
+  const isAdminPage = currentPageName?.startsWith('Admin');
+  const isDeveloperPage = currentPageName === 'DeveloperPanel';
+  const [maintenanceMode, setMaintenanceMode] = React.useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = React.useState('');
+  const [maintenanceChecked, setMaintenanceChecked] = React.useState(false);
+
+  useEffect(() => {
+    // Check maintenance mode - simplified and faster
+    const checkMaintenance = async () => {
+      try {
+        const settings = await base44.entities.SiteSettings.filter({ key: 'maintenance_mode' });
+        const isMaintenanceOn = settings.length > 0 && settings[0].value === 'true';
+        
+        if (!isMaintenanceOn) {
+          setMaintenanceChecked(true);
+          return;
+        }
+
+        const msgSettings = await base44.entities.SiteSettings.filter({ key: 'maintenance_message' });
+        const msg = msgSettings.length > 0 ? msgSettings[0].value : 'Site em manutenção. Voltamos em breve!';
+        
+        // Quick admin check
+        const isAuth = await base44.auth.isAuthenticated();
+        if (isAuth) {
+          const userData = await base44.auth.me();
+          if (userData.role === 'admin') {
+            setMaintenanceChecked(true);
+            return;
+          }
+        }
+        
+        setMaintenanceMode(true);
+        setMaintenanceMessage(msg);
+      } catch (e) {
+        console.error('Error checking maintenance:', e);
+      } finally {
+        setMaintenanceChecked(true);
+      }
+    };
+    checkMaintenance();
+  }, []);
+
+  useEffect(() => {
+    // Check auth asynchronously without blocking
+    base44.auth.isAuthenticated().then(isAuth => {
+      if (isAuth) {
+        base44.auth.me().then(setUser).catch(() => setUser(null));
+      } else {
+        setUser(null);
+      }
+    }).catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    let ticking = false;
+    let lastScroll = 0;
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      // Só atualiza se mudou significativamente
+      if (Math.abs(currentScroll - lastScroll) < 10 && ticking) return;
+      
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(currentScroll > 50);
+          setShowScrollTop(currentScroll > 400);
+          lastScroll = currentScroll;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Usar e.code para compatibilidade entre Windows e Mac
+      // Digit6 e Digit9 são consistentes independentemente do layout de teclado
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit6' || e.key === '6')) {
+        e.preventDefault();
+        sessionStorage.setItem('admin_keyboard_access', 'true');
+        window.location.href = createPageUrl('AdminLogin');
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit9' || e.key === '9')) {
+        e.preventDefault();
+        sessionStorage.setItem('dev_keyboard_access', 'true');
+        window.location.href = createPageUrl('DeveloperPanel');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Atalho para tablets/mobile: tocar 5 vezes no logo em 2 segundos
+  const [logoTaps, setLogoTaps] = React.useState([]);
+  
+  const handleLogoTap = () => {
+    const now = Date.now();
+    const recentTaps = [...logoTaps, now].filter(t => now - t < 2000);
+    setLogoTaps(recentTaps);
+    
+    if (recentTaps.length >= 7) {
+      sessionStorage.setItem('admin_keyboard_access', 'true');
+      window.location.href = createPageUrl('AdminLogin');
+      setLogoTaps([]);
+    }
+  };
+
+
+
+  useEffect(() => {
+    // Load logo image
+    getSiteImage('logo', DEFAULT_IMAGES.logo).then(setLogoUrl);
+
+    // Check if can go back (for mobile back button)
+    setCanGoBack(window.history.length > 1 && currentPageName !== 'Home');
+  }, [currentPageName]);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Pull-to-refresh handlers
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Trigger reload of current page data
+    window.location.reload();
+  };
+
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0 && mainContentRef.current) {
+      touchStart.current = e.touches[0].clientY;
+      isPulling.current = true;
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isPulling.current || window.scrollY > 0) return;
+
+    const distance = e.touches[0].clientY - touchStart.current;
+    if (distance > 0 && distance < 120) {
+      setPullDistance(distance);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (pullDistance > 80) {
+      handleRefresh();
+    } else {
+      setPullDistance(0);
+    }
+    isPulling.current = false;
+  };
+
+  const handleLogout = useCallback(() => {
+    base44.auth.logout();
+  }, []);
+
+  if (isAdminPage || isDeveloperPage) {
+    return <>{children}</>;
+  }
+
+  // Don't block rendering, let page load while checking maintenance
+  if (!maintenanceChecked && !maintenanceMode) {
+    // Continue rendering while checking
+  }
+
+  // Maintenance mode screen
+  if (maintenanceMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex items-center justify-center p-4">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-10 h-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-serif font-bold text-white">{maintenanceMessage}</h1>
+          <p className="text-stone-400">
+            Estamos a trabalhar para melhorar a sua experiência.
+            Por favor, volte mais tarde.
+          </p>
+          <div className="pt-4">
+            <div className="animate-pulse flex space-x-2 justify-center">
+              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-500 rounded-full animation-delay-200"></div>
+              <div className="w-3 h-3 bg-yellow-500 rounded-full animation-delay-400"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const navLinks = [
+    { name: t('nav_home'), page: 'Home' },
+    { name: t('nav_services'), page: 'Services' },
+    { name: t('nav_gallery') || 'Galeria', page: 'Gallery' },
+    { name: t('nav_bookings'), page: 'Bookings' },
+    { name: 'Competições', page: 'Competitions' },
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-stone-50">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+          --color-primary: #2D2D2D;
+          --color-primary-light: #4A4A4A;
+          --color-secondary: #8B7355;
+          --color-accent: #B8956A;
+          --color-dark: #1A1A1A;
+          --color-cream: #F5F3EF;
+          --color-stone: #E8E4DD;
+        }
+        
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .font-serif {
+          font-family: 'Playfair Display', Georgia, serif;
+        }
+        
+        .gradient-gold {
+          background: linear-gradient(135deg, #B8956A 0%, #C9A961 50%, #B8956A 100%);
+        }
+        
+        .text-gradient {
+          background: linear-gradient(135deg, #B8956A 0%, #8B7355 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        
+        * {
+          scroll-behavior: smooth;
+        }
+      `}</style>
+
+      {/* Top Bar */}
+      <div className="bg-[#1A1A1A] text-white py-2 px-4 text-sm hidden md:block">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <a href="tel:+351932111786" className="flex items-center gap-2 hover:text-[#B8956A] transition-colors">
+              <Phone className="w-3.5 h-3.5" />
+              +351 932 111 786
+            </a>
+            <a href="mailto:picadeiroquintadahorta.gf@gmail.com" className="flex items-center gap-2 hover:text-[#B8956A] transition-colors">
+              <Mail className="w-3.5 h-3.5" />
+              picadeiroquintadahorta.gf@gmail.com
+            </a>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="https://www.facebook.com/Picadeiroquintadahortaoficial/" target="_blank" rel="noopener noreferrer" className="hover:text-[#B8956A] transition-colors">
+              <Facebook className="w-4 h-4" />
+            </a>
+            <a href="https://www.instagram.com/picadeiro.quinta.da.horta/" target="_blank" rel="noopener noreferrer" className="hover:text-[#B8956A] transition-colors">
+              <Instagram className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Navigation */}
+      <header 
+        className={`sticky top-0 z-50 transition-all duration-500 safe-top ${
+          isScrolled 
+            ? 'bg-white/95 dark:bg-stone-900/95 backdrop-blur-md shadow-lg py-2' 
+            : 'bg-transparent py-4'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* Mobile Back Button */}
+            {canGoBack && (
+              <button
+                onClick={() => window.history.back()}
+                className="lg:hidden p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors mr-2"
+                aria-label="Voltar"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            {/* Logo */}
+            <Link 
+              to={createPageUrl('Home')} 
+              className="flex items-center gap-3 transition-opacity hover:opacity-80"
+              aria-label="Ir para página inicial"
+              onClick={(e) => {
+                handleLogoTap();
+              }}
+            >
+              <LazyImage
+                src={logoUrl}
+                alt="Picadeiro Quinta da Horta"
+                className="h-16 w-16 object-cover rounded-full"
+                priority={true}
+              />
+              <div className="hidden md:block">
+                <h1 className="text-xl font-serif font-bold text-[#1A1A1A]">Picadeiro</h1>
+                <p className="text-sm text-[#8B7355] tracking-wider">QUINTA DA HORTA</p>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.page}
+                  to={createPageUrl(link.page)}
+                  className={`text-sm font-medium transition-all duration-200 pb-1 border-b-2 ${
+                    currentPageName === link.page 
+                      ? 'text-[#B8956A] border-[#B8956A]' 
+                      : 'text-[#1A1A1A] hover:text-[#B8956A] border-transparent'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Right Side */}
+            <div className="flex items-center gap-2">
+              <LanguageSelector />
+
+
+
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-[#2D2D2D] flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
+                          {user.full_name?.charAt(0) || user.email?.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="hidden sm:inline text-sm">{user.full_name?.split(' ')[0]}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl('UserProfile')} className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        {t('my_account')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-red-600">
+                      <LogOut className="w-4 h-4" />
+                      {t('logout')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  onClick={() => base44.auth.redirectToLogin()}
+                  className="bg-[#2D2D2D] hover:bg-[#1A1A1A] text-white"
+                >
+                  {t('login')}
+                </Button>
+              )}
+
+              {/* Mobile Menu Button */}
+              <button
+                className="lg:hidden p-2 hover:bg-stone-100 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-white border-t shadow-lg animate-in slide-in-from-top-2">
+            <nav className="flex flex-col p-4 gap-2" role="navigation" aria-label="Menu principal">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.page}
+                  to={createPageUrl(link.page)}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#B8956A] focus:ring-offset-2 ${
+                    currentPageName === link.page 
+                      ? 'bg-[#B8956A] text-white' 
+                      : 'text-[#2D2D2D] hover:bg-stone-100'
+                  }`}
+                  aria-current={currentPageName === link.page ? 'page' : undefined}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        )}
+      </header>
+
+      {/* Main Content */}
+      <main 
+        ref={mainContentRef}
+        className="flex-1 pb-20 lg:pb-0 relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Pull-to-refresh indicator */}
+        {pullDistance > 0 && (
+          <div 
+            className="fixed top-16 left-0 right-0 flex items-center justify-center z-40 pointer-events-none"
+            style={{ 
+              transform: `translateY(${Math.min(pullDistance - 50, 0)}px)`,
+              opacity: Math.min(pullDistance / 80, 1)
+            }}
+          >
+            <div className={`p-3 bg-white dark:bg-stone-800 rounded-full shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
+              <svg className="w-6 h-6 text-[#B8956A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+          </div>
+        )}
+
+        <motion.div
+          key={currentPageName}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          {children}
+        </motion.div>
+      </main>
+
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-700 safe-bottom no-select">
+        <div className="flex justify-around items-center h-16">
+          <Link
+            to={createPageUrl('Home')}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+              currentPageName === 'Home'
+                ? 'text-[#B8956A]'
+                : 'text-stone-500 dark:text-stone-400'
+            }`}
+          >
+            <HomeIcon className="w-6 h-6" />
+            <span className="text-xs mt-1">{t('nav_home')}</span>
+          </Link>
+          <Link
+            to={createPageUrl('Services')}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+              currentPageName === 'Services'
+                ? 'text-[#B8956A]'
+                : 'text-stone-500 dark:text-stone-400'
+            }`}
+          >
+            <Briefcase className="w-6 h-6" />
+            <span className="text-xs mt-1">{t('nav_services')}</span>
+          </Link>
+          <Link
+            to={createPageUrl('Bookings')}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+              currentPageName === 'Bookings'
+                ? 'text-[#B8956A]'
+                : 'text-stone-500 dark:text-stone-400'
+            }`}
+          >
+            <CalendarIcon className="w-6 h-6" />
+            <span className="text-xs mt-1">{t('nav_bookings')}</span>
+          </Link>
+          {user && (
+            <Link
+              to={createPageUrl('UserProfile')}
+              className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+                currentPageName === 'UserProfile'
+                  ? 'text-[#B8956A]'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              <UserIcon className="w-6 h-6" />
+              <span className="text-xs mt-1">{t('my_account')}</span>
+            </Link>
+          )}
+        </div>
+      </nav>
+
+      {/* Footer */}
+      <footer className="bg-[#1A1A1A] text-white safe-bottom">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            {/* About */}
+            <div>
+              <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
+                <div className="w-20 h-20 rounded-full bg-white p-2 flex items-center justify-center">
+                  <LazyImage
+                    src={logoUrl}
+                    alt="Picadeiro Quinta da Horta"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+              </Link>
+              <p className="text-stone-300 text-sm leading-relaxed">
+                {t('footer_description')}
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">{t('quick_links')}</h4>
+              <ul className="space-y-3">
+                {navLinks.map((link) => (
+                <li key={link.page}>
+                  <Link 
+                    to={createPageUrl(link.page)}
+                    className="text-stone-300 hover:text-white transition-colors text-sm"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+              </ul>
+            </div>
+
+            {/* Services */}
+            <div>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">{t('services_title')}</h4>
+              <ul className="space-y-3 text-sm text-stone-300">
+                <li>{t('service_private_title')}</li>
+                <li>{t('service_group_title')}</li>
+                <li>{t('service_rental_title')}</li>
+                <li>{t('service_owners_title')}</li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 className="font-serif text-lg font-semibold mb-6 text-[#B8956A]">Contactos</h4>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-[#B8956A] flex-shrink-0 mt-0.5" />
+                  <span className="text-stone-300 text-sm">
+                    Rua das Hortas - Picadeiro Quinta da Horta - Fonte da Senhora<br />
+                    2890-106 Alcochete
+                  </span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-[#B8956A]" />
+                  <a href="tel:+351932111786" className="text-stone-300 hover:text-white text-sm">
+                    +351 932 111 786
+                  </a>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-[#B8956A]" />
+                  <a href="mailto:picadeiroquintadahorta.gf@gmail.com" className="text-stone-300 hover:text-white text-sm break-all">
+                    picadeiroquintadahorta.gf@gmail.com
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-stone-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-stone-400 text-xs sm:text-sm text-center md:text-left">
+              © {new Date().getFullYear()} Picadeiro Quinta da Horta - Rua das Hortas - Fonte da Senhora, 2890-106 Alcochete
+            </p>
+            <div className="flex items-center gap-4">
+              <a href="https://www.facebook.com/Picadeiroquintadahortaoficial/" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-[#B8956A] transition-colors">
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a href="https://www.instagram.com/picadeiro.quinta.da.horta/" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-[#B8956A] transition-colors">
+                <Instagram className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          aria-label="Voltar ao topo"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 
+                     bg-[#2D2D2D] text-white rounded-full shadow-lg 
+                     flex items-center justify-center hover:bg-[#1A1A1A] transition-all duration-300
+                     hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#B8956A] focus:ring-offset-2
+                     animate-in fade-in slide-in-from-bottom-4 z-40"
+        >
+          <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+      )}
+
+      {/* Cookie Banner */}
+      <CookieBanner />
+      </div>
+      );
+      });
+
+      const Layout = ({ children, currentPageName }) => {
+  return (
+    <LanguageProvider>
+      <LayoutContent children={children} currentPageName={currentPageName} />
+    </LanguageProvider>
+  );
 };
 
-// Componente para seleção de aula semanal
-function WeeklyLessonSelector({
-  index, currentDate, currentTime, selectedDates, selectedTimes,
-  setSelectedDates, setSelectedTimes, blockedSlots, getAvailableSlots, getLessonsForDate, isOwnerService
-}) {
-  const [dateLessons, setDateLessons] = useState([]);
-  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Buscar aulas quando a data muda
-  useEffect(() => {
-    if (currentDate) {
-      setIsLoadingSlots(true);
-      getLessonsForDate(currentDate).then(lessons => {
-        setDateLessons(lessons);
-        setIsLoadingSlots(false);
-      }).catch(() => {
-        setDateLessons([]);
-        setIsLoadingSlots(false);
-      });
-    } else {
-      setDateLessons([]);
-    }
-  }, [currentDate]);
-
-  const availableSlots = getAvailableSlots(currentDate, dateLessons);
-
-  return (
-    <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="bg-gradient-to-br from-[#B8956A]/5 to-white border-b border-stone-200">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-[#B8956A]" />
-            Aula {index + 1}
-          </span>
-          {currentTime && currentDate && (
-            <span className="text-[#B8956A] text-sm font-normal bg-[#B8956A]/10 px-3 py-1 rounded-full">
-              {format(new Date(currentDate), "EEE dd/MM", { locale: pt })} às {currentTime}
-            </span>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <Label className="mb-3 block font-semibold text-[#2C3E1F]">Dia da Semana</Label>
-            <Calendar
-              mode="single"
-              selected={currentDate}
-              onSelect={(date) => {
-                const newDates = [...selectedDates];
-                newDates[index] = date;
-                setSelectedDates(newDates);
-                // Limpar o horário quando a data muda
-                const newTimes = [...selectedTimes];
-                newTimes[index] = null;
-                setSelectedTimes(newTimes);
-              }}
-              locale={pt}
-              disabled={(date) => {
-                if (date < today || date.getDay() === 0) return true;
-                // Bloquear agosto EXCETO para serviço de Proprietários
-                if (date.getMonth() === 7 && !isOwnerService) return true;
-                // Verificar se o dia está bloqueado
-                const dateStr = format(date, 'yyyy-MM-dd');
-                if (blockedSlots.some(b => b.date === dateStr && !b.time_slot)) return true;
-                // Verificar se o dia já foi selecionado em outro calendário
-                return selectedDates.some((selectedDate, i) => {
-                  if (i === index || !selectedDate) return false;
-                  return format(new Date(selectedDate), 'yyyy-MM-dd') === dateStr;
-                });
-              }}
-              className="rounded-md border-0 mx-auto"
-              classNames={{
-                months: "flex flex-col space-y-4",
-                month: "space-y-4",
-                caption: "flex justify-center pt-1 relative items-center",
-                caption_label: "text-sm font-semibold text-[#2C3E1F]",
-                nav: "space-x-1 flex items-center",
-                nav_button: "h-7 w-7 bg-transparent hover:bg-stone-100 rounded-md transition-colors",
-                nav_button_previous: "absolute left-1",
-                nav_button_next: "absolute right-1",
-                table: "w-full border-collapse space-y-1",
-                head_row: "flex justify-between",
-                head_cell: "text-stone-500 rounded-md w-9 font-medium text-[0.8rem]",
-                row: "flex w-full mt-2 justify-between",
-                cell: "text-center text-sm p-0 relative",
-                day: "h-9 w-9 p-0 font-normal hover:bg-[#B8956A]/10 rounded-md transition-colors",
-                day_selected: "bg-[#B8956A] text-white hover:bg-[#8B7355] hover:text-white focus:bg-[#B8956A] focus:text-white",
-                day_today: "bg-stone-100 text-[#2C3E1F] font-semibold",
-                day_outside: "text-stone-400 opacity-50",
-                day_disabled: "text-stone-300 opacity-50 hover:bg-transparent cursor-not-allowed",
-                day_hidden: "invisible",
-              }}
-            />
-          </div>
-          <div>
-            <Label className="mb-3 block font-semibold text-[#2C3E1F]">Horário</Label>
-            {isLoadingSlots ? (
-              <div className="flex items-center justify-center h-64">
-                <Loader2 className="w-6 h-6 animate-spin text-[#B8956A]" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 bg-stone-50 rounded-lg">
-                {availableSlots.map((slot) => {
-                  const isSelected = currentTime === slot;
-                  return (
-                    <Button
-                      key={slot}
-                      variant={isSelected ? 'default' : 'outline'}
-                      size="sm"
-                      className={
-                        isSelected
-                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md'
-                          : 'border-stone-300 hover:border-[#B8956A] hover:text-[#B8956A] hover:bg-[#B8956A]/5 transition-all bg-white'
-                      }
-                      onClick={() => {
-                        const newTimes = [...selectedTimes];
-                        // Permitir deselecionar se já está selecionado
-                        if (currentTime === slot) {
-                          newTimes[index] = null;
-                        } else {
-                          newTimes[index] = slot;
-                        }
-                        setSelectedTimes(newTimes);
-                      }}
-                    >
-                      {slot}
-                    </Button>
-                  );
-                })}
-              </div>
-            )}
-            {!isLoadingSlots && currentDate && availableSlots.length === 0 && (
-              <div className="text-center py-4 text-sm text-stone-500">
-                Sem horários disponíveis para este dia.
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export default function NewBookingForm({ user, isBlocked }) {
-  const { t } = useLanguage();
-  const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedTimes, setSelectedTimes] = useState([]);
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
-  const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
-  const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
-  const [wantsPhotoVideo, setWantsPhotoVideo] = useState(false);
-
-  const queryClient = useQueryClient();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const stepMeta = [
-    { id: 1, label: 'Serviço' },
-    { id: 2, label: 'Plano' },
-    { id: 3, label: 'Data e Hora' },
-    { id: 4, label: 'Confirmação' }
-  ];
-
-  // Reset selected time when date changes
-  useEffect(() => {
-    setSelectedTime(null);
-  }, [selectedDate]);
-
-  // Reset selected times when dates array changes
-  useEffect(() => {
-    const newTimes = [];
-    selectedDates.forEach((_, index) => {
-      newTimes[index] = selectedTimes[index] || null;
-    });
-    if (selectedDates.length < selectedTimes.length) {
-      setSelectedTimes(newTimes.slice(0, selectedDates.length));
-    }
-  }, [selectedDates]);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [step]);
-
-  const defaultServices = [
-    { id: '1', title: t('service_private_title'), price: 45, duration: 60, max_participants: 1, short_description: t('service_private_short') },
-    { id: '2', title: t('service_group_title'), price: 30, duration: 60, max_participants: 4, short_description: t('service_group_short') },
-    { id: '5', title: t('service_owners_title'), price: null, duration: 30, max_participants: 1, short_description: t('service_owners_short'), is_owner_service: true }
-  ];
-
-  const { data: services } = useQuery({
-    queryKey: ['services'],
-    queryFn: () => base44.entities.Service.filter({ is_active: true }),
-    initialData: defaultServices
-  });
-
-  const displayServices = (services && services.length > 0) ? services : defaultServices;
-
-  const { data: lessons } = useQuery({
-    queryKey: ['lessons', format(selectedDate, 'yyyy-MM-dd')],
-    queryFn: async () => {
-      try {
-        return await base44.entities.Lesson.filter({ date: format(selectedDate, 'yyyy-MM-dd') });
-      } catch (e) {
-        return [];
-      }
-    },
-    enabled: !!selectedDate,
-    initialData: []
-  });
-
-  // Buscar aulas para cada data selecionada no plano semanal
-  const getLessonsForDate = async (date) => {
-    if (!date) return [];
-    try {
-      const dateStr = format(new Date(date), 'yyyy-MM-dd');
-      return await base44.entities.Lesson.filter({ date: dateStr });
-    } catch (e) {
-      return [];
-    }
-  };
-
-  const { data: blockedSlots = [] } = useQuery({
-    queryKey: ['blocked-slots'],
-    queryFn: async () => {
-      try {
-        return await base44.entities.BlockedSlot.filter({ is_active: true });
-      } catch (e) {
-        return [];
-      }
-    }
-  });
-
-  const createBookingMutation = useMutation({
-    mutationFn: async () => {
-      const duration = selectedPlan?.duration || selectedService.duration;
-      const bookingsToCreate = [];
-
-      // Se tem múltiplos horários (planos com frequency > 1)
-      if (selectedPlan?.frequency > 1) {
-        for (let i = 0; i < selectedPlan.frequency; i++) {
-          const date = selectedDates[i];
-          const time = selectedTimes[i];
-
-          if (!date || !time) {
-            throw new Error('Por favor selecione todos os horários');
-          }
-
-          // Buscar aulas para esta data
-          const dateLessons = await base44.entities.Lesson.filter({ date: format(new Date(date), 'yyyy-MM-dd') });
-
-          // Verificar disponibilidade
-          const lessonsAtTime = dateLessons.filter(l => l.start_time === time);
-          const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-          if (totalBooked >= 6) {
-            throw new Error(`Horário ${time} de ${format(new Date(date), "dd/MM")} indisponível - máximo 6 alunos`);
-          }
-
-          // Se for 60 minutos, verificar próxima meia hora
-          if (duration === 60) {
-            const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-            const slotIndex = timeSlots.indexOf(time);
-            const nextSlot = timeSlots[slotIndex + 1];
-
-            if (nextSlot) {
-              const lessonsAtNextTime = dateLessons.filter(l => l.start_time === nextSlot);
-              const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-              if (totalBookedNext >= 6) {
-                throw new Error(`Horário ${time} de ${format(new Date(date), "dd/MM")} indisponível - próxima meia hora cheia`);
-              }
-            }
-          }
-
-          // Criar ou encontrar a lição
-          let lesson = dateLessons.find(l =>
-            l.service_id === selectedService.id &&
-            l.start_time === time
-          );
-
-          if (!lesson) {
-            const startTime = new Date(`2000-01-01T${time}:00`);
-            const endTime = new Date(startTime.getTime() + duration * 60000);
-
-            lesson = await base44.entities.Lesson.create({
-              service_id: selectedService.id,
-              date: format(new Date(date), 'yyyy-MM-dd'),
-              start_time: time,
-              end_time: format(endTime, 'HH:mm'),
-              max_spots: 6,
-              booked_spots: 0,
-              is_owner_service: selectedService.title === 'Proprietários'
-            });
-          }
-
-          // Se for 60 minutos, criar/atualizar próxima meia hora
-          if (duration === 60) {
-            const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-            const slotIndex = timeSlots.indexOf(time);
-            const nextSlot = timeSlots[slotIndex + 1];
-
-            if (nextSlot) {
-              let nextLesson = dateLessons.find(l =>
-                l.service_id === selectedService.id &&
-                l.start_time === nextSlot
-              );
-
-              if (!nextLesson) {
-                const startTime = new Date(`2000-01-01T${nextSlot}:00`);
-                const endTime = new Date(startTime.getTime() + 30 * 60000);
-
-                nextLesson = await base44.entities.Lesson.create({
-                  service_id: selectedService.id,
-                  date: format(new Date(date), 'yyyy-MM-dd'),
-                  start_time: nextSlot,
-                  end_time: format(endTime, 'HH:mm'),
-                  max_spots: 6,
-                  booked_spots: 0,
-                  is_owner_service: selectedService.title === 'Proprietários'
-                });
-              }
-
-              await base44.entities.Lesson.update(nextLesson.id, {
-                booked_spots: (nextLesson.booked_spots || 0) + 1
-              });
-            }
-          }
-
-          // Criar reserva (sempre pendente para planos múltiplos)
-          const booking = await base44.entities.Booking.create({
-            lesson_id: lesson.id,
-            client_email: user.email,
-            client_name: user.full_name,
-            status: 'pending',
-            is_owner_booking: selectedService.title === 'Proprietários'
-          });
-
-          await base44.entities.Lesson.update(lesson.id, {
-            booked_spots: (lesson.booked_spots || 0) + 1
-          });
-
-          bookingsToCreate.push({ date, time, booking });
-        }
-
-        // Enviar email com todas as reservas
-        const bookingsList = bookingsToCreate.map(b =>
-          `<li>${format(new Date(b.date), "EEEE, d 'de' MMMM", { locale: pt })} às ${b.time}</li>`
-        ).join('');
-
-        await base44.functions.invoke('sendBookingConfirmation', {
-          bookingId: bookingsToCreate[0].booking.id,
-          lessonId: bookingsToCreate[0].booking.lesson_id,
-          clientEmail: user.email,
-          clientName: user.full_name,
-          lessonDate: format(new Date(bookingsToCreate[0].date), 'yyyy-MM-dd'),
-          lessonTime: bookingsToCreate[0].time,
-          serviceName: selectedService.title
-        });
-
-        /* await base44.integrations.Core.SendEmail({
-          to: user.email,
-          subject: `Reservas Registadas - ${selectedService.title}`,
-          body: `
-            <h2>Olá ${user.full_name}!</h2>
-            <p>As suas reservas foram registadas e estão <strong>pendentes de aprovação</strong>.</p>
-            <h3>Detalhes das Reservas</h3>
-            <ul>
-              <li><strong>Serviço:</strong> ${selectedService.title}</li>
-              <li><strong>Plano:</strong> ${selectedPlan.label}</li>
-              <li><strong>Duração:</strong> ${duration} minutos</li>
-            </ul>
-            <h3>Horários Selecionados</h3>
-            <ul>
-              ${bookingsList}
-            </ul>
-            <p>Aguarde a confirmação da nossa equipa.</p>
-            <p>Obrigado por escolher o Picadeiro Quinta da Horta!</p>
-          `
-        }); */
-
-        return bookingsToCreate;
-      } else if (selectedPlan?.isRecurringFourWeeks) {
-        // Reserva para as próximas 4 semanas
-        if (!selectedTime) throw new Error('Por favor selecione um horário');
-        if (!selectedDate) throw new Error('Por favor selecione um dia');
-
-        const bookingsToCreate = [];
-
-        for (let i = 0; i < 4; i++) {
-          const targetDate = new Date(selectedDate);
-          targetDate.setDate(targetDate.getDate() + (i * 7));
-          const dateStr = format(targetDate, 'yyyy-MM-dd');
-
-          // Buscar lições para esta data específica para verificar disponibilidade
-          const dateLessons = await base44.entities.Lesson.filter({ date: dateStr });
-          const lessonsAtTime = dateLessons.filter(l => l.start_time === selectedTime);
-          const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-          if (totalBooked >= 6) {
-            throw new Error(`Horário indisponível na semana ${i + 1} (${format(targetDate, 'dd/MM')}) - máximo de 6 alunos`);
-          }
-
-          if (duration === 60) {
-            const timeSlots = targetDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-            const slotIndex = timeSlots.indexOf(selectedTime);
-            const nextSlot = timeSlots[slotIndex + 1];
-
-            if (nextSlot) {
-              const lessonsAtNextTime = dateLessons.filter(l => l.start_time === nextSlot);
-              const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-              if (totalBookedNext >= 6) {
-                throw new Error(`Horário indisponível na semana ${i + 1} (${format(targetDate, 'dd/MM')}) - próxima meia hora cheia`);
-              }
-            }
-          }
-
-          let lesson = dateLessons.find(l =>
-            l.service_id === selectedService.id &&
-            l.start_time === selectedTime
-          );
-
-          if (!lesson) {
-            const startTime = new Date(`2000-01-01T${selectedTime}:00`);
-            const endTime = new Date(startTime.getTime() + duration * 60000);
-
-            lesson = await base44.entities.Lesson.create({
-              service_id: selectedService.id,
-              date: dateStr,
-              start_time: selectedTime,
-              end_time: format(endTime, 'HH:mm'),
-              max_spots: 6,
-              booked_spots: 0,
-              is_owner_service: selectedService.title === 'Proprietários'
-            });
-          }
-
-          if (duration === 60) {
-            const timeSlots = targetDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-            const slotIndex = timeSlots.indexOf(selectedTime);
-            const nextSlot = timeSlots[slotIndex + 1];
-
-            if (nextSlot) {
-              let nextLesson = dateLessons.find(l =>
-                l.service_id === selectedService.id &&
-                l.start_time === nextSlot
-              );
-
-              if (!nextLesson) {
-                const startTime = new Date(`2000-01-01T${nextSlot}:00`);
-                const endTime = new Date(startTime.getTime() + 30 * 60000);
-
-                nextLesson = await base44.entities.Lesson.create({
-                  service_id: selectedService.id,
-                  date: dateStr,
-                  start_time: nextSlot,
-                  end_time: format(endTime, 'HH:mm'),
-                  max_spots: 6,
-                  booked_spots: 0,
-                  is_owner_service: selectedService.title === 'Proprietários'
-                });
-              }
-
-              await base44.entities.Lesson.update(nextLesson.id, {
-                booked_spots: (nextLesson.booked_spots || 0) + 1
-              });
-            }
-          }
-
-          const booking = await base44.entities.Booking.create({
-            lesson_id: lesson.id,
-            client_email: user.email,
-            client_name: user.full_name,
-            status: selectedService.auto_approve ? 'approved' : 'pending',
-            is_owner_booking: selectedService.title === 'Proprietários'
-          });
-
-          await base44.entities.Lesson.update(lesson.id, {
-            booked_spots: (lesson.booked_spots || 0) + 1
-          });
-
-          bookingsToCreate.push({ date: targetDate, time: selectedTime, booking });
-        }
-
-        // Enviar email com todas as reservas
-        try {
-          await base44.functions.invoke('sendBookingConfirmation', {
-            bookingId: bookingsToCreate[0].booking.id,
-            lessonId: bookingsToCreate[0].booking.lesson_id,
-            clientEmail: user.email,
-            clientName: user.full_name,
-            lessonDate: format(new Date(bookingsToCreate[0].date), 'yyyy-MM-dd'),
-            lessonTime: bookingsToCreate[0].time,
-            serviceName: `${selectedService.title}`
-          });
-        } catch (e) {
-          console.log('Erro ao enviar email:', e);
-        }
-
-        return bookingsToCreate;
-      } else {
-        // Reserva única
-        if (!selectedTime) {
-          throw new Error('Por favor selecione um horário');
-        }
-
-        if (!selectedDate) {
-          throw new Error('Por favor selecione uma data');
-        }
-
-        const lessonsAtTime = lessons.filter(l => l.start_time === selectedTime);
-        const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-        if (totalBooked >= 6) {
-          throw new Error('Horário indisponível - máximo de 6 alunos por meia hora');
-        }
-
-        if (duration === 60) {
-          const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-          const slotIndex = timeSlots.indexOf(selectedTime);
-          const nextSlot = timeSlots[slotIndex + 1];
-
-          if (nextSlot) {
-            const lessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
-            const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-            if (totalBookedNext >= 6) {
-              throw new Error('Horário indisponível - próxima meia hora está cheia (máximo 6 alunos)');
-            }
-          }
-        }
-
-        let lesson = lessons.find(l =>
-          l.service_id === selectedService.id &&
-          l.start_time === selectedTime
-        );
-
-        if (!lesson) {
-          const startTime = new Date(`2000-01-01T${selectedTime}:00`);
-          const endTime = new Date(startTime.getTime() + duration * 60000);
-
-          lesson = await base44.entities.Lesson.create({
-            service_id: selectedService.id,
-            date: format(selectedDate, 'yyyy-MM-dd'),
-            start_time: selectedTime,
-            end_time: format(endTime, 'HH:mm'),
-            max_spots: 6,
-            booked_spots: 0,
-            is_owner_service: selectedService.title === 'Proprietários'
-          });
-        }
-
-        if (duration === 60) {
-          const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-          const slotIndex = timeSlots.indexOf(selectedTime);
-          const nextSlot = timeSlots[slotIndex + 1];
-
-          if (nextSlot) {
-            let nextLesson = lessons.find(l =>
-              l.service_id === selectedService.id &&
-              l.start_time === nextSlot
-            );
-
-            if (!nextLesson) {
-              const startTime = new Date(`2000-01-01T${nextSlot}:00`);
-              const endTime = new Date(startTime.getTime() + 30 * 60000);
-
-              nextLesson = await base44.entities.Lesson.create({
-                service_id: selectedService.id,
-                date: format(selectedDate, 'yyyy-MM-dd'),
-                start_time: nextSlot,
-                end_time: format(endTime, 'HH:mm'),
-                max_spots: 6,
-                booked_spots: 0,
-                is_owner_service: selectedService.title === 'Proprietários'
-              });
-            }
-
-            await base44.entities.Lesson.update(nextLesson.id, {
-              booked_spots: (nextLesson.booked_spots || 0) + 1
-            });
-          }
-        }
-
-        const booking = await base44.entities.Booking.create({
-          lesson_id: lesson.id,
-          client_email: user.email,
-          client_name: user.full_name,
-          status: selectedService.auto_approve ? 'approved' : 'pending',
-          is_owner_booking: selectedService.title === 'Proprietários'
-        });
-
-        // Enviar email de confirmação
-        try {
-          await base44.functions.invoke('sendBookingConfirmation', {
-            bookingId: booking.id,
-            lessonId: lesson.id,
-            clientEmail: user.email,
-            clientName: user.full_name,
-            lessonDate: format(selectedDate, 'yyyy-MM-dd'),
-            lessonTime: selectedTime,
-            serviceName: selectedService.title
-          });
-        } catch (e) {
-          console.log('Erro ao enviar email:', e);
-        }
-
-        await base44.entities.Lesson.update(lesson.id, {
-          booked_spots: (lesson.booked_spots || 0) + 1
-        });
-
-        return booking;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['my-bookings']);
-      queryClient.invalidateQueries(['lessons']);
-      setStep(5);
-      toast.success('Reserva criada com sucesso!');
-    },
-    onError: (error) => {
-      toast.error(error?.message || 'Não foi possível concluir a reserva. Tente novamente.');
-    }
-  });
-
-  const getAvailableSlots = (date = selectedDate, dateLessons = null) => {
-    if (!date) return [];
-
-    const dayOfWeek = date.getDay();
-    const timeSlots = dayOfWeek === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-
-    if (!selectedService) return timeSlots;
-
-    // Verificar se o dia está bloqueado
-    const dateStr = format(new Date(date), 'yyyy-MM-dd');
-    const dayBlocked = blockedSlots.some(b => b.date === dateStr && !b.time_slot);
-    if (dayBlocked) return [];
-
-    // Usar as lições fornecidas ou as lições do dia selecionado
-    const lessonsToCheck = dateLessons !== null ? dateLessons : lessons;
-
-    const selectedDay = new Date(date);
-    selectedDay.setHours(0, 0, 0, 0);
-    const now = new Date();
-    const isToday = selectedDay.getTime() === today.getTime();
-    const currentTime = format(now, 'HH:mm');
-
-    if (!lessonsToCheck || lessonsToCheck.length === 0) {
-      return timeSlots.filter(slot => {
-        if (isToday && slot <= currentTime) return false;
-        // Verificar se o horário específico está bloqueado
-        return !blockedSlots.some(b => b.date === dateStr && b.time_slot === slot);
-      });
-    }
-
-    const serviceDuration = selectedPlan?.duration || selectedService.duration;
-
-    // Para serviços de 60 minutos, verificar se as duas meias horas estão disponíveis
-    return timeSlots.filter(slot => {
-      if (isToday && slot <= currentTime) return false;
-      // Verificar se o horário específico está bloqueado
-      if (blockedSlots.some(b => b.date === dateStr && b.time_slot === slot)) {
-        return false;
-      }
-
-      const lessonsAtTime = lessonsToCheck.filter(l => l.start_time === slot);
-      const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-      // Máximo 6 alunos por horário (incluindo fixos e avulsos)
-      // Se já tem 6 pessoas (fixos + avulsos), bloquear
-      if (totalBooked >= 6) {
-        return false;
-      }
-
-      // Se o serviço dura 60 minutos, verificar a meia hora seguinte
-      if (serviceDuration === 60) {
-        const slotIndex = timeSlots.indexOf(slot);
-        const nextSlot = timeSlots[slotIndex + 1];
-
-        if (nextSlot) {
-          const lessonsAtNextTime = lessonsToCheck.filter(l => l.start_time === nextSlot);
-          const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-
-          // Se a próxima meia hora tem 6 pessoas (fixos + avulsos), bloquear
-          if (totalBookedNext >= 6) return false;
-        }
-      }
-
-      return true;
-    });
-  };
-
-  const singleDayAvailableSlots = useMemo(
-    () => (selectedDate ? getAvailableSlots(selectedDate) : []),
-    [selectedDate, selectedService, selectedPlan, lessons, blockedSlots]
-  );
-
-  const selectedWeeklyCount = selectedTimes.filter(Boolean).length;
-  const needsWeeklySlots = selectedPlan?.frequency > 1;
-
-  const goToStep2 = () => {
-    if (!selectedService) {
-      toast.error('Selecione um serviço para continuar.');
-      return;
-    }
-    setStep(2);
-  };
-
-  const goToStep3 = () => {
-    if (!selectedService) {
-      toast.error('Selecione um serviço para continuar.');
-      return;
-    }
-
-    if (selectedService?.title === 'Hipoterapia') {
-      setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
-      setStep(3);
-      return;
-    }
-
-    if (selectedService?.title === 'Proprietários' && !selectedPlan) {
-      toast.error('Por favor selecione a duração da sessão.');
-      return;
-    }
-
-    if (!selectedPlan && selectedService) {
-      setSelectedPlan({ label: selectedService.title, price: selectedService.price });
-    }
-    setStep(3);
-  };
-
-  const goToStep4 = () => {
-    if (needsWeeklySlots) {
-      if (selectedWeeklyCount !== selectedPlan.frequency) {
-        toast.error(`Faltam ${selectedPlan.frequency - selectedWeeklyCount} horário(s) para completar o plano.`);
-        return;
-      }
-      setStep(4);
-      return;
-    }
-
-    if (!selectedDate) {
-      toast.error('Selecione uma data para continuar.');
-      return;
-    }
-    if (!selectedTime) {
-      toast.error('Selecione um horário para continuar.');
-      return;
-    }
-    setStep(4);
-  };
-
-  if (isBlocked) {
-    return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-red-800 mb-2">{t('account_blocked')}</h3>
-            <p className="text-red-700 text-sm">
-              {t('debt_warning')} {t('regularize_warning')}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 5) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="text-center py-12"
-      >
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="w-10 h-10 text-green-600" />
-        </div>
-        <h2 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-4">
-          {t('booking_confirmed')}
-        </h2>
-        <p className="text-stone-600 mb-8 max-w-md mx-auto">
-          {t('booking_confirmation_message')}
-        </p>
-        <Button
-          onClick={() => {
-            setStep(1);
-            setSelectedService(null);
-            setSelectedPlan(null);
-            setSelectedTime(null);
-            setSelectedTimes([]);
-            setSelectedDates([]);
-          }}
-          className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
-        >
-          {t('new_booking')}
-        </Button>
-      </motion.div>
-    );
-  }
-
-  return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 bg-white/90 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-stone-200/50 relative overflow-hidden">
-      {/* Background decoration elements */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-[#B8956A]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-[#2C3E1F]/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Modern Progress Indicator */}
-      <div className="mb-12 relative px-4 sm:px-10">
-        <div className="flex justify-between relative z-10">
-          {[1, 2, 3, 4].map((s) => {
-            const isActive = step >= s;
-            const isCompleted = step > s;
-            return (
-              <div key={s} className="flex flex-col items-center group">
-                <motion.div
-                  initial={false}
-                  animate={{
-                    backgroundColor: isActive ? '#B8956A' : '#f5f5f4',
-                    borderColor: isActive ? '#B8956A' : '#e7e5e4',
-                    scale: step === s ? 1.1 : 1
-                  }}
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 shadow-sm ${isActive ? 'text-white shadow-[#B8956A]/20' : 'text-stone-400'
-                    }`}
-                >
-                  {isCompleted ? <CheckCircle className="w-6 h-6" /> : <span className="font-bold text-lg">{s}</span>}
-                </motion.div>
-                <span className={`mt-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-500 ${isActive ? 'text-[#B8956A]' : 'text-stone-400'
-                  }`}>
-                  {s === 1 ? 'Serviço' : s === 2 ? 'Plano' : s === 3 ? 'Horário' : 'Confirmar'}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        {/* Progress Line */}
-        <div className="absolute top-6 left-14 right-14 h-[3px] bg-stone-100 rounded-full -z-0">
-          <motion.div
-            className="h-full bg-gradient-to-r from-[#B8956A] to-[#8B7355] rounded-full"
-            initial={{ width: '0%' }}
-            animate={{ width: `${((step - 1) / 3) * 100}%` }}
-            transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-          />
-        </div>
-      </div>
-
-      {/* Steps Content with AnimatePresence for smooth transitions */}
-      <div className="relative min-h-[400px]">
-        {step === 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-8"
-          >
-            <div className="text-center space-y-3">
-              <h2 className="font-serif text-4xl font-bold text-[#2C3E1F] tracking-tight">O que deseja reservar?</h2>
-              <p className="text-stone-500 text-lg">Selecione uma das nossas experiências equestres premium</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayServices.map((service) => (
-                <motion.div
-                  key={service.id}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card
-                    className={`group cursor-pointer border-2 transition-all duration-500 h-full overflow-hidden relative rounded-[2rem] p-1 ${selectedService?.id === service.id
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/10'
-                        : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-xl'
-                      }`}
-                    onClick={() => setSelectedService(service)}
-                  >
-                    <CardContent className="p-8">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 transition-all duration-500 ${selectedService?.id === service.id
-                          ? 'bg-[#B8956A] text-white rotate-12 shadow-lg shadow-[#B8956A]/30'
-                          : 'bg-stone-50 text-stone-400 group-hover:bg-[#B8956A]/10 group-hover:text-[#B8956A] group-hover:rotate-6'
-                        }`}>
-                        {service.title.includes('Escola') ? <CalendarDays className="w-7 h-7" /> :
-                          service.title.includes('Grupo') ? <Clock className="w-7 h-7" /> :
-                            <CheckCircle className="w-7 h-7" />}
-                      </div>
-                      <h3 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-4 group-hover:text-[#B8956A] transition-colors">{service.title}</h3>
-                      <p className="text-stone-500 leading-relaxed mb-6 h-12 overflow-hidden line-clamp-2">
-                        {service.short_description || service.description}
-                      </p>
-                      <div className="flex items-center justify-between mt-auto">
-                        {service.price > 0 ? (
-                          <span className="text-xl font-bold text-[#B8956A]">Desde {service.price}€</span>
-                        ) : (
-                          <span className="text-stone-400 text-sm italic">Sob consulta</span>
-                        )}
-                        <motion.div
-                          animate={{ x: selectedService?.id === service.id ? 0 : 20, opacity: selectedService?.id === service.id ? 1 : 0 }}
-                          className="bg-[#B8956A] p-2 rounded-full text-white"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </motion.div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="flex justify-end pt-8">
-              <Button
-                onClick={goToStep2}
-                disabled={!selectedService}
-                className="bg-[#B8956A] hover:bg-[#8B7355] text-white h-16 px-12 rounded-2xl text-xl font-bold shadow-2xl shadow-[#B8956A]/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:hover:scale-100"
-              >
-                Continuar
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 2 && (
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            className="space-y-10"
-          >
-            <div className="text-center space-y-3">
-              <h2 className="font-serif text-4xl font-bold text-[#2C3E1F] tracking-tight">Personalize o seu Plano</h2>
-              <p className="text-stone-500 text-lg">Detalhes para {selectedService?.title}</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Logic for different services remains the same but with enhanced UI */}
-              {selectedService?.title === 'Aulas de Escola' && [
-                { duration: 30, frequency: 1, price: 70, label: '30min - 1x/semana' },
-                { duration: 30, frequency: 2, price: 120, label: '30min - 2x/semana' },
-                { duration: 30, frequency: 3, price: 150, label: '30min - 3x/semana' },
-                { duration: 60, frequency: 1, price: 90, label: '60min - 1x/semana' },
-                { duration: 60, frequency: 2, price: 150, label: '60min - 2x/semana' },
-                { duration: 60, frequency: 3, price: 180, label: '60min - 3x/semana' }
-              ].map((plan) => (
-                <Card
-                  key={plan.label}
-                  className={`cursor-pointer border-2 transition-all duration-300 rounded-[1.5rem] p-1 ${selectedPlan?.label === plan.label
-                      ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-xl shadow-[#B8956A]/5'
-                      : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-lg'
-                    }`}
-                  onClick={() => setSelectedPlan(plan)}
-                >
-                  <CardContent className="p-6 flex justify-between items-center">
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-lg text-[#2C3E1F]">{plan.label}</h3>
-                      <p className="text-sm text-stone-500">{plan.duration} min por aula</p>
-                    </div>
-                    <div className="text-right">
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {selectedService?.title === 'Aulas Particulares' && (
-                <>
-                  <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] overflow-hidden ${selectedPlan?.label === 'Com Gilberto Filipe'
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
-                        : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-xl'
-                      }`}
-                    onClick={() => {
-                      setSelectedPlan({ label: 'Com Gilberto Filipe', price: 75, isRecurringFourWeeks: true, duration: 60 });
-                      setShowPhotoVideoDialog(true);
-                    }}
-                  >
-                    <div className="h-3 w-full bg-gradient-to-r from-[#B8956A] to-[#8B7355]" />
-                    <CardContent className="p-8">
-                      <h3 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-3">Gilberto Filipe</h3>
-                      <p className="text-stone-500 mb-8 leading-relaxed">Experiência exclusiva com o Mestre. Foco em alta performance.</p>
-                      <div className="flex items-baseline gap-2 h-10">
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] overflow-hidden ${selectedPlan?.label === 'Com Monitores/Team'
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
-                        : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-xl'
-                      }`}
-                    onClick={() => setSelectedPlan({ label: 'Com Monitores/Team', price: 50, isRecurringFourWeeks: true, duration: 60 })}
-                  >
-                    <div className="h-3 w-full bg-stone-100 group-hover:bg-[#B8956A]/20 transition-all" />
-                    <CardContent className="p-8">
-                      <h3 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-3">Monitores/Team</h3>
-                      <p className="text-stone-500 mb-8 leading-relaxed">Acompanhamento técnico premium pela nossa equipa certificada.</p>
-                      <div className="flex items-baseline gap-2 h-10">
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
-
-              {selectedService?.title === 'Aulas em Grupo' && (
-                <>
-                  <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] ${selectedPlan?.duration === 30
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
-                        : 'border-stone-100 hover:border-[#B8956A]/30'
-                      }`}
-                    onClick={() => setSelectedPlan({ label: '30 minutos', duration: 30, frequency: 1, isRecurringFourWeeks: true })}
-                  >
-                    <CardContent className="p-8 text-center space-y-4">
-                      <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-[#B8956A]">
-                        <Clock className="w-8 h-8" />
-                      </div>
-                      <h3 className="font-serif text-3xl font-bold text-[#2C3E1F]">30 min</h3>
-                      <div className="h-10"></div>
-                    </CardContent>
-                  </Card>
-                  <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] ${selectedPlan?.duration === 60
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
-                        : 'border-stone-100 hover:border-[#B8956A]/30'
-                      }`}
-                    onClick={() => setSelectedPlan({ label: '60 minutos', duration: 60, frequency: 1, isRecurringFourWeeks: true })}
-                  >
-                    <CardContent className="p-8 text-center space-y-4">
-                      <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-[#B8956A]">
-                        <Clock className="w-8 h-8" />
-                      </div>
-                      <h3 className="font-serif text-3xl font-bold text-[#2C3E1F]">60 min</h3>
-                      <div className="h-10"></div>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
-            </div>
-
-            <div className="flex justify-between items-center pt-10 border-t border-stone-100">
-              <Button
-                variant="ghost"
-                onClick={() => setStep(1)}
-                className="text-stone-400 hover:text-[#2C3E1F] hover:bg-stone-50 h-14 px-8 rounded-xl font-bold"
-              >
-                Voltar
-              </Button>
-              <Button
-                onClick={goToStep3}
-                disabled={!selectedPlan && selectedService?.title !== 'Hipoterapia' && !selectedService?.price && selectedService?.title !== 'Proprietários'}
-                className="bg-[#B8956A] hover:bg-[#8B7355] text-white h-16 px-12 rounded-2xl text-xl font-bold shadow-2xl shadow-[#B8956A]/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-30"
-              >
-                Continuar
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 3 && (
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            className="space-y-10"
-          >
-            <div className="text-center space-y-3">
-              <h2 className="font-serif text-4xl font-bold text-[#2C3E1F] tracking-tight">Quando deseja vir?</h2>
-              <p className="text-stone-500 text-lg">Selecione o melhor horário para si</p>
-            </div>
-
-            {selectedPlan?.isRecurringFourWeeks && (
-              <div className="p-6 bg-[#B8956A]/5 border border-[#B8956A]/20 rounded-3xl flex items-center gap-4">
-                <div className="bg-[#B8956A] p-3 rounded-2xl text-white">
-                  <AlertCircle className="w-6 h-6" />
-                </div>
-                <p className="text-sm text-[#2C3E1F] leading-relaxed font-medium">
-                  Agendamento automático para as próximas <span className="text-[#B8956A] font-bold text-lg">4 semanas</span> no mesmo horário selecionado.
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              <Card className="border-2 border-stone-100 rounded-[2rem] overflow-hidden bg-white shadow-xl shadow-stone-200/50">
-                <CardHeader className="bg-stone-50/80 border-b border-stone-100 p-6">
-                  <CardTitle className="text-xl flex items-center gap-3 text-[#2C3E1F]">
-                    <div className="p-2 bg-white rounded-xl shadow-sm">
-                      <CalendarDays className="w-5 h-5 text-[#B8956A]" />
-                    </div>
-                    {selectedPlan?.isRecurringFourWeeks ? 'Dia da Semana' : 'Selecione a Data'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8">
-                  {selectedPlan?.isRecurringFourWeeks ? (
-                    <div className="grid grid-cols-1 gap-3">
-                      {weekDays.map((day) => {
-                        const isSelected = selectedDate && selectedDate.getDay() === day.id;
-                        return (
-                          <motion.div key={day.id} whileHover={{ x: 5 }} whileTap={{ scale: 0.98 }}>
-                            <Button
-                              variant="outline"
-                              className={`w-full h-16 rounded-2xl justify-start px-6 transition-all duration-300 ${isSelected
-                                  ? 'bg-[#B8956A] text-white border-[#B8956A] shadow-lg shadow-[#B8956A]/30'
-                                  : 'border-stone-100 hover:border-[#B8956A]/30 hover:bg-[#B8956A]/5 text-[#2C3E1F] font-bold'
-                                }`}
-                              onClick={() => setSelectedDate(getNextDayOfWeek(day.id))}
-                            >
-                              <div className={`p-2 rounded-lg mr-4 ${isSelected ? 'bg-white/20' : 'bg-stone-50 text-[#B8956A]'}`}>
-                                <CalendarDays className="w-4 h-4" />
-                              </div>
-                              <span className="flex-1 text-left">{day.label}</span>
-                              {isSelected && (
-                                <span className="text-[10px] bg-white/20 px-3 py-1 rounded-full uppercase tracking-widest font-bold">
-                                  Inicia {format(selectedDate, "dd/MM")}
-                                </span>
-                              )}
-                            </Button>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      locale={pt}
-                      disabled={(date) => {
-                        if (date < today || date.getDay() === 0) return true;
-                        if (date.getMonth() === 7 && selectedService?.title !== 'Proprietários') return true;
-                        return false;
-                      }}
-                      className="mx-auto"
-                    />
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 border-stone-100 rounded-[2rem] overflow-hidden bg-white shadow-xl shadow-stone-200/50">
-                <CardHeader className="bg-stone-50/80 border-b border-stone-100 p-6">
-                  <CardTitle className="text-xl flex items-center gap-3 text-[#2C3E1F]">
-                    <div className="p-2 bg-white rounded-xl shadow-sm">
-                      <Clock className="w-5 h-5 text-[#B8956A]" />
-                    </div>
-                    Horários
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8">
-                  {!selectedDate ? (
-                    <div className="text-center py-20 space-y-4">
-                      <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-stone-200">
-                        <CalendarDays className="w-8 h-8" />
-                      </div>
-                      <p className="text-stone-400 font-medium">Selecione o dia primeiro</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {singleDayAvailableSlots.map((slot) => {
-                        const isSelected = selectedTime === slot;
-                        return (
-                          <motion.div key={slot} whileTap={{ scale: 0.95 }}>
-                            <Button
-                              variant={isSelected ? 'default' : 'outline'}
-                              className={`w-full h-14 rounded-xl transition-all duration-300 font-bold ${isSelected
-                                  ? 'bg-[#2C3E1F] text-white border-[#2C3E1F] shadow-lg'
-                                  : 'border-stone-100 hover:border-[#B8956A] hover:bg-[#B8956A]/5'
-                                }`}
-                              onClick={() => setSelectedTime(isSelected ? null : slot)}
-                            >
-                              {slot}
-                            </Button>
-                          </motion.div>
-                        );
-                      })}
-                      {singleDayAvailableSlots.length === 0 && (
-                        <div className="col-span-full py-10 text-center text-stone-400 italic">
-                          Não existem horários disponíveis para este dia.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="flex justify-between items-center pt-10 border-t border-stone-100">
-              <Button
-                variant="ghost"
-                onClick={() => setStep(2)}
-                className="text-stone-400 hover:text-[#2C3E1F] hover:bg-stone-50 h-14 px-8 rounded-xl font-bold"
-              >
-                Voltar
-              </Button>
-              <Button
-                onClick={goToStep4}
-                disabled={!selectedTime}
-                className="bg-[#B8956A] hover:bg-[#8B7355] text-white h-16 px-12 rounded-2xl text-xl font-bold shadow-2xl shadow-[#B8956A]/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-30"
-              >
-                Rever Reserva
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 4 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="space-y-10"
-          >
-            <div className="text-center space-y-3">
-              <h2 className="font-serif text-4xl font-bold text-[#2C3E1F] tracking-tight">Quase pronto!</h2>
-              <p className="text-stone-500 text-lg">Confirme os detalhes da sua reserva de luxo</p>
-            </div>
-
-            <Card className="border-none rounded-[2.5rem] bg-gradient-to-br from-[#2C3E1F] to-[#1A2613] text-white overflow-hidden shadow-2xl">
-              <CardContent className="p-10 space-y-8 relative">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <CheckCircle className="w-40 h-40" />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
-                  <div className="space-y-6">
-                    <div className="space-y-1">
-                      <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">Serviço</p>
-                      <h3 className="text-2xl font-serif font-bold">{selectedService?.title}</h3>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">Plano Selecionado</p>
-                      <p className="text-xl font-semibold text-[#B8956A]">{selectedPlan?.label}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">Datas do Agendamento</p>
-                      {selectedPlan?.isRecurringFourWeeks ? (
-                        <div className="space-y-3">
-                          {[0, 1, 2, 3].map((i) => {
-                            const d = new Date(selectedDate);
-                            d.setDate(d.getDate() + i * 7);
-                            return (
-                              <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
-                                <CheckCircle className="w-4 h-4 text-[#B8956A]" />
-                                <span className="text-sm font-medium">
-                                  {format(d, "EEEE, d 'de' MMMM", { locale: pt })} às {selectedTime}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-4 bg-white/5 p-5 rounded-2xl border border-white/10">
-                          <Clock className="w-6 h-6 text-[#B8956A]" />
-                          <div>
-                            <p className="text-lg font-semibold">
-                              {selectedDate && format(new Date(selectedDate), "EEEE, d 'de' MMMM", { locale: pt })}
-                            </p>
-                            <p className="text-[#B8956A] font-bold tracking-widest text-sm uppercase">às {selectedTime}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-10 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-6">
-                  <div className="text-center sm:text-left hidden sm:block">
-                  </div>
-                  <Button
-                    size="lg"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="bg-[#B8956A] hover:bg-white hover:text-[#11180D] text-white h-20 px-16 rounded-2xl text-xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95 disabled:opacity-30 w-full sm:w-auto"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="w-8 h-8 animate-spin" />
-                    ) : (
-                      'Confirmar e Agendar'
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Button
-              variant="ghost"
-              onClick={() => setStep(3)}
-              className="text-stone-500 hover:text-[#2C3E1F] font-black uppercase tracking-widest text-xs h-14 mx-auto block"
-            >
-              ← Voltar para seleção de horário
-            </Button>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
-}
-
+export default Layout;
