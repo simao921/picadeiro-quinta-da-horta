@@ -99,7 +99,7 @@ export default function Competitions() {
               Acompanhe as provas de maior prestígio e os resultados da nossa equipa.
             </p>
             <div className="flex flex-wrap justify-center gap-6">
-              <Link to={createPageUrl('ClientDashboard')}>
+              <Link to={createPageUrl('UserProfile')}>
                 <Button className="h-16 px-10 rounded-2xl bg-white text-[#11180D] hover:bg-[#B8956A] hover:text-white font-black uppercase tracking-widest text-xs transition-all duration-500 shadow-2xl">
                   Minhas Inscrições
                 </Button>
@@ -120,49 +120,49 @@ export default function Competitions() {
               <h2 className="text-2xl font-serif font-black text-[#2C3E1F]">Refinar Provas</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">Modalidade</label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-stone-600">Modalidade</label>
                 <Select value={modalityFilter} onValueChange={setModalityFilter}>
-                  <SelectTrigger className="h-14 rounded-xl border-stone-100 bg-stone-50/50 font-bold text-sm">
+                  <SelectTrigger className="w-full bg-stone-50 border-stone-200">
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-stone-100 shadow-2xl">
-                    <SelectItem value="all" className="font-bold py-3">Todas as modalidades</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as modalidades</SelectItem>
                     {modalities.map(mod => (
-                      <SelectItem key={mod.id} value={mod.name} className="font-bold py-3">{mod.name}</SelectItem>
+                      <SelectItem key={mod.id} value={mod.name}>{mod.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">Ano</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-stone-600">Ano</label>
                 <Select value={yearFilter} onValueChange={setYearFilter}>
-                  <SelectTrigger className="h-14 rounded-xl border-stone-100 bg-stone-50/50 font-bold text-sm">
+                  <SelectTrigger className="w-full bg-stone-50 border-stone-200">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-stone-100 shadow-2xl">
-                    <SelectItem value="all" className="font-bold py-3">Todos os anos</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os anos</SelectItem>
                     {years.map(year => (
-                      <SelectItem key={year} value={year.toString()} className="font-bold py-3">{year}</SelectItem>
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">Estado</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-stone-600">Estado</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-14 rounded-xl border-stone-100 bg-stone-50/50 font-bold text-sm">
+                  <SelectTrigger className="w-full bg-stone-50 border-stone-200">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-stone-100 shadow-2xl">
-                    <SelectItem value="all" className="font-bold py-3">Todos os estados</SelectItem>
-                    <SelectItem value="inscricoes_abertas" className="font-bold py-3">Inscrições Abertas</SelectItem>
-                    <SelectItem value="inscricoes_encerradas" className="font-bold py-3">Inscrições Encerradas</SelectItem>
-                    <SelectItem value="em_curso" className="font-bold py-3">Em Curso</SelectItem>
-                    <SelectItem value="concluida" className="font-bold py-3">Concluída</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os estados</SelectItem>
+                    <SelectItem value="inscricoes_abertas">Inscrições Abertas</SelectItem>
+                    <SelectItem value="inscricoes_encerradas">Inscrições Encerradas</SelectItem>
+                    <SelectItem value="em_curso">Em Curso</SelectItem>
+                    <SelectItem value="concluida">Concluída</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -170,88 +170,72 @@ export default function Competitions() {
           </div>
         </div>
 
-        {/* Competitions Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-96 rounded-[2.5rem] bg-stone-50 animate-pulse" />
+              <div key={i} className="h-64 rounded-xl bg-stone-200 animate-pulse" />
             ))}
           </div>
         ) : filteredCompetitions.length === 0 ? (
-          <div className="text-center py-32 bg-stone-50 rounded-[3rem] border-2 border-dashed border-stone-100">
-            <Trophy className="w-20 h-20 text-stone-200 mx-auto mb-6" />
-            <p className="text-xl font-serif font-black text-stone-400">Sem resultados para os filtros aplicados</p>
+          <div className="text-center py-16 bg-white rounded-xl border border-stone-200">
+            <Trophy className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+            <p className="text-lg font-medium text-stone-500">Nenhuma competição encontrada</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCompetitions.map((comp, index) => {
               const statusInfo = getStatusInfo(comp.status);
               return (
-                <motion.div
-                  key={comp.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="premium-card bg-white border-white hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] transition-all duration-700 h-full flex flex-col group">
-                    <CardHeader className="p-8 pb-4">
-                      <div className="flex justify-between items-start mb-6">
-                        <Badge className={`${statusInfo.color} border-none px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest`}>
-                          {statusInfo.label}
+                <Card key={comp.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-all flex flex-col">
+                  <CardHeader className="p-6 pb-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <Badge className={`${statusInfo.color} border-none`}>
+                        {statusInfo.label}
+                      </Badge>
+                      {userEntries.some(e => e.competition_id === comp.id) && (
+                        <Badge className="bg-[#B8956A] text-white border-none">
+                          Registado
                         </Badge>
-                        {userEntries.some(e => e.competition_id === comp.id) && (
-                          <Badge className="bg-[#B8956A] text-white border-none px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
-                            Registado
-                          </Badge>
-                        )}
-                      </div>
-                      <CardTitle className="font-serif text-3xl font-black text-[#2C3E1F] leading-tight group-hover:text-[#B8956A] transition-colors duration-500">
-                        {comp.name}
-                      </CardTitle>
-                    </CardHeader>
-                    
-                    <CardContent className="p-8 pt-0 flex-grow flex flex-col">
-                      <div className="space-y-4 mb-8 text-sm font-bold text-stone-500">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-stone-50 flex items-center justify-center">
-                            <Calendar className="w-4 h-4 text-[#B8956A]" />
-                          </div>
-                          {format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-stone-50 flex items-center justify-center">
-                            <Trophy className="w-4 h-4 text-[#B8956A]" />
-                          </div>
-                          {comp.modality_name}
-                        </div>
-                        {comp.grade && (
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-stone-50 flex items-center justify-center">
-                              <Trophy className="w-4 h-4 text-[#B8956A]" />
-                            </div>
-                            Grau: {comp.grade}
-                          </div>
-                        )}
-                      </div>
-
-                      {comp.description && (
-                        <p className="text-sm text-stone-400 font-medium mb-10 line-clamp-3 leading-relaxed">
-                          {comp.description}
-                        </p>
                       )}
-
-                      <div className="mt-auto">
-                        <Link to={createPageUrl('CompetitionDetail') + `?id=${comp.id}`}>
-                          <Button className="w-full bg-[#11180D] hover:bg-[#B8956A] text-white h-16 rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-500 group-hover:scale-[1.02]">
-                            Ver Detalhes
-                            <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                          </Button>
-                        </Link>
+                    </div>
+                    <CardTitle className="text-xl font-bold text-[#2C3E1F] line-clamp-2">
+                      {comp.name}
+                    </CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent className="p-6 pt-0 flex-grow flex flex-col">
+                    <div className="space-y-3 mb-6 text-sm text-stone-600">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-stone-400" />
+                        {format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-stone-400" />
+                        {comp.modality_name}
+                      </div>
+                      {comp.grade && (
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-stone-400" />
+                          Grau: {comp.grade}
+                        </div>
+                      )}
+                    </div>
+
+                    {comp.description && (
+                      <p className="text-sm text-stone-500 mb-6 line-clamp-3">
+                        {comp.description}
+                      </p>
+                    )}
+
+                    <div className="mt-auto">
+                      <Link to={createPageUrl('CompetitionDetail') + `?id=${comp.id}`}>
+                        <Button className="w-full bg-[#2C3E1F] hover:bg-[#1f2c16] text-white">
+                          Ver Detalhes
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
