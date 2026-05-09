@@ -70,8 +70,8 @@ export default function Bookings() {
               src={heroImage}
               alt=""
               className="w-full h-full object-cover"
-              priority={true}
-            />
+              priority={true} />
+            
           </div>
           <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/65" />
           <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-48 h-48 sm:w-72 sm:h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
@@ -110,8 +110,8 @@ export default function Bookings() {
             src={heroImage}
             alt="Reservas"
             className="w-full h-full object-cover"
-            priority={true}
-          />
+            priority={true} />
+          
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/65" />
         {/* Decorative Elements */}
@@ -121,10 +121,10 @@ export default function Bookings() {
         <div className="absolute top-6 sm:top-8 left-0 right-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}>
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}>
             
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
+            <h1 className="font-serif sm:text-4xl font-bold text-white mb-2 text-xs">
               {t('hello')}, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
             </h1>
             <p className="text-stone-300 hidden">
