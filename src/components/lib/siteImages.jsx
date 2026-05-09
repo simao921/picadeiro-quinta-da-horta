@@ -6,10 +6,10 @@ export const DEFAULT_IMAGES = {
   hero_gallery: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1920&q=80',
   hero_bookings: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
   about_section: 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?auto=format&fit=crop&w=1200&q=80',
-  about_grid_1: 'https://www.image2url.com/r2/default/images/1778336317638-1f9a2d9b-b407-4310-8966-491e164a040d.jpeg',
+  about_grid_1: 'https://www.image2url.com/r2/default/images/1778336895303-972e3964-2dd8-45de-b91f-432635c1f8dd.jpeg',
   about_grid_2: 'https://www.image2url.com/r2/default/images/1778336372916-4a48fbd9-1fec-4852-ad75-a2d30fb4556b.jpeg',
   about_grid_3: 'https://www.image2url.com/r2/default/images/1778336960071-9cfe2be2-7f9e-4c9d-9237-e2b1840dc241.jpeg',
-  about_grid_4: 'https://www.image2url.com/r2/default/images/1778336895303-972e3964-2dd8-45de-b91f-432635c1f8dd.jpeg',
+  about_grid_4: 'https://www.image2url.com/r2/default/images/1778336317638-1f9a2d9b-b407-4310-8966-491e164a040d.jpeg',
   logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/695506be843687b2f61b8758/8b9c42396_944BDCD3-BD5F-45A8-A0F7-F73EB7F7BE9B2.PNG',
   testimonials_bg: 'https://images.unsplash.com/photo-1598662779094-d8de6b04f1c5?auto=format&fit=crop&w=1920&q=80',
   cta_section: 'https://images.unsplash.com/photo-1560925691-17f5b06af77a?auto=format&fit=crop&w=1920&q=80'
