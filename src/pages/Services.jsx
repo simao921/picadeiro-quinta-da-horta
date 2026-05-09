@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';
+import LazyImage from '@/components/ui/LazyImage';
+import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 
 const iconMap = {
   'GraduationCap': GraduationCap,
@@ -77,6 +79,16 @@ export default function Services() {
   const { t } = useLanguage();
   const defaultServices = getDefaultServices(t);
   
+  const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero_services);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      const url = await getSiteImage('hero_services', DEFAULT_IMAGES.hero_services);
+      setHeroImage(url);
+    };
+    loadImage();
+  }, []);
+  
   const { data: services, isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.list(),
@@ -95,10 +107,11 @@ export default function Services() {
       {/* Hero Section */}
       <section className="relative py-12 sm:py-16 md:py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
-          <img
-            src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
-            alt=""
+          <LazyImage
+            src={heroImage}
+            alt="Serviços Equestres"
             className="w-full h-full object-cover"
+            priority={true}
           />
         </div>
         {/* Decorative Elements */}
