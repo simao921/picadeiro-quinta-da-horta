@@ -1,7 +1,7 @@
 import { base44 } from '@/api/base44Client';
 
 export const DEFAULT_IMAGES = {
-  hero_home: 'https://www.cmjornal.pt/desporto/modalidades/detalhe/cavaleiro-portugues-gilberto-filipe-bi-campeao-do-mundo-de-equitacao-de-trabalho',
+  hero_home: 'https://www.cmjornal.pt/desporto/modalidades/detalhe/cavaleiro-portugues-gilberto-filipe-bi-campeao-do-mundo-de-equitacao-de-trabalho.png',
   hero_services: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1920&q=80',
   hero_gallery: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1920&q=80',
   hero_bookings: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
