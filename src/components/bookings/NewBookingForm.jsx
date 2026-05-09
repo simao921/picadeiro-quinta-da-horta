@@ -1012,8 +1012,6 @@ export default function NewBookingForm({ user, isBlocked }) {
                       <p className="text-sm text-stone-500">{plan.duration} min por aula</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-[#B8956A]">{plan.price}€</p>
-                      <p className="text-[10px] text-stone-400 uppercase font-bold tracking-widest">por mês</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1035,9 +1033,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     <CardContent className="p-8">
                       <h3 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-3">Gilberto Filipe</h3>
                       <p className="text-stone-500 mb-8 leading-relaxed">Experiência exclusiva com o Mestre. Foco em alta performance.</p>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-[#B8956A]">75€</span>
-                        <span className="text-stone-400 font-medium">/aula</span>
+                      <div className="flex items-baseline gap-2 h-10">
                       </div>
                     </CardContent>
                   </Card>
@@ -1052,9 +1048,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     <CardContent className="p-8">
                       <h3 className="font-serif text-3xl font-bold text-[#2C3E1F] mb-3">Monitores/Team</h3>
                       <p className="text-stone-500 mb-8 leading-relaxed">Acompanhamento técnico premium pela nossa equipa certificada.</p>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-[#B8956A]">50€</span>
-                        <span className="text-stone-400 font-medium">/aula</span>
+                      <div className="flex items-baseline gap-2 h-10">
                       </div>
                     </CardContent>
                   </Card>
@@ -1075,8 +1069,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                         <Clock className="w-8 h-8" />
                       </div>
                       <h3 className="font-serif text-3xl font-bold text-[#2C3E1F]">30 min</h3>
-                      <p className="text-stone-500">Sessão dinâmica e focada</p>
-                      <p className="text-4xl font-bold text-[#B8956A]">40€</p>
+                      <div className="h-10"></div>
                     </CardContent>
                   </Card>
                   <Card
@@ -1091,8 +1084,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                         <Clock className="w-8 h-8" />
                       </div>
                       <h3 className="font-serif text-3xl font-bold text-[#2C3E1F]">60 min</h3>
-                      <p className="text-stone-500">Imersão completa no treino</p>
-                      <p className="text-4xl font-bold text-[#B8956A]">60€</p>
+                      <div className="h-10"></div>
                     </CardContent>
                   </Card>
                 </>
@@ -1326,9 +1318,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 </div>
 
                 <div className="pt-10 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-6">
-                  <div className="text-center sm:text-left">
-                    <p className="text-stone-400 text-xs font-black uppercase tracking-[0.3em] mb-1">Total da Reserva</p>
-                    <p className="text-4xl font-serif font-black text-white">€{selectedPlan?.price || '0.00'}</p>
+                  <div className="text-center sm:text-left hidden sm:block">
                   </div>
                   <Button
                     size="lg"
