@@ -84,17 +84,12 @@ export default function Competitions() {
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/65" />
+        <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-48 h-48 sm:w-72 sm:h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 sm:bottom-20 sm:left-20 w-64 h-64 sm:w-96 sm:h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white">Competições</h1>
-              <p className="text-stone-200 mt-2 max-w-2xl">Acompanhe as provas e os resultados da nossa equipa.</p>
-            </div>
-            <Link to={createPageUrl('UserProfile')}>
-              <Button className="bg-[#B8956A] hover:bg-[#8C6D46] text-white font-semibold">
-                Minhas Inscrições
-              </Button>
-            </Link>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white">Competições</h1>
+            <p className="text-stone-200 mt-2 max-w-2xl">Acompanhe as provas e os resultados da nossa equipa.</p>
           </div>
         </div>
       </section>
