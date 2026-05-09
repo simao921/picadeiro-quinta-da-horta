@@ -160,6 +160,54 @@ export default function UserProfile() {
     }
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: async (data) => { await base44.auth.updateMe(data); },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['user']);
+      setEditMode(false);
+      setUser(prev => ({ ...prev, ...formData }));
+      toast.success('Perfil atualizado com sucesso!');
+    },
+  });
+
+  const { data: userMessages = [], isLoading: messagesLoading } = useQuery({
+    queryKey: ['user-messages', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return await base44.entities.ContactMessage.filter({ email: user.email });
+    },
+    enabled: !!user?.email,
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (data) => {
+      await base44.entities.ContactMessage.create({
+        name: user.full_name,
+        email: user.email,
+        subject: data.subject,
+        message: data.message,
+        phone: user.phone || ''
+      });
+    },
+    onSuccess: () => {
+      setMessage('');
+      setMessageSubject('');
+      queryClient.invalidateQueries(['user-messages']);
+      toast.success('Mensagem enviada com sucesso!');
+    },
+  });
+
+  const handleSaveProfile = () => updateUserMutation.mutate(formData);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!messageSubject.trim() || !message.trim()) {
+      toast.error('Por favor preencha o assunto e a mensagem');
+      return;
+    }
+    sendMessageMutation.mutate({ subject: messageSubject, message });
+  };
+
   const getStatusBadge = (status) => {
     const config = {
       pending: { label: 'Pendente', class: 'bg-amber-100 text-amber-800' },
@@ -170,6 +218,7 @@ export default function UserProfile() {
     const { label, class: className } = config[status] || config.pending;
     return <Badge className={className}>{label}</Badge>;
   };
+
 
   const getPaymentStatusBadge = (status) => {
     const config = {
