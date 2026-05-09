@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
@@ -8,12 +8,17 @@ import { Image as ImageIcon, Filter, X } from 'lucide-react';
 import LazyImage from '@/components/ui/LazyImage';
 import MetaTags from '@/components/seo/MetaTags';
 import { useLanguage } from '@/components/LanguageProvider';
+import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 
 export default function Gallery() {
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedImage, setSelectedImage] = useState(null);
-  const [heroImage] = useState('https://www.image2url.com/r2/default/images/1778342419244-815fb73f-d3a7-4e27-b4d5-c775902ec137.jpeg');
+  const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero_gallery);
+
+  useEffect(() => {
+    getSiteImage('hero_gallery', DEFAULT_IMAGES.hero_gallery).then(setHeroImage);
+  }, []);
 
   const { data: images = [], isLoading } = useQuery({
     queryKey: ['gallery-images'],
@@ -67,8 +72,13 @@ export default function Gallery() {
 
       {/* Hero Section */}
       <div className="relative h-[50vh] min-h-[400px] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1600')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 opacity-20">
+          <LazyImage
+            src={heroImage}
+            alt={t('our_gallery')}
+            className="w-full h-full object-cover"
+            priority={true}
+          />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-stone-900/50"></div>
         <div className="relative z-10 text-center px-4">
