@@ -74,9 +74,10 @@ export default function LazyImage({
     className: `${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 ease-in-out`,
     onLoad: handleLoad,
     onError: () => {
-      setImageSrc(placeholder);
-      setIsLoaded(true);
-    }
+      setIsLoaded(true); // Show placeholder on error
+    },
+    loading: priority ? "eager" : "lazy",
+    decoding: "async"
   };
 
   if (width) imgProps.width = width;

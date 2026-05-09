@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -13,8 +13,6 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/components/LanguageProvider';
-import LazyImage from '@/components/ui/LazyImage';
-import { getSiteImage, DEFAULT_IMAGES } from '@/components/lib/siteImages';
 
 const iconMap = {
   'GraduationCap': GraduationCap,
@@ -79,16 +77,6 @@ export default function Services() {
   const { t } = useLanguage();
   const defaultServices = getDefaultServices(t);
   
-  const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero_services);
-
-  useEffect(() => {
-    const loadImage = async () => {
-      const url = await getSiteImage('hero_services', DEFAULT_IMAGES.hero_services);
-      setHeroImage(url);
-    };
-    loadImage();
-  }, []);
-  
   const { data: services, isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: () => base44.entities.Service.list(),
@@ -98,61 +86,61 @@ export default function Services() {
   const displayServices = (services && services.length > 0) ? services : defaultServices;
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB]">
+    <div className="min-h-screen bg-stone-50">
       <MetaTags 
         title="Serviços - Picadeiro Quinta da Horta"
         description="Aulas de equitação particulares e em grupo, hipoterapia e aluguer de espaço para eventos. Programas personalizados com o Bi-Campeão Mundial Gilberto Filipe."
         keywords="aulas equitação, aulas particulares cavalos, hipoterapia, eventos cavalos, gilberto filipe"
       />
-      
-      {/* Cinematic Hero Section */}
-      <section className="relative h-[60vh] flex items-center overflow-hidden bg-[#11180D]">
-        <div className="absolute inset-0 z-0">
-          <motion.div 
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 10, ease: "easeOut" }}
-            className="w-full h-full"
-          >
-            <LazyImage
-              src={heroImage}
-              alt="Serviços Equestres"
-              className="w-full h-full object-cover opacity-40"
-              priority={true}
-            />
-          </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCFB] via-transparent to-transparent" />
-          <div className="absolute inset-0 bg-[#11180D]/40" />
+      {/* Hero Section */}
+      <section className="relative py-12 sm:py-16 md:py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img
+            src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
+            alt=""
+            className="w-full h-full object-cover"
+          />
         </div>
+        {/* Decorative Elements */}
+        <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-48 h-48 sm:w-72 sm:h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 sm:bottom-20 sm:left-20 w-64 h-64 sm:w-96 sm:h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
         
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 relative z-10 w-full text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            className="text-center"
           >
-            <span className="inline-flex items-center gap-3 px-6 py-2 bg-[#B8956A]/20 backdrop-blur-md rounded-full text-[#B8956A] text-xs font-black uppercase tracking-[0.4em] mb-8">
-              <Trophy className="w-4 h-4" />
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#B8956A]/20 backdrop-blur-sm 
+                           rounded-full text-[#B8956A] text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
               {t('services_title')}
             </span>
-            <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl font-black text-white leading-tight mb-8">
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4 sm:mb-6 px-4">
               {t('services_page_title')}
             </h1>
-            <p className="text-xl text-stone-300 max-w-2xl mx-auto font-medium leading-relaxed">
+            <p className="text-base sm:text-lg text-stone-300 max-w-2xl mx-auto leading-relaxed px-4">
               {t('services_page_subtitle')}
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Services Listing */}
-      <section className="py-32">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="space-y-32">
+      {/* Services Grid */}
+      <section className="py-12 sm:py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-8 sm:space-y-12 md:space-y-16">
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-20">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-[500px] rounded-[3rem] bg-stone-100 animate-pulse" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <Skeleton className="h-64 w-full" />
+                    <CardContent className="p-6">
+                      <Skeleton className="h-6 w-2/3 mb-2" />
+                      <Skeleton className="h-4 w-full mb-4" />
+                      <Skeleton className="h-10 w-32" />
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             ) : (
@@ -165,76 +153,70 @@ export default function Services() {
                     key={service.id}
                     initial={{ opacity: 0, y: 50 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
                   >
-                    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center ${isEven ? '' : 'lg:flex-row-reverse'}`}>
-                      {/* Premium Image Column */}
-                      <div className={`relative group ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
-                        <div className="absolute inset-0 bg-[#B8956A] rounded-[3rem] rotate-3 scale-[1.02] opacity-10 group-hover:rotate-0 transition-transform duration-700" />
-                        <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl border border-stone-100">
+                    <Card className="overflow-hidden border-0 shadow-xl bg-white">
+                      <div className={`grid grid-cols-1 lg:grid-cols-2 ${isEven ? '' : 'lg:flex-row-reverse'}`}>
+                        {/* Image */}
+                        <div className={`relative h-56 sm:h-72 md:h-80 lg:h-auto ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                           <img
                             src={service.image_url}
                             alt={service.title}
-                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                            className="w-full h-full object-cover"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#11180D]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent lg:hidden" />
+                          <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                            <Badge className="bg-[#C9A961] text-[#2C3E1F] px-2 py-1 text-xs sm:px-3 sm:py-1 sm:text-sm">
+                              <Icon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              {service.short_description || 'Destaque'}
+                            </Badge>
+                          </div>
                         </div>
-                        
-                        {/* Floating Icon Badge */}
-                        <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-white rounded-3xl shadow-2xl flex items-center justify-center z-20 group-hover:-translate-y-4 group-hover:bg-[#B8956A] transition-all duration-500">
-                          <Icon className="w-10 h-10 text-[#2C3E1F] group-hover:text-white transition-colors duration-500" />
-                        </div>
-                      </div>
 
-                      {/* Content Column */}
-                      <div className={`space-y-10 ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
-                        <div className="space-y-4">
-                          <Badge className="bg-[#B8956A]/10 text-[#B8956A] border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] rounded-full">
-                            {service.short_description || 'Excelência Equestre'}
-                          </Badge>
-                          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black text-[#2C3E1F] leading-tight">
+                        {/* Content */}
+                        <CardContent className={`p-5 sm:p-6 md:p-8 lg:p-12 flex flex-col justify-center ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+                          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2C3E1F] mb-3 sm:mb-4">
                             {service.title}
                           </h2>
-                        </div>
-                        
-                        <p className="text-lg text-stone-500 font-medium leading-relaxed">
-                          {service.description}
-                        </p>
+                          <p className="text-sm sm:text-base text-stone-600 leading-relaxed mb-4 sm:mb-6">
+                            {service.description}
+                          </p>
 
-                        {/* Features List */}
-                        {service.features && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                            {service.features.map((feature, i) => (
-                              <div key={i} className="flex items-center gap-4 text-sm font-bold text-[#2C3E1F] group/feat">
-                                <div className="w-8 h-8 rounded-xl bg-[#2C3E1F]/5 flex items-center justify-center group-hover/feat:bg-[#B8956A] transition-colors duration-300">
-                                  <CheckCircle className="w-4 h-4 text-[#B8956A] group-hover/feat:text-white transition-colors" />
+                          {/* Features */}
+                          {service.features && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                              {service.features.map((feature, i) => (
+                                <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-stone-600">
+                                  <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4A5D23] flex-shrink-0 mt-0.5" />
+                                  <span>{feature}</span>
                                 </div>
-                                <span>{feature}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="pt-8 flex flex-col sm:flex-row gap-6">
-                          <Link to={createPageUrl('Bookings')} className="flex-1 sm:flex-none">
-                            <Button 
-                              size="lg" 
-                              className="bg-[#2C3E1F] hover:bg-[#B8956A] text-white h-20 px-12 rounded-2xl text-lg font-black shadow-2xl shadow-[#2C3E1F]/20 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
-                            >
-                              {t('book_now')}
-                              <ArrowRight className="w-6 h-6 ml-4" />
-                            </Button>
-                          </Link>
-                          {service.price && (
-                            <div className="h-20 px-8 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-center font-black text-[#2C3E1F]">
-                              <span className="text-xs uppercase tracking-widest text-stone-400 mr-4">Desde</span>
-                              <span className="text-3xl font-serif">€{service.price}</span>
+                              ))}
                             </div>
                           )}
-                        </div>
+
+                          {/* Info Cards */}
+                          <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8">
+                            {service.max_participants && (
+                              <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-stone-100 rounded-lg">
+                                <Users2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-600" />
+                                <span className="text-sm sm:text-base text-stone-600">Máx. {service.max_participants}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <Link to={createPageUrl('Bookings')}>
+                            <Button 
+                              size="lg" 
+                              className="bg-[#B8956A] hover:bg-[#8B7355] text-white w-full sm:w-fit shadow-lg shadow-[#B8956A]/30 text-sm sm:text-base"
+                            >
+                              {t('book_now')}
+                              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+                            </Button>
+                          </Link>
+                        </CardContent>
                       </div>
-                    </div>
+                    </Card>
                   </motion.div>
                 );
               })
@@ -243,33 +225,28 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Global Contact CTA Section */}
-      <section className="py-32 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-[#11180D] rounded-[4rem] p-12 sm:p-20 relative overflow-hidden text-center shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#B8956A]/10 rounded-full blur-[100px] -mr-48 -mt-48" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#2C3E1F]/20 rounded-full blur-[100px] -ml-48 -mb-48" />
-            
-            <div className="relative z-10 space-y-10">
-              <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight">
-                {t('not_found_services') || 'Procura algo personalizado?'}
-              </h2>
-              <p className="text-xl text-stone-400 font-medium max-w-2xl mx-auto">
-                {t('not_found_services_desc') || 'Estamos disponíveis para criar programas à medida das suas necessidades e ambições equestres.'}
-              </p>
-              <div className="pt-6">
-                <a href="tel:+351932111786">
-                  <Button 
-                    size="lg" 
-                    className="bg-[#B8956A] hover:bg-white text-[#11180D] h-20 px-12 rounded-2xl text-lg font-black shadow-2xl shadow-[#B8956A]/30 transition-all hover:scale-105 active:scale-95"
-                  >
-                    Contactar Agora
-                    <ArrowRight className="w-6 h-6 ml-4" />
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </div>
+      {/* CTA Section */}
+      <section className="relative py-12 sm:py-16 md:py-20 bg-gradient-to-r from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-[#B8956A] rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-[#8B7355] rounded-full blur-3xl" />
+        </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative">
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
+            {t('not_found_services') || 'Não encontrou o que procurava?'}
+          </h2>
+          <p className="text-stone-300 text-sm sm:text-base md:text-lg mb-6 sm:mb-8">
+            {t('not_found_services_desc') || 'Entre em contacto connosco para soluções personalizadas.'}
+          </p>
+          <a href="tel:+351932111786">
+            <Button 
+              size="lg" 
+              className="bg-[#B8956A] hover:bg-[#8B7355] text-white font-semibold shadow-lg shadow-[#B8956A]/30 px-6 sm:px-8 w-full sm:w-auto text-sm sm:text-base"
+            >
+              Ligar agora
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+            </Button>
+          </a>
         </div>
       </section>
     </div>

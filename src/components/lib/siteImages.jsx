@@ -2,7 +2,7 @@ import { base44 } from '@/api/base44Client';
 
 export const DEFAULT_IMAGES = {
   hero_home: 'https://cdn.cmjornal.pt/images/2022-07/img_1500x1000uu2022-07-24-16-46-48-1171717.png',
-  hero_services: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ7sR7n22wxUJR9Yw0S-UW15W4__kHzrGj3A&s',
+  hero_services: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1920&q=80',
   hero_gallery: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1920&q=80',
   hero_bookings: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
   about_section: 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?auto=format&fit=crop&w=1200&q=80',
