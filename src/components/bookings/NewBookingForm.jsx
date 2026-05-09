@@ -4,8 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { 
-  CalendarDays, Clock, 
+import {
+  CalendarDays, Clock,
   CheckCircle, Loader2, AlertCircle, Camera
 } from 'lucide-react';
 import {
@@ -52,8 +52,8 @@ const getNextDayOfWeek = (dayIndex) => {
 };
 
 // Componente para seleção de aula semanal
-function WeeklyLessonSelector({ 
-  index, currentDate, currentTime, selectedDates, selectedTimes, 
+function WeeklyLessonSelector({
+  index, currentDate, currentTime, selectedDates, selectedTimes,
   setSelectedDates, setSelectedTimes, blockedSlots, getAvailableSlots, getLessonsForDate, isOwnerService
 }) {
   const [dateLessons, setDateLessons] = useState([]);
@@ -294,54 +294,54 @@ export default function NewBookingForm({ user, isBlocked }) {
     mutationFn: async () => {
       const duration = selectedPlan?.duration || selectedService.duration;
       const bookingsToCreate = [];
-      
+
       // Se tem múltiplos horários (planos com frequency > 1)
       if (selectedPlan?.frequency > 1) {
         for (let i = 0; i < selectedPlan.frequency; i++) {
           const date = selectedDates[i];
           const time = selectedTimes[i];
-          
+
           if (!date || !time) {
             throw new Error('Por favor selecione todos os horários');
           }
-          
+
           // Buscar aulas para esta data
           const dateLessons = await base44.entities.Lesson.filter({ date: format(new Date(date), 'yyyy-MM-dd') });
-          
+
           // Verificar disponibilidade
           const lessonsAtTime = dateLessons.filter(l => l.start_time === time);
           const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-          
+
           if (totalBooked >= 6) {
             throw new Error(`Horário ${time} de ${format(new Date(date), "dd/MM")} indisponível - máximo 6 alunos`);
           }
-          
+
           // Se for 60 minutos, verificar próxima meia hora
           if (duration === 60) {
             const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
             const slotIndex = timeSlots.indexOf(time);
             const nextSlot = timeSlots[slotIndex + 1];
-            
+
             if (nextSlot) {
               const lessonsAtNextTime = dateLessons.filter(l => l.start_time === nextSlot);
               const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-              
+
               if (totalBookedNext >= 6) {
                 throw new Error(`Horário ${time} de ${format(new Date(date), "dd/MM")} indisponível - próxima meia hora cheia`);
               }
             }
           }
-          
+
           // Criar ou encontrar a lição
-          let lesson = dateLessons.find(l => 
-            l.service_id === selectedService.id && 
+          let lesson = dateLessons.find(l =>
+            l.service_id === selectedService.id &&
             l.start_time === time
           );
-          
+
           if (!lesson) {
             const startTime = new Date(`2000-01-01T${time}:00`);
             const endTime = new Date(startTime.getTime() + duration * 60000);
-            
+
             lesson = await base44.entities.Lesson.create({
               service_id: selectedService.id,
               date: format(new Date(date), 'yyyy-MM-dd'),
@@ -352,23 +352,23 @@ export default function NewBookingForm({ user, isBlocked }) {
               is_owner_service: selectedService.title === 'Proprietários'
             });
           }
-          
+
           // Se for 60 minutos, criar/atualizar próxima meia hora
           if (duration === 60) {
             const timeSlots = date.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
             const slotIndex = timeSlots.indexOf(time);
             const nextSlot = timeSlots[slotIndex + 1];
-            
+
             if (nextSlot) {
-              let nextLesson = dateLessons.find(l => 
-                l.service_id === selectedService.id && 
+              let nextLesson = dateLessons.find(l =>
+                l.service_id === selectedService.id &&
                 l.start_time === nextSlot
               );
-              
+
               if (!nextLesson) {
                 const startTime = new Date(`2000-01-01T${nextSlot}:00`);
                 const endTime = new Date(startTime.getTime() + 30 * 60000);
-                
+
                 nextLesson = await base44.entities.Lesson.create({
                   service_id: selectedService.id,
                   date: format(new Date(date), 'yyyy-MM-dd'),
@@ -379,13 +379,13 @@ export default function NewBookingForm({ user, isBlocked }) {
                   is_owner_service: selectedService.title === 'Proprietários'
                 });
               }
-              
+
               await base44.entities.Lesson.update(nextLesson.id, {
                 booked_spots: (nextLesson.booked_spots || 0) + 1
               });
             }
           }
-          
+
           // Criar reserva (sempre pendente para planos múltiplos)
           const booking = await base44.entities.Booking.create({
             lesson_id: lesson.id,
@@ -394,19 +394,19 @@ export default function NewBookingForm({ user, isBlocked }) {
             status: 'pending',
             is_owner_booking: selectedService.title === 'Proprietários'
           });
-          
+
           await base44.entities.Lesson.update(lesson.id, {
             booked_spots: (lesson.booked_spots || 0) + 1
           });
-          
+
           bookingsToCreate.push({ date, time, booking });
         }
-        
+
         // Enviar email com todas as reservas
-        const bookingsList = bookingsToCreate.map(b => 
+        const bookingsList = bookingsToCreate.map(b =>
           `<li>${format(new Date(b.date), "EEEE, d 'de' MMMM", { locale: pt })} às ${b.time}</li>`
         ).join('');
-        
+
         await base44.functions.invoke('sendBookingConfirmation', {
           bookingId: bookingsToCreate[0].booking.id,
           lessonId: bookingsToCreate[0].booking.lesson_id,
@@ -416,7 +416,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           lessonTime: bookingsToCreate[0].time,
           serviceName: selectedService.title
         });
-        
+
         /* await base44.integrations.Core.SendEmail({
           to: user.email,
           subject: `Reservas Registadas - ${selectedService.title}`,
@@ -437,7 +437,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             <p>Obrigado por escolher o Picadeiro Quinta da Horta!</p>
           `
         }); */
-        
+
         return bookingsToCreate;
       } else if (selectedPlan?.isRecurringFourWeeks) {
         // Reserva para as próximas 4 semanas
@@ -445,7 +445,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         if (!selectedDate) throw new Error('Por favor selecione um dia');
 
         const bookingsToCreate = [];
-        
+
         for (let i = 0; i < 4; i++) {
           const targetDate = new Date(selectedDate);
           targetDate.setDate(targetDate.getDate() + (i * 7));
@@ -455,7 +455,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           const dateLessons = await base44.entities.Lesson.filter({ date: dateStr });
           const lessonsAtTime = dateLessons.filter(l => l.start_time === selectedTime);
           const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-          
+
           if (totalBooked >= 6) {
             throw new Error(`Horário indisponível na semana ${i + 1} (${format(targetDate, 'dd/MM')}) - máximo de 6 alunos`);
           }
@@ -464,26 +464,26 @@ export default function NewBookingForm({ user, isBlocked }) {
             const timeSlots = targetDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
             const slotIndex = timeSlots.indexOf(selectedTime);
             const nextSlot = timeSlots[slotIndex + 1];
-            
+
             if (nextSlot) {
               const lessonsAtNextTime = dateLessons.filter(l => l.start_time === nextSlot);
               const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-              
+
               if (totalBookedNext >= 6) {
                 throw new Error(`Horário indisponível na semana ${i + 1} (${format(targetDate, 'dd/MM')}) - próxima meia hora cheia`);
               }
             }
           }
 
-          let lesson = dateLessons.find(l => 
-            l.service_id === selectedService.id && 
+          let lesson = dateLessons.find(l =>
+            l.service_id === selectedService.id &&
             l.start_time === selectedTime
           );
 
           if (!lesson) {
             const startTime = new Date(`2000-01-01T${selectedTime}:00`);
             const endTime = new Date(startTime.getTime() + duration * 60000);
-            
+
             lesson = await base44.entities.Lesson.create({
               service_id: selectedService.id,
               date: dateStr,
@@ -499,17 +499,17 @@ export default function NewBookingForm({ user, isBlocked }) {
             const timeSlots = targetDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
             const slotIndex = timeSlots.indexOf(selectedTime);
             const nextSlot = timeSlots[slotIndex + 1];
-            
+
             if (nextSlot) {
-              let nextLesson = dateLessons.find(l => 
-                l.service_id === selectedService.id && 
+              let nextLesson = dateLessons.find(l =>
+                l.service_id === selectedService.id &&
                 l.start_time === nextSlot
               );
-              
+
               if (!nextLesson) {
                 const startTime = new Date(`2000-01-01T${nextSlot}:00`);
                 const endTime = new Date(startTime.getTime() + 30 * 60000);
-                
+
                 nextLesson = await base44.entities.Lesson.create({
                   service_id: selectedService.id,
                   date: dateStr,
@@ -520,7 +520,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   is_owner_service: selectedService.title === 'Proprietários'
                 });
               }
-              
+
               await base44.entities.Lesson.update(nextLesson.id, {
                 booked_spots: (nextLesson.booked_spots || 0) + 1
               });
@@ -563,42 +563,42 @@ export default function NewBookingForm({ user, isBlocked }) {
         if (!selectedTime) {
           throw new Error('Por favor selecione um horário');
         }
-        
+
         if (!selectedDate) {
           throw new Error('Por favor selecione uma data');
         }
-        
+
         const lessonsAtTime = lessons.filter(l => l.start_time === selectedTime);
         const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-        
+
         if (totalBooked >= 6) {
           throw new Error('Horário indisponível - máximo de 6 alunos por meia hora');
         }
-        
+
         if (duration === 60) {
           const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
           const slotIndex = timeSlots.indexOf(selectedTime);
           const nextSlot = timeSlots[slotIndex + 1];
-          
+
           if (nextSlot) {
             const lessonsAtNextTime = lessons.filter(l => l.start_time === nextSlot);
             const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-            
+
             if (totalBookedNext >= 6) {
               throw new Error('Horário indisponível - próxima meia hora está cheia (máximo 6 alunos)');
             }
           }
         }
 
-        let lesson = lessons.find(l => 
-          l.service_id === selectedService.id && 
+        let lesson = lessons.find(l =>
+          l.service_id === selectedService.id &&
           l.start_time === selectedTime
         );
 
         if (!lesson) {
           const startTime = new Date(`2000-01-01T${selectedTime}:00`);
           const endTime = new Date(startTime.getTime() + duration * 60000);
-          
+
           lesson = await base44.entities.Lesson.create({
             service_id: selectedService.id,
             date: format(selectedDate, 'yyyy-MM-dd'),
@@ -614,17 +614,17 @@ export default function NewBookingForm({ user, isBlocked }) {
           const timeSlots = selectedDate.getDay() === 6 ? saturdayTimeSlots : weekdayTimeSlots;
           const slotIndex = timeSlots.indexOf(selectedTime);
           const nextSlot = timeSlots[slotIndex + 1];
-          
+
           if (nextSlot) {
-            let nextLesson = lessons.find(l => 
-              l.service_id === selectedService.id && 
+            let nextLesson = lessons.find(l =>
+              l.service_id === selectedService.id &&
               l.start_time === nextSlot
             );
-            
+
             if (!nextLesson) {
               const startTime = new Date(`2000-01-01T${nextSlot}:00`);
               const endTime = new Date(startTime.getTime() + 30 * 60000);
-              
+
               nextLesson = await base44.entities.Lesson.create({
                 service_id: selectedService.id,
                 date: format(selectedDate, 'yyyy-MM-dd'),
@@ -635,7 +635,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 is_owner_service: selectedService.title === 'Proprietários'
               });
             }
-            
+
             await base44.entities.Lesson.update(nextLesson.id, {
               booked_spots: (nextLesson.booked_spots || 0) + 1
             });
@@ -685,20 +685,20 @@ export default function NewBookingForm({ user, isBlocked }) {
 
   const getAvailableSlots = (date = selectedDate, dateLessons = null) => {
     if (!date) return [];
-    
+
     const dayOfWeek = date.getDay();
     const timeSlots = dayOfWeek === 6 ? saturdayTimeSlots : weekdayTimeSlots;
-    
+
     if (!selectedService) return timeSlots;
-    
+
     // Verificar se o dia está bloqueado
     const dateStr = format(new Date(date), 'yyyy-MM-dd');
     const dayBlocked = blockedSlots.some(b => b.date === dateStr && !b.time_slot);
     if (dayBlocked) return [];
-    
+
     // Usar as lições fornecidas ou as lições do dia selecionado
     const lessonsToCheck = dateLessons !== null ? dateLessons : lessons;
-    
+
     const selectedDay = new Date(date);
     selectedDay.setHours(0, 0, 0, 0);
     const now = new Date();
@@ -712,9 +712,9 @@ export default function NewBookingForm({ user, isBlocked }) {
         return !blockedSlots.some(b => b.date === dateStr && b.time_slot === slot);
       });
     }
-    
+
     const serviceDuration = selectedPlan?.duration || selectedService.duration;
-    
+
     // Para serviços de 60 minutos, verificar se as duas meias horas estão disponíveis
     return timeSlots.filter(slot => {
       if (isToday && slot <= currentTime) return false;
@@ -722,30 +722,30 @@ export default function NewBookingForm({ user, isBlocked }) {
       if (blockedSlots.some(b => b.date === dateStr && b.time_slot === slot)) {
         return false;
       }
-      
+
       const lessonsAtTime = lessonsToCheck.filter(l => l.start_time === slot);
       const totalBooked = lessonsAtTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-      
+
       // Máximo 6 alunos por horário (incluindo fixos e avulsos)
       // Se já tem 6 pessoas (fixos + avulsos), bloquear
       if (totalBooked >= 6) {
         return false;
       }
-      
+
       // Se o serviço dura 60 minutos, verificar a meia hora seguinte
       if (serviceDuration === 60) {
         const slotIndex = timeSlots.indexOf(slot);
         const nextSlot = timeSlots[slotIndex + 1];
-        
+
         if (nextSlot) {
           const lessonsAtNextTime = lessonsToCheck.filter(l => l.start_time === nextSlot);
           const totalBookedNext = lessonsAtNextTime.reduce((sum, l) => sum + (l.booked_spots || 0), 0);
-          
+
           // Se a próxima meia hora tem 6 pessoas (fixos + avulsos), bloquear
           if (totalBookedNext >= 6) return false;
         }
       }
-      
+
       return true;
     });
   };
@@ -873,22 +873,20 @@ export default function NewBookingForm({ user, isBlocked }) {
             const isCompleted = step > s;
             return (
               <div key={s} className="flex flex-col items-center group">
-                <motion.div 
+                <motion.div
                   initial={false}
-                  animate={{ 
+                  animate={{
                     backgroundColor: isActive ? '#B8956A' : '#f5f5f4',
                     borderColor: isActive ? '#B8956A' : '#e7e5e4',
                     scale: step === s ? 1.1 : 1
                   }}
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 shadow-sm ${
-                    isActive ? 'text-white shadow-[#B8956A]/20' : 'text-stone-400'
-                  }`}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 shadow-sm ${isActive ? 'text-white shadow-[#B8956A]/20' : 'text-stone-400'
+                    }`}
                 >
                   {isCompleted ? <CheckCircle className="w-6 h-6" /> : <span className="font-bold text-lg">{s}</span>}
                 </motion.div>
-                <span className={`mt-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-500 ${
-                  isActive ? 'text-[#B8956A]' : 'text-stone-400'
-                }`}>
+                <span className={`mt-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-500 ${isActive ? 'text-[#B8956A]' : 'text-stone-400'
+                  }`}>
                   {s === 1 ? 'Serviço' : s === 2 ? 'Plano' : s === 3 ? 'Horário' : 'Confirmar'}
                 </span>
               </div>
@@ -897,7 +895,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         </div>
         {/* Progress Line */}
         <div className="absolute top-6 left-14 right-14 h-[3px] bg-stone-100 rounded-full -z-0">
-          <motion.div 
+          <motion.div
             className="h-full bg-gradient-to-r from-[#B8956A] to-[#8B7355] rounded-full"
             initial={{ width: '0%' }}
             animate={{ width: `${((step - 1) / 3) * 100}%` }}
@@ -909,7 +907,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       {/* Steps Content with AnimatePresence for smooth transitions */}
       <div className="relative min-h-[400px]">
         {step === 1 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -919,7 +917,7 @@ export default function NewBookingForm({ user, isBlocked }) {
               <h2 className="font-serif text-4xl font-bold text-[#2C3E1F] tracking-tight">O que deseja reservar?</h2>
               <p className="text-stone-500 text-lg">Selecione uma das nossas experiências equestres premium</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayServices.map((service) => (
                 <motion.div
@@ -928,22 +926,20 @@ export default function NewBookingForm({ user, isBlocked }) {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Card
-                    className={`group cursor-pointer border-2 transition-all duration-500 h-full overflow-hidden relative rounded-[2rem] p-1 ${
-                      selectedService?.id === service.id 
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/10' 
+                    className={`group cursor-pointer border-2 transition-all duration-500 h-full overflow-hidden relative rounded-[2rem] p-1 ${selectedService?.id === service.id
+                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/10'
                         : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-xl'
-                    }`}
+                      }`}
                     onClick={() => setSelectedService(service)}
                   >
                     <CardContent className="p-8">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 transition-all duration-500 ${
-                        selectedService?.id === service.id 
-                          ? 'bg-[#B8956A] text-white rotate-12 shadow-lg shadow-[#B8956A]/30' 
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 transition-all duration-500 ${selectedService?.id === service.id
+                          ? 'bg-[#B8956A] text-white rotate-12 shadow-lg shadow-[#B8956A]/30'
                           : 'bg-stone-50 text-stone-400 group-hover:bg-[#B8956A]/10 group-hover:text-[#B8956A] group-hover:rotate-6'
-                      }`}>
-                        {service.title.includes('Escola') ? <CalendarDays className="w-7 h-7" /> : 
-                         service.title.includes('Grupo') ? <Clock className="w-7 h-7" /> : 
-                         <CheckCircle className="w-7 h-7" />}
+                        }`}>
+                        {service.title.includes('Escola') ? <CalendarDays className="w-7 h-7" /> :
+                          service.title.includes('Grupo') ? <Clock className="w-7 h-7" /> :
+                            <CheckCircle className="w-7 h-7" />}
                       </div>
                       <h3 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-4 group-hover:text-[#B8956A] transition-colors">{service.title}</h3>
                       <p className="text-stone-500 leading-relaxed mb-6 h-12 overflow-hidden line-clamp-2">
@@ -955,7 +951,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                         ) : (
                           <span className="text-stone-400 text-sm italic">Sob consulta</span>
                         )}
-                        <motion.div 
+                        <motion.div
                           animate={{ x: selectedService?.id === service.id ? 0 : 20, opacity: selectedService?.id === service.id ? 1 : 0 }}
                           className="bg-[#B8956A] p-2 rounded-full text-white"
                         >
@@ -967,7 +963,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 </motion.div>
               ))}
             </div>
-            
+
             <div className="flex justify-end pt-8">
               <Button
                 onClick={goToStep2}
@@ -981,7 +977,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         )}
 
         {step === 2 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
@@ -1004,11 +1000,10 @@ export default function NewBookingForm({ user, isBlocked }) {
               ].map((plan) => (
                 <Card
                   key={plan.label}
-                  className={`cursor-pointer border-2 transition-all duration-300 rounded-[1.5rem] p-1 ${
-                    selectedPlan?.label === plan.label 
-                      ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-xl shadow-[#B8956A]/5' 
+                  className={`cursor-pointer border-2 transition-all duration-300 rounded-[1.5rem] p-1 ${selectedPlan?.label === plan.label
+                      ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-xl shadow-[#B8956A]/5'
                       : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-lg'
-                  }`}
+                    }`}
                   onClick={() => setSelectedPlan(plan)}
                 >
                   <CardContent className="p-6 flex justify-between items-center">
@@ -1027,11 +1022,10 @@ export default function NewBookingForm({ user, isBlocked }) {
               {selectedService?.title === 'Aulas Particulares' && (
                 <>
                   <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] overflow-hidden ${
-                      selectedPlan?.label === 'Com Gilberto Filipe' 
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5' 
+                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] overflow-hidden ${selectedPlan?.label === 'Com Gilberto Filipe'
+                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
                         : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-xl'
-                    }`}
+                      }`}
                     onClick={() => {
                       setSelectedPlan({ label: 'Com Gilberto Filipe', price: 75, isRecurringFourWeeks: true, duration: 60 });
                       setShowPhotoVideoDialog(true);
@@ -1048,11 +1042,10 @@ export default function NewBookingForm({ user, isBlocked }) {
                     </CardContent>
                   </Card>
                   <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] overflow-hidden ${
-                      selectedPlan?.label === 'Com Monitores/Team' 
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5' 
+                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] overflow-hidden ${selectedPlan?.label === 'Com Monitores/Team'
+                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
                         : 'border-stone-100 hover:border-[#B8956A]/30 hover:shadow-xl'
-                    }`}
+                      }`}
                     onClick={() => setSelectedPlan({ label: 'Com Monitores/Team', price: 50, isRecurringFourWeeks: true, duration: 60 })}
                   >
                     <div className="h-3 w-full bg-stone-100 group-hover:bg-[#B8956A]/20 transition-all" />
@@ -1071,11 +1064,10 @@ export default function NewBookingForm({ user, isBlocked }) {
               {selectedService?.title === 'Aulas em Grupo' && (
                 <>
                   <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] ${
-                      selectedPlan?.duration === 30 
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5' 
+                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] ${selectedPlan?.duration === 30
+                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
                         : 'border-stone-100 hover:border-[#B8956A]/30'
-                    }`}
+                      }`}
                     onClick={() => setSelectedPlan({ label: '30 minutos', duration: 30, frequency: 1, isRecurringFourWeeks: true })}
                   >
                     <CardContent className="p-8 text-center space-y-4">
@@ -1088,11 +1080,10 @@ export default function NewBookingForm({ user, isBlocked }) {
                     </CardContent>
                   </Card>
                   <Card
-                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] ${
-                      selectedPlan?.duration === 60 
-                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5' 
+                    className={`cursor-pointer border-2 transition-all duration-500 rounded-[2rem] ${selectedPlan?.duration === 60
+                        ? 'border-[#B8956A] bg-[#B8956A]/5 shadow-2xl shadow-[#B8956A]/5'
                         : 'border-stone-100 hover:border-[#B8956A]/30'
-                    }`}
+                      }`}
                     onClick={() => setSelectedPlan({ label: '60 minutos', duration: 60, frequency: 1, isRecurringFourWeeks: true })}
                   >
                     <CardContent className="p-8 text-center space-y-4">
@@ -1109,9 +1100,9 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
 
             <div className="flex justify-between items-center pt-10 border-t border-stone-100">
-              <Button 
-                variant="ghost" 
-                onClick={() => setStep(1)} 
+              <Button
+                variant="ghost"
+                onClick={() => setStep(1)}
                 className="text-stone-400 hover:text-[#2C3E1F] hover:bg-stone-50 h-14 px-8 rounded-xl font-bold"
               >
                 Voltar
@@ -1128,7 +1119,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         )}
 
         {step === 3 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
@@ -1169,11 +1160,10 @@ export default function NewBookingForm({ user, isBlocked }) {
                           <motion.div key={day.id} whileHover={{ x: 5 }} whileTap={{ scale: 0.98 }}>
                             <Button
                               variant="outline"
-                              className={`w-full h-16 rounded-2xl justify-start px-6 transition-all duration-300 ${
-                                isSelected 
-                                  ? 'bg-[#B8956A] text-white border-[#B8956A] shadow-lg shadow-[#B8956A]/30' 
+                              className={`w-full h-16 rounded-2xl justify-start px-6 transition-all duration-300 ${isSelected
+                                  ? 'bg-[#B8956A] text-white border-[#B8956A] shadow-lg shadow-[#B8956A]/30'
                                   : 'border-stone-100 hover:border-[#B8956A]/30 hover:bg-[#B8956A]/5 text-[#2C3E1F] font-bold'
-                              }`}
+                                }`}
                               onClick={() => setSelectedDate(getNextDayOfWeek(day.id))}
                             >
                               <div className={`p-2 rounded-lg mr-4 ${isSelected ? 'bg-white/20' : 'bg-stone-50 text-[#B8956A]'}`}>
@@ -1232,11 +1222,10 @@ export default function NewBookingForm({ user, isBlocked }) {
                           <motion.div key={slot} whileTap={{ scale: 0.95 }}>
                             <Button
                               variant={isSelected ? 'default' : 'outline'}
-                              className={`w-full h-14 rounded-xl transition-all duration-300 font-bold ${
-                                isSelected 
-                                  ? 'bg-[#2C3E1F] text-white border-[#2C3E1F] shadow-lg' 
+                              className={`w-full h-14 rounded-xl transition-all duration-300 font-bold ${isSelected
+                                  ? 'bg-[#2C3E1F] text-white border-[#2C3E1F] shadow-lg'
                                   : 'border-stone-100 hover:border-[#B8956A] hover:bg-[#B8956A]/5'
-                              }`}
+                                }`}
                               onClick={() => setSelectedTime(isSelected ? null : slot)}
                             >
                               {slot}
@@ -1256,9 +1245,9 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
 
             <div className="flex justify-between items-center pt-10 border-t border-stone-100">
-              <Button 
-                variant="ghost" 
-                onClick={() => setStep(2)} 
+              <Button
+                variant="ghost"
+                onClick={() => setStep(2)}
                 className="text-stone-400 hover:text-[#2C3E1F] hover:bg-stone-50 h-14 px-8 rounded-xl font-bold"
               >
                 Voltar
@@ -1275,7 +1264,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         )}
 
         {step === 4 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-10"
@@ -1290,7 +1279,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                   <CheckCircle className="w-40 h-40" />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
                   <div className="space-y-6">
                     <div className="space-y-1">
@@ -1341,7 +1330,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                     <p className="text-stone-400 text-xs font-black uppercase tracking-[0.3em] mb-1">Total da Reserva</p>
                     <p className="text-4xl font-serif font-black text-white">€{selectedPlan?.price || '0.00'}</p>
                   </div>
-                  <Button 
+                  <Button
                     size="lg"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
@@ -1357,8 +1346,8 @@ export default function NewBookingForm({ user, isBlocked }) {
               </CardContent>
             </Card>
 
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setStep(3)}
               className="text-stone-500 hover:text-[#2C3E1F] font-black uppercase tracking-widest text-xs h-14 mx-auto block"
             >
