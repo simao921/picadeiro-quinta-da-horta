@@ -40,9 +40,9 @@ export default function Bookings() {
     initialData: []
   });
 
-  const totalDebt = payments
-    .filter(p => p.status !== 'paid')
-    .reduce((sum, p) => sum + (p.total || p.amount + (p.penalty || 0)), 0);
+  const totalDebt = payments.
+  filter((p) => p.status !== 'paid').
+  reduce((sum, p) => sum + (p.total || p.amount + (p.penalty || 0)), 0);
 
   const isBlocked = totalDebt > 30;
 
@@ -50,8 +50,8 @@ export default function Bookings() {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B8956A]"></div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!isAuthenticated) {
@@ -62,14 +62,14 @@ export default function Bookings() {
             <img
               src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80"
               alt=""
-              className="w-full h-full object-cover"
-            />
+              className="w-full h-full object-cover" />
+            
           </div>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
+              animate={{ opacity: 1, y: 0 }}>
+              
               <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white mb-6">
                 {t('bookings_area')}
               </h1>
@@ -79,15 +79,15 @@ export default function Bookings() {
               <Button
                 size="lg"
                 onClick={() => base44.auth.redirectToLogin(window.location.href)}
-                className="bg-[#C9A961] hover:bg-[#B89A51] text-[#2C3E1F] font-semibold"
-              >
+                className="bg-[#C9A961] hover:bg-[#B89A51] text-[#2C3E1F] font-semibold">
+                
                 {t('login_or_register')}
               </Button>
             </motion.div>
           </div>
         </section>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -98,8 +98,8 @@ export default function Bookings() {
           <img
             src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80"
             alt=""
-            className="w-full h-full object-cover"
-          />
+            className="w-full h-full object-cover" />
+          
         </div>
         {/* Decorative Elements */}
         <div className="absolute top-10 right-10 w-48 h-48 bg-[#B8956A]/20 rounded-full blur-3xl" />
@@ -107,12 +107,12 @@ export default function Bookings() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+            animate={{ opacity: 1, y: 0 }}>
+            
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">
               {t('hello')}, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
             </h1>
-            <p className="text-stone-300">
+            <p className="text-stone-300 hidden">
               {t('manage_bookings_subtitle')}
             </p>
           </motion.div>
@@ -123,12 +123,12 @@ export default function Bookings() {
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Account Status Alert */}
-          {isBlocked && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8 p-6 bg-red-50 border-2 border-red-300 rounded-xl"
-            >
+          {isBlocked &&
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-6 bg-red-50 border-2 border-red-300 rounded-xl">
+            
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <AlertCircle className="w-6 h-6 text-white" />
@@ -158,7 +158,7 @@ export default function Bookings() {
                 </div>
               </div>
             </motion.div>
-          )}
+          }
 
           <Tabs defaultValue="new" className="space-y-8">
             <TabsList className="bg-white border shadow-sm">
@@ -182,6 +182,6 @@ export default function Bookings() {
           </Tabs>
         </div>
       </section>
-    </div>
-  );
+    </div>);
+
 }
