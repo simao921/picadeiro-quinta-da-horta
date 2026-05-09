@@ -79,15 +79,7 @@ export default function Services() {
   const { t } = useLanguage();
   const defaultServices = getDefaultServices(t);
   
-  const [heroImage, setHeroImage] = useState(DEFAULT_IMAGES.hero_services);
-
-  useEffect(() => {
-    const loadImage = async () => {
-      const url = await getSiteImage('hero_services', DEFAULT_IMAGES.hero_services);
-      setHeroImage(url);
-    };
-    loadImage();
-  }, []);
+  const [heroImage] = useState('https://www.image2url.com/r2/default/images/1778340621743-b1fbb7b7-87b3-4f65-a3dc-0fadcadcb19f.jpeg');
   
   const { data: services, isLoading } = useQuery({
     queryKey: ['services'],
@@ -107,10 +99,11 @@ export default function Services() {
       {/* Hero Section */}
       <section className="relative py-12 sm:py-16 md:py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
-          <img
-            src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
-            alt=""
+          <LazyImage
+            src={heroImage}
+            alt="Serviços Equestres"
             className="w-full h-full object-cover"
+            priority={true}
           />
         </div>
         {/* Decorative Elements */}
