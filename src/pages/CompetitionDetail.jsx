@@ -1,60 +1,47 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Calendar, MapPin, Trophy, Download, Users, FileText, Award, Calculator } from 'lucide-react';
+import { Calendar, Trophy, Filter, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-import CompetitionEntryForm from '@/components/competitions/CompetitionEntryForm';
+import MetaTags from '@/components/seo/MetaTags';
 import { useAuth } from '@/lib/AuthContext';
 
-export default function CompetitionDetail() {
-  const [showEntryDialog, setShowEntryDialog] = useState(false);
-  const [selectedResultGrade, setSelectedResultGrade] = useState('all');
+export default function Competitions() {
+  const [modalityFilter, setModalityFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { user } = useAuth();
-  const urlParams = new URLSearchParams(window.location.search);
-  const competitionId = urlParams.get('id');
 
-  const { data: competition, isLoading } = useQuery({
-    queryKey: ['competition', competitionId],
-    queryFn: async () => {
-      const comps = await base44.entities.Competition.filter({ id: competitionId });
-      return comps[0];
-    },
-    enabled: !!competitionId
+  const { data: competitions = [], isLoading } = useQuery({
+    queryKey: ['competitions'],
+    queryFn: () => base44.entities.Competition.list('-date')
+  });
+  const { data: modalities = [] } = useQuery({
+    queryKey: ['modalities'],
+    queryFn: () => base44.entities.CompetitionModality.list()
   });
 
-  const { data: entries = [] } = useQuery({
-    queryKey: ['competition-entries', competitionId, user?.email],
-    queryFn: async () => {
-      if (!competitionId) return [];
-      const allEntries = await base44.entities.CompetitionEntry.filter({ competition_id: competitionId });
-      // Mostrar todas as aprovadas E as pendentes/rejeitadas do próprio utilizador
-      return allEntries.filter(e => e.status === 'aprovada' || e.rider_email === user?.email);
-    },
-    enabled: !!competitionId
+  const { data: userEntries = [] } = useQuery({
+    queryKey: ['my-entries', user?.email],
+    queryFn: () => base44.entities.CompetitionEntry.filter({ rider_email: user.email }),
+    enabled: !!user?.email
   });
 
-  const { data: results = [] } = useQuery({
-    queryKey: ['competition-results', competitionId],
-    queryFn: () => base44.entities.CompetitionResult.filter({ competition_id: competitionId }),
-    enabled: !!competitionId
-  });
+  const years = [...new Set(competitions.map(c => c.year).filter(Boolean))].sort((a, b) => b - a);
 
-  const { data: modality } = useQuery({
-    queryKey: ['modality', competition?.modality_id],
-    queryFn: async () => {
-      if (!competition?.modality_id) return null;
-      const mods = await base44.entities.CompetitionModality.filter({ id: competition.modality_id });
-      return mods[0] || null;
-    },
-    enabled: !!competition?.modality_id
+  const filteredCompetitions = competitions.filter(comp => {
+    if (modalityFilter !== 'all' && comp.modality_name !== modalityFilter) return false;
+    if (yearFilter !== 'all' && comp.year !== parseInt(yearFilter)) return false;
+    if (statusFilter !== 'all' && comp.status !== statusFilter) return false;
+    return true;
   });
 
   const getStatusInfo = (status) => {
@@ -68,402 +55,156 @@ export default function CompetitionDetail() {
     return statusMap[status] || statusMap.inscricoes_abertas;
   };
 
-  const statusInfo = getStatusInfo(competition?.status);
-  const isFull = !!competition?.max_entries && entries.length >= competition.max_entries;
-  const canEnroll = competition?.status === 'inscricoes_abertas' && !isFull;
-  const hasResults = results.length > 0;
-  
-  const resultsWithGrade = useMemo(() => {
-    if (!results.length) return [];
-
-    const entryGradeById = new Map(
-      entries.map((entry) => [entry.id, entry.grade || 'Sem escalão'])
-    );
-
-    return results.map((result) => {
-      const entryGrade = result.entry_id ? entryGradeById.get(result.entry_id) : null;
-      const fallbackEntry = !entryGrade
-        ? entries.find((entry) =>
-            entry.rider_name === result.rider_name &&
-            entry.horse_name === result.horse_name
-          )
-        : null;
-
-      return {
-        ...result,
-        grade: entryGrade || fallbackEntry?.grade || 'Sem escalão'
-      };
-    });
-  }, [results, entries]);
-
-  const availableGrades = useMemo(() => {
-    return Array.from(new Set(resultsWithGrade.map((result) => result.grade)))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, 'pt'));
-  }, [resultsWithGrade]);
-
-  const filteredResults = useMemo(() => {
-    const source = selectedResultGrade === 'all'
-      ? resultsWithGrade
-      : resultsWithGrade.filter((result) => result.grade === selectedResultGrade);
-
-    return [...source].sort((a, b) => {
-      const aPercentage = Number(a.percentage);
-      const bPercentage = Number(b.percentage);
-      if (Number.isFinite(aPercentage) && Number.isFinite(bPercentage) && aPercentage !== bPercentage) {
-        return bPercentage - aPercentage;
-      }
-
-      const aScore = Number(a.score);
-      const bScore = Number(b.score);
-      if (Number.isFinite(aScore) && Number.isFinite(bScore) && aScore !== bScore) {
-        return bScore - aScore;
-      }
-
-      return Number(a.position || 999) - Number(b.position || 999);
-    });
-  }, [resultsWithGrade, selectedResultGrade]);
-
-  if (isLoading || !competition) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B8956A]"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FDFCFB]">
-      {/* Cinematic Hero Section */}
-      <section className="relative h-[60vh] flex items-center overflow-hidden bg-[#11180D]">
-        <div className="absolute inset-0 z-0">
-          <motion.div 
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 10, ease: "easeOut" }}
-            className="w-full h-full"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80"
-              alt={competition.name}
-              className="w-full h-full object-cover opacity-40"
-            />
-          </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCFB] via-transparent to-transparent" />
-          <div className="absolute inset-0 bg-[#11180D]/40" />
+      <MetaTags
+        title="Competições Equestres - Picadeiro Quinta da Horta"
+        description="Próximas provas e competições equestres. Inscreva-se e acompanhe os resultados."
+        keywords="competições equestres, provas, dressage, working equitation, inscrições"
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-[#2C3E1F]">Competições</h1>
+            <p className="text-stone-500 mt-2">Acompanhe as provas e os resultados da nossa equipa.</p>
+          </div>
+          <Link to={createPageUrl('UserProfile')}>
+            <Button className="bg-[#B8956A] hover:bg-[#8C6D46] text-white font-semibold">
+              Minhas Inscrições
+            </Button>
+          </Link>
         </div>
-        
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 relative z-10 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center sm:text-left"
-          >
-            <Badge className={`${statusInfo.color} px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 border-none shadow-xl`}>
-              {statusInfo.label}
-            </Badge>
-            <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl font-black text-white leading-tight mb-8">
-              {competition.name}
-            </h1>
-            <div className="flex flex-wrap justify-center sm:justify-start gap-8 text-stone-300 font-medium text-lg">
-              <div className="flex items-center gap-3">
-                <Calendar className="w-6 h-6 text-[#B8956A]" />
-                {format(new Date(competition.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
-              </div>
-              <div className="flex items-center gap-3">
-                <Trophy className="w-6 h-6 text-[#B8956A]" />
-                {competition.modality_name}
-              </div>
-              {competition.location && (
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-6 h-6 text-[#B8956A]" />
-                  {competition.location}
-                </div>
-              )}
+
+        {/* Advanced Filters */}
+        <div className="mb-12">
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-stone-100">
+              <Filter className="w-5 h-5 text-stone-400" />
+              <h2 className="text-lg font-semibold text-stone-700">Filtros</h2>
             </div>
-          </motion.div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-stone-600">Modalidade</label>
+                <Select value={modalityFilter} onValueChange={setModalityFilter}>
+                  <SelectTrigger className="w-full bg-stone-50 border-stone-200">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as modalidades</SelectItem>
+                    {modalities.map(mod => (
+                      <SelectItem key={mod.id} value={mod.name}>{mod.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-stone-600">Ano</label>
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-full bg-stone-50 border-stone-200">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os anos</SelectItem>
+                    {years.map(year => (
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-stone-600">Estado</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full bg-stone-50 border-stone-200">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os estados</SelectItem>
+                    <SelectItem value="inscricoes_abertas">Inscrições Abertas</SelectItem>
+                    <SelectItem value="inscricoes_encerradas">Inscrições Encerradas</SelectItem>
+                    <SelectItem value="em_curso">Em Curso</SelectItem>
+                    <SelectItem value="concluida">Concluída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-          {/* Main Content Area */}
-          <div className="lg:col-span-2 space-y-12">
-            <Tabs defaultValue="info" className="w-full">
-              <TabsList className="bg-stone-50 border border-stone-100 p-1.5 rounded-[2rem] h-auto gap-2 mb-12">
-                <TabsTrigger value="info" className="rounded-[1.5rem] px-8 py-4 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500">
-                  Sobre a Prova
-                </TabsTrigger>
-                <TabsTrigger value="participants" className="rounded-[1.5rem] px-8 py-4 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500">
-                  Participantes ({entries.length})
-                </TabsTrigger>
-                <TabsTrigger value="results" className="rounded-[1.5rem] px-8 py-4 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500">
-                  Resultados
-                </TabsTrigger>
-                <TabsTrigger value="program" className="rounded-[1.5rem] px-8 py-4 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500">
-                  Ordem de Entrada
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="info" className="mt-0">
-                <Card className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
-                  <CardContent className="p-12 space-y-10">
-                    <div className="space-y-6">
-                      <h3 className="text-3xl font-serif font-black text-[#2C3E1F]">Detalhes do Evento</h3>
-                      <p className="text-xl text-stone-500 leading-relaxed font-medium">
-                        {competition.description || 'Estamos a finalizar os detalhes desta competição. Fique atento às atualizações.'}
-                      </p>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-64 rounded-xl bg-stone-200 animate-pulse" />
+            ))}
+          </div>
+        ) : filteredCompetitions.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl border border-stone-200">
+            <Trophy className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+            <p className="text-lg font-medium text-stone-500">Nenhuma competição encontrada</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCompetitions.map((comp, index) => {
+              const statusInfo = getStatusInfo(comp.status);
+              return (
+                <Card key={comp.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-all flex flex-col">
+                  <CardHeader className="p-6 pb-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <Badge className={`${statusInfo.color} border-none`}>
+                        {statusInfo.label}
+                      </Badge>
+                      {userEntries.some(e => e.competition_id === comp.id) && (
+                        <Badge className="bg-[#B8956A] text-white border-none">
+                          Registado
+                        </Badge>
+                      )}
                     </div>
-                    {competition.regulation_url && (
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open(competition.regulation_url, '_blank')}
-                        className="h-16 px-8 rounded-2xl border-stone-100 text-[#B8956A] font-black uppercase tracking-widest text-[10px]"
-                      >
-                        <FileText className="w-5 h-5 mr-3" />
-                        Consultar Regulamento PDF
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="participants" className="mt-0">
-                <Card className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
-                  <CardContent className="p-12">
-                    {entries.length === 0 ? (
-                      <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
-                        <Users className="w-20 h-20 text-stone-200 mx-auto mb-6" />
-                        <p className="text-xl font-serif font-black text-stone-400">Nenhum participante registado</p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-6">
-                        {entries.map((entry, index) => (
-                          <div key={entry.id} className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all duration-500">
-                            <div className="flex items-center gap-8">
-                              <div className="w-14 h-14 bg-[#11180D] rounded-2xl flex items-center justify-center text-white font-serif font-black text-xl shadow-lg">
-                                {index + 1}
-                              </div>
-                              <div>
-                                <p className="text-2xl font-serif font-black text-[#2C3E1F]">{entry.rider_name}</p>
-                                <p className="text-lg font-bold text-[#B8956A] uppercase tracking-widest text-[10px]">{entry.horse_name}</p>
-                              </div>
-                            </div>
-                            <Badge className="bg-[#B8956A]/10 text-[#B8956A] border-none px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest">
-                              Confirmado
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="results" className="mt-0">
-                <Card className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
-                  <CardHeader className="p-10 px-12 border-b border-stone-50 flex flex-row items-center justify-between">
-                    <h3 className="text-2xl font-serif font-black text-[#2C3E1F]">Tabela de Classificações</h3>
-                    {hasResults && (
-                      <Select value={selectedResultGrade} onValueChange={setSelectedResultGrade}>
-                        <SelectTrigger className="w-64 h-12 rounded-xl border-stone-100 font-bold">
-                          <SelectValue placeholder="Todos os Escalões" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos os Escalões</SelectItem>
-                          {availableGrades.map((grade) => (
-                            <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                    <CardTitle className="text-xl font-bold text-[#2C3E1F] line-clamp-2">
+                      {comp.name}
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-12">
-                    {!hasResults ? (
-                      <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
-                        <Award className="w-20 h-20 text-stone-200 mx-auto mb-6" />
-                        <p className="text-xl font-serif font-black text-stone-400">Resultados pendentes de publicação</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-8">
-                        {filteredResults.map((result, index) => {
-                          const scoreValue = typeof result.score === 'number' ? result.score : parseFloat(result.score || 0);
-                          const percentageValue = typeof result.percentage === 'number' ? result.percentage : parseFloat(result.percentage || 0);
-
-                          return (
-                            <div key={result.id} className="p-10 bg-stone-50/50 rounded-[3rem] border border-stone-100 relative group hover:bg-white hover:shadow-2xl transition-all duration-700">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-10">
-                                <div className="flex items-center gap-10">
-                                  <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center font-serif font-black text-3xl shadow-xl transform group-hover:scale-110 transition-transform duration-500 ${
-                                    index === 0 ? 'bg-gradient-to-br from-yellow-300 to-yellow-600 text-white' :
-                                    index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white' :
-                                    index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white' :
-                                    'bg-white text-[#11180D] border border-stone-100'
-                                  }`}>
-                                    {index + 1}
-                                  </div>
-                                  <div>
-                                    <p className="text-3xl font-serif font-black text-[#2C3E1F] mb-1">{result.rider_name}</p>
-                                    <div className="flex items-center gap-4">
-                                      <p className="text-lg font-bold text-[#B8956A]">{result.horse_name}</p>
-                                      <span className="w-1 h-1 bg-stone-300 rounded-full" />
-                                      <p className="text-xs font-black uppercase tracking-widest text-stone-400">{result.grade}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  {percentageValue > 0 && (
-                                    <p className="text-5xl font-serif font-black text-[#11180D] mb-1">{percentageValue.toFixed(2)}%</p>
-                                  )}
-                                  <p className="text-sm font-black text-stone-400 uppercase tracking-widest">{scoreValue.toFixed(2)} Pontos Totais</p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        
-                        {competition.final_report_url && (
-                          <div className="pt-8">
-                            <Button
-                              onClick={() => window.open(competition.final_report_url, '_blank')}
-                              className="w-full h-20 rounded-[2rem] bg-[#11180D] hover:bg-[#B8956A] text-white font-black uppercase tracking-widest text-xs transition-all duration-500 shadow-2xl shadow-[#11180D]/20"
-                            >
-                              <Download className="w-6 h-6 mr-4" />
-                              Baixar Livro de Resultados Oficial
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="program" className="mt-0">
-                <Card className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
-                  <CardContent className="p-12">
-                    {entries.length === 0 ? (
-                      <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
-                        <FileText className="w-20 h-20 text-stone-200 mx-auto mb-6" />
-                        <p className="text-xl font-serif font-black text-stone-400">Ordem de entrada em processamento</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {entries
-                          .sort((a, b) => (a.order_number || 0) - (b.order_number || 0))
-                          .map((entry) => {
-                            const timeMatch = entry.notes?.match(/Horário:\s*(\d{2}:\d{2})/);
-                            const entryTime = timeMatch ? timeMatch[1] : null;
-                            
-                            return (
-                              <div key={entry.id} className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex items-center justify-between hover:bg-white hover:shadow-xl transition-all duration-500 group">
-                                <div className="flex items-center gap-8">
-                                  <div className="w-14 h-14 bg-[#2C3E1F] rounded-2xl flex items-center justify-center text-white font-serif font-black text-xl shadow-lg">
-                                    {entry.order_number || '-'}
-                                  </div>
-                                  <div>
-                                    <p className="text-2xl font-serif font-black text-[#2C3E1F]">{entry.rider_name}</p>
-                                    <p className="text-lg font-bold text-[#B8956A] uppercase tracking-widest text-[10px]">{entry.horse_name}</p>
-                                    {entry.status !== 'aprovada' && (
-                                      <Badge className="mt-2 bg-amber-100 text-amber-700 border-none text-[8px] font-black uppercase tracking-widest px-3 py-1">
-                                        {entry.status === 'pendente' ? 'Pendente de Aprovação' : 'Rejeitada'}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                                {entryTime && (
-                                  <div className="bg-[#11180D] px-8 py-4 rounded-2xl shadow-xl">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#B8956A] mb-1">Início Estimado</p>
-                                    <p className="text-2xl font-serif font-black text-white">{entryTime}</p>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar Area */}
-          <div className="space-y-12">
-            {(competition.status === 'inscricoes_abertas' || isFull) && (
-              <div className="premium-card bg-[#11180D] p-12 shadow-[0_50px_100px_-30px_rgba(0,0,0,0.3)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#B8956A]/10 rounded-full blur-[100px] -mr-32 -mt-32" />
-                <div className="relative z-10 space-y-10 text-center">
-                  <div className="space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#B8956A]">Inscrições Online</span>
-                    <h3 className="text-4xl font-serif font-black text-white">Participe Hoje</h3>
-                    <p className="text-white/50 font-medium text-lg">
-                      {isFull ? 'As inscrições para esta prova encontram-se atualmente esgotadas.' : 'Garanta o seu lugar na linha de partida submetendo a sua inscrição segura.'}
-                    </p>
-                  </div>
                   
-                  <Button
-                    disabled={!canEnroll}
-                    onClick={() => setShowEntryDialog(true)}
-                    className="w-full h-20 bg-[#B8956A] hover:bg-white hover:text-[#11180D] text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all duration-500 shadow-2xl shadow-[#B8956A]/20"
-                  >
-                    Submeter Formulário
-                  </Button>
+                  <CardContent className="p-6 pt-0 flex-grow flex flex-col">
+                    <div className="space-y-3 mb-6 text-sm text-stone-600">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-stone-400" />
+                        {format(new Date(comp.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-stone-400" />
+                        {comp.modality_name}
+                      </div>
+                      {comp.grade && (
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-stone-400" />
+                          Grau: {comp.grade}
+                        </div>
+                      )}
+                    </div>
 
-                  {competition.entry_deadline && (
-                    <p className="text-xs font-black uppercase tracking-widest text-white/30">
-                      Encerramento a {format(new Date(competition.entry_deadline), "d 'de' MMMM", { locale: pt })}
-                    </p>
-                  )}
+                    {comp.description && (
+                      <p className="text-sm text-stone-500 mb-6 line-clamp-3">
+                        {comp.description}
+                      </p>
+                    )}
 
-                  <div className="pt-8 border-t border-white/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Suporte ao Atleta</p>
-                    <a href="tel:+351932111786" className="text-white font-bold hover:text-[#B8956A] transition-colors text-lg">+351 932 111 786</a>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <Card className="premium-card bg-white border border-stone-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] overflow-hidden">
-              <div className="p-8 border-b border-stone-50">
-                <h3 className="text-xl font-serif font-black text-[#2C3E1F]">Resumo Técnico</h3>
-              </div>
-              <CardContent className="p-10 space-y-6">
-                <div className="flex justify-between items-center group">
-                  <span className="text-xs font-black uppercase tracking-widest text-stone-400">Modalidade</span>
-                  <span className="font-bold text-[#2C3E1F]">{competition.modality_name}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-black uppercase tracking-widest text-stone-400">Participantes</span>
-                  <span className="font-bold text-[#2C3E1F]">{entries.length} / {competition.max_entries || '∞'}</span>
-                </div>
-                {competition.grade && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-black uppercase tracking-widest text-stone-400">Grau Técnico</span>
-                    <span className="font-bold text-[#2C3E1F]">{competition.grade}</span>
-                  </div>
-                )}
-                {competition.is_federal && (
-                  <Badge className="w-full justify-center bg-blue-50 text-blue-600 border-none py-3 rounded-xl font-black uppercase tracking-widest text-[9px]">
-                    Evento Federado Oficial
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
+                    <div className="mt-auto">
+                      <Link to={createPageUrl('CompetitionDetail') + `?id=${comp.id}`}>
+                        <Button className="w-full bg-[#2C3E1F] hover:bg-[#1f2c16] text-white">
+                          Ver Detalhes
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
-
-      <Dialog open={showEntryDialog} onOpenChange={setShowEntryDialog}>
-        <DialogContent className="max-w-3xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
-          <CompetitionEntryForm
-            competitionId={competition.id}
-            competitionName={competition.name}
-            onClose={() => setShowEntryDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
