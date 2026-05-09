@@ -63,61 +63,25 @@ export default function Competitions() {
         keywords="competições equestres, provas, dressage, working equitation, inscrições"
       />
 
-      {/* Cinematic Hero Section */}
-      <section className="relative h-[50vh] flex items-center overflow-hidden bg-[#11180D]">
-        <div className="absolute inset-0 z-0">
-          <motion.div 
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 10 }}
-            className="w-full h-full"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1598974357851-98166a9399ff?w=1600&q=80"
-              alt="Competições"
-              className="w-full h-full object-cover opacity-30"
-            />
-          </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCFB] via-transparent to-transparent" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-[#2C3E1F]">Competições</h1>
+            <p className="text-stone-500 mt-2">Acompanhe as provas e os resultados da nossa equipa.</p>
+          </div>
+          <Link to={createPageUrl('UserProfile')}>
+            <Button className="bg-[#B8956A] hover:bg-[#8C6D46] text-white font-semibold">
+              Minhas Inscrições
+            </Button>
+          </Link>
         </div>
-        
-        <div className="max-w-7xl mx-auto px-6 relative z-10 w-full text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <span className="inline-flex items-center gap-3 px-6 py-2 bg-[#B8956A]/20 backdrop-blur-md rounded-full text-[#B8956A] text-xs font-black uppercase tracking-[0.4em] mb-8">
-              <Trophy className="w-4 h-4" />
-              Elite Competitiva
-            </span>
-            <h1 className="font-serif text-5xl sm:text-7xl lg:text-8xl font-black text-white leading-tight mb-8">
-              Grandes<br />
-              <span className="text-[#B8956A] italic">Competições</span>
-            </h1>
-            <p className="text-xl text-stone-300 max-w-2xl mx-auto font-medium leading-relaxed mb-10">
-              Acompanhe as provas de maior prestígio e os resultados da nossa equipa.
-            </p>
-            <div className="flex flex-wrap justify-center gap-6">
-              <Link to={createPageUrl('UserProfile')}>
-                <Button className="h-16 px-10 rounded-2xl bg-white text-[#11180D] hover:bg-[#B8956A] hover:text-white font-black uppercase tracking-widest text-xs transition-all duration-500 shadow-2xl">
-                  Minhas Inscrições
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-24">
         {/* Advanced Filters */}
-        <div className="mb-20">
-          <div className="premium-card bg-white p-10 border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)]">
-            <div className="flex items-center gap-4 mb-10 pb-6 border-b border-stone-50">
-              <div className="w-12 h-12 bg-[#2C3E1F] rounded-xl flex items-center justify-center">
-                <Filter className="w-6 h-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-serif font-black text-[#2C3E1F]">Refinar Provas</h2>
+        <div className="mb-12">
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-stone-100">
+              <Filter className="w-5 h-5 text-stone-400" />
+              <h2 className="text-lg font-semibold text-stone-700">Filtros</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
