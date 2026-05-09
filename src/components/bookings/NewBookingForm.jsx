@@ -946,6 +946,9 @@ export default function NewBookingForm({ user, isBlocked }) {
                          <CheckCircle className="w-7 h-7" />}
                       </div>
                       <h3 className="font-serif text-2xl font-bold text-[#2C3E1F] mb-4 group-hover:text-[#B8956A] transition-colors">{service.title}</h3>
+                      <p className="text-stone-500 leading-relaxed mb-6 h-12 overflow-hidden line-clamp-2">
+                        {service.short_description || service.description}
+                      </p>
                       <div className="flex items-center justify-between mt-auto">
                         {service.price > 0 ? (
                           <span className="text-xl font-bold text-[#B8956A]">Desde {service.price}€</span>
