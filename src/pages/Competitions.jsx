@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -10,15 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Trophy, Filter, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
-import { motion } from 'framer-motion';
 import MetaTags from '@/components/seo/MetaTags';
-import { useAuth } from '@/lib/AuthContext';
 
 export default function Competitions() {
   const [modalityFilter, setModalityFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const { user } = useAuth();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(isAuth => {
+      if (isAuth) base44.auth.me().then(setCurrentUser).catch(() => {});
+    }).catch(() => {});
+  }, []);
 
   const { data: competitions = [], isLoading } = useQuery({
     queryKey: ['competitions'],
@@ -30,9 +34,9 @@ export default function Competitions() {
   });
 
   const { data: userEntries = [] } = useQuery({
-    queryKey: ['my-entries', user?.email],
-    queryFn: () => base44.entities.CompetitionEntry.filter({ rider_email: user.email }),
-    enabled: !!user?.email
+    queryKey: ['my-entries', currentUser?.email],
+    queryFn: () => base44.entities.CompetitionEntry.filter({ rider_email: currentUser.email }),
+    enabled: !!currentUser?.email
   });
 
   const years = [...new Set(competitions.map(c => c.year).filter(Boolean))].sort((a, b) => b - a);
