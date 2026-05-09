@@ -104,7 +104,7 @@ export default function Bookings() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Hero Section */}
-      <section className="relative py-14 sm:py-16 min-h-[300px] bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden flex items-start">
+      <section className="relative py-14 sm:py-16 min-h-[300px] bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <LazyImage
             src={heroImage}
@@ -118,7 +118,8 @@ export default function Bookings() {
         <div className="absolute top-10 right-10 sm:top-20 sm:right-20 w-48 h-48 sm:w-72 sm:h-72 bg-[#B8956A]/20 rounded-full blur-3xl" />
         <div className="absolute bottom-10 left-10 sm:bottom-20 sm:left-20 w-64 h-64 sm:w-96 sm:h-96 bg-[#8B7355]/20 rounded-full blur-3xl" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute top-6 sm:top-8 left-0 right-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}>
@@ -130,6 +131,7 @@ export default function Bookings() {
               {t('manage_bookings_subtitle')}
             </p>
           </motion.div>
+        </div>
         </div>
       </section>
 
