@@ -76,8 +76,7 @@ export default function LazyImage({
     onError: () => {
       setImageSrc(placeholder);
       setIsLoaded(true);
-    },
-    loading: priority ? "eager" : "lazy"
+    }
   };
 
   if (width) imgProps.width = width;
@@ -87,7 +86,7 @@ export default function LazyImage({
     imgProps.fetchPriority = "high";
   }
 
-  const imgElement = <img {...(imgProps as any)} />;
+  const imgElement = <img {...imgProps} />;
 
   // If width/height provided, wrap in container for better control
   if (width || height) {
