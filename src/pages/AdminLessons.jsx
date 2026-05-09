@@ -598,8 +598,7 @@ export default function AdminLessons() {
   const moveLessonMutation = useMutation({
     mutationFn: async ({ lessonId, newDate, newTime }) => {
       console.log('Movendo aula:', { lessonId, newDate, newTime });
-      
-      const lesson = lessons.find(l => l.id === lessonId);
+      const lesson = allLessons.find(l => l.id === lessonId);
       if (!lesson) throw new Error('Aula não encontrada');
       
       // Calcular nova hora de fim
@@ -629,6 +628,36 @@ export default function AdminLessons() {
     onError: (error) => {
       console.error('Erro ao mover aula:', error);
       toast.error('Erro ao mover aula');
+    }
+  });
+
+  const cancelLessonMutation = useMutation({
+    mutationFn: async (lessonId) => {
+      // 1. Atualizar a aula para cancelada
+      await base44.entities.Lesson.update(lessonId, { status: 'cancelled', booked_spots: 0 });
+      
+      // 2. Buscar todas as reservas desta aula
+      const lessonBookings = await base44.entities.Booking.filter({ lesson_id: lessonId });
+      
+      // 3. Rejeitar/Cancelar todas as reservas (para que os clientes saibam)
+      for (const booking of lessonBookings) {
+        if (booking.status !== 'rejected' && booking.status !== 'cancelled') {
+          await base44.entities.Booking.update(booking.id, { 
+            status: 'rejected',
+            notes: (booking.notes || '') + ' [AULA CANCELADA PELO ADMINISTRADOR]'
+          });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-lessons'] });
+      toast.success('Aula cancelada com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao cancelar aula:', error);
+      toast.error('Erro ao cancelar aula');
     }
   });
 
@@ -1197,6 +1226,30 @@ export default function AdminLessons() {
                                 <Users className="w-5 h-5 mr-2" />
                                 {lesson.booked_spots || 0}/6
                               </Badge>
+
+                              {!isCompleted && lesson.status !== 'cancelled' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-all font-bold mt-2"
+                                  onClick={() => {
+                                    if (confirm('Tem a certeza que deseja cancelar esta aula? Todas as reservas associadas serão rejeitadas.')) {
+                                      cancelLessonMutation.mutate(lesson.id);
+                                    }
+                                  }}
+                                  disabled={cancelLessonMutation.isPending}
+                                >
+                                  {cancelLessonMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />}
+                                  Cancelar Aula
+                                </Button>
+                              )}
+
+                              {lesson.status === 'cancelled' && (
+                                <Badge className="bg-stone-500 text-white shadow-lg text-sm px-3 py-1.5 mt-2">
+                                  <XCircle className="w-4 h-4 mr-1.5" />
+                                  Cancelada
+                                </Badge>
+                              )}
                             </div>
                           </div>
 
