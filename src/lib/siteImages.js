@@ -40,7 +40,7 @@ export const DEFAULT_IMAGES = {
   service_2: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80',
   service_3: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=600&q=80',
   about_decorative: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&q=80',
-  about_grid_1: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=600&q=80',
+  about_grid_1: 'https://www.image2url.com/r2/default/images/1778336317638-1f9a2d9b-b407-4310-8966-491e164a040d.jpeg',
   about_grid_2: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
   about_grid_3: 'https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=400&q=80',
   about_grid_4: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=600&q=80',
