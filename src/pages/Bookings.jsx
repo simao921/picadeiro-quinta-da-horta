@@ -64,7 +64,7 @@ export default function Bookings() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-stone-50">
-        <section className="relative py-20 sm:py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+        <section className="relative py-16 sm:py-20 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
           <div className="absolute inset-0 opacity-30">
             <LazyImage
               src={heroImage}
@@ -104,7 +104,7 @@ export default function Bookings() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Hero Section */}
-      <section className="relative py-20 sm:py-24 min-h-[400px] bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden flex items-center">
+      <section className="relative py-14 sm:py-16 min-h-[300px] bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden flex items-start">
         <div className="absolute inset-0 opacity-30">
           <LazyImage
             src={heroImage}
