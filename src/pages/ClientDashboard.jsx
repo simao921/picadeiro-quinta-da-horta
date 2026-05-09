@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import FeedbackModal from '@/components/FeedbackModal';
 import {
   CalendarDays, Clock, CheckCircle, XCircle, 
-  AlertCircle, Euro, LogOut,
+  AlertCircle, Euro, LogOut, Plus,
   Calendar as CalendarIcon, FileText, Eye, X, Star, Trash2
 } from 'lucide-react';
 import {
@@ -178,47 +178,48 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+    <div className="min-h-screen bg-[#FDFCFB] py-24">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+        {/* Header - Cinematic Style */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-16"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="font-serif text-3xl font-bold text-[#2C3E1F]">
-                Olá, {user.full_name?.split(' ')[0]}!
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+            <div className="space-y-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#B8956A]">Portal do Cliente</span>
+              <h1 className="font-serif text-5xl sm:text-6xl font-black text-[#2C3E1F] leading-tight">
+                Olá, <span className="text-[#B8956A] italic">{user.full_name?.split(' ')[0]}!</span>
               </h1>
-              <p className="text-stone-600">{user.email}</p>
+              <p className="text-xl text-stone-400 font-medium">{user.email}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-4">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
                     variant="outline"
-                    className="border-red-500 text-red-600 hover:bg-red-50 w-fit"
+                    className="h-14 rounded-2xl border-stone-100 text-stone-400 hover:text-red-600 hover:border-red-100 transition-all font-bold"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-5 h-5 mr-3" />
                     Eliminar Conta
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="rounded-[2.5rem] p-10 border-none shadow-2xl">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Tem a certeza absoluta?</AlertDialogTitle>
-                    <AlertDialogDescription>
+                    <AlertDialogTitle className="font-serif text-3xl font-black text-[#2C3E1F]">Tem a certeza absoluta?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-stone-500 font-medium text-lg leading-relaxed pt-4">
                       Esta ação não pode ser desfeita. Isto irá eliminar permanentemente a sua conta 
                       e remover todos os seus dados dos nossos servidores, incluindo todas as suas reservas e pagamentos.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogFooter className="pt-10">
+                    <AlertDialogCancel className="h-14 rounded-2xl border-stone-100 font-black uppercase tracking-widest text-xs">Cancelar</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteAccount}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="h-14 rounded-2xl bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest text-xs shadow-2xl shadow-red-600/20"
                     >
-                      Sim, eliminar a minha conta
+                      Sim, eliminar conta
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -226,289 +227,293 @@ export default function ClientDashboard() {
               <Button
                 variant="outline"
                 onClick={() => base44.auth.logout()}
-                className="w-fit"
+                className="h-14 rounded-2xl border-stone-100 text-[#2C3E1F] font-black uppercase tracking-widest text-xs shadow-sm hover:shadow-lg transition-all"
               >
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="w-4 h-4 mr-3" />
                 Terminar Sessão
               </Button>
             </div>
           </div>
         </motion.div>
 
-        {/* Alert if blocked */}
+        {/* Alert if blocked - Premium Version */}
         {isBlocked && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-16 p-10 bg-red-50 border-2 border-red-100 rounded-[3rem] relative overflow-hidden group"
           >
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-red-800">Conta Bloqueada</h3>
-                <p className="text-red-700 text-sm">
-                  A sua conta está bloqueada devido a dívidas superiores a 30€. 
-                  Por favor regularize a sua situação para poder continuar a ter aulas e participar em provas.
-                </p>
-                <p className="text-red-800 font-semibold mt-2">
-                  Dívida total: {totalDebt.toFixed(2)}€
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-[80px] -mr-32 -mt-32" />
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 relative z-10">
+              <div className="w-16 h-16 bg-red-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl shadow-red-500/20">
+                <AlertCircle className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-center sm:text-left">
+                <h3 className="text-2xl font-black text-red-950 mb-3 uppercase tracking-tight">Acesso Restrito</h3>
+                <p className="text-red-900/70 font-medium text-lg leading-relaxed max-w-3xl">
+                  Detetámos pagamentos em atraso superiores a 30€. Por favor regularize a sua situação (Valor total: <span className="font-black text-red-600">{totalDebt.toFixed(2)}€</span>) para poder continuar as suas atividades.
                 </p>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <CalendarDays className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-stone-500">Reservas Ativas</p>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">
-                    {bookings.filter(b => b.status === 'approved').length}
-                  </p>
-                </div>
+        {/* Stats Cards - Premium Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-white p-8 border border-stone-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-[#2C3E1F]/5 rounded-[1.5rem] flex items-center justify-center">
+                <CalendarDays className="w-8 h-8 text-[#2C3E1F]" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-stone-500">Pendentes</p>
-                  <p className="text-2xl font-bold text-[#2C3E1F]">
-                    {bookings.filter(b => b.status === 'pending').length}
-                  </p>
-                </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-1">Reservas Ativas</p>
+                <p className="text-4xl font-serif font-black text-[#2C3E1F]">
+                  {bookings.filter(b => b.status === 'approved').length}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 ${totalDebt > 0 ? 'bg-red-100' : 'bg-green-100'} rounded-xl flex items-center justify-center`}>
-                  <Euro className={`w-6 h-6 ${totalDebt > 0 ? 'text-red-600' : 'text-green-600'}`} />
-                </div>
-                <div>
-                  <p className="text-sm text-stone-500">Dívida</p>
-                  <p className={`text-2xl font-bold ${totalDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {totalDebt.toFixed(2)}€
-                  </p>
-                </div>
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-white p-8 border border-stone-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-[#B8956A]/10 rounded-[1.5rem] flex items-center justify-center">
+                <Clock className="w-8 h-8 text-[#B8956A]" />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-1">Pedidas</p>
+                <p className="text-4xl font-serif font-black text-[#B8956A]">
+                  {bookings.filter(b => b.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
-
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-[#11180D] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]">
+            <div className="flex items-center gap-6">
+              <div className={`w-16 h-16 ${totalDebt > 0 ? 'bg-red-500/10' : 'bg-green-500/10'} rounded-[1.5rem] flex items-center justify-center`}>
+                <Euro className={`w-8 h-8 ${totalDebt > 0 ? 'text-red-500' : 'text-green-500'}`} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-1">Balanço</p>
+                <p className={`text-4xl font-serif font-black ${totalDebt > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  {totalDebt.toFixed(2)}€
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
-        {/* Regulations Section */}
+        {/* Regulations - Premium Card */}
         {regulations.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <Card className="border-[#B8956A] bg-gradient-to-br from-stone-50 to-white">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#B8956A]" />
-                  Regulamento Interno
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {regulations.map((reg) => (
-                    <div key={reg.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#B8956A] transition-colors">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-8 h-8 text-[#B8956A]" />
-                        <div>
-                          <p className="font-medium text-[#2C3E1F]">{reg.title}</p>
-                          <p className="text-xs text-stone-500">Documento em PDF</p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A] hover:text-white"
-                        onClick={() => setSelectedRegulation(reg)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Ver Documento
-                      </Button>
-                    </div>
-                  ))}
+          <div className="mb-24">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="bg-[#11180D] p-8 px-12 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <FileText className="w-6 h-6 text-[#B8956A]" />
+                  <h2 className="text-xl font-serif font-black text-white">Regulamentos Internos</h2>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+              <div className="p-8 px-12 divide-y divide-stone-50">
+                {regulations.map((reg) => (
+                  <div key={reg.id} className="py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group">
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center group-hover:bg-[#B8956A]/10 transition-colors duration-500">
+                        <FileText className="w-8 h-8 text-stone-300 group-hover:text-[#B8956A] transition-colors" />
+                      </div>
+                      <div>
+                        <p className="font-black text-xl text-[#2C3E1F] mb-1">{reg.title}</p>
+                        <p className="text-xs font-black uppercase tracking-widest text-stone-400">Formato Digital PDF</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="h-14 rounded-2xl border-stone-100 text-[#2C3E1F] font-black uppercase tracking-widest text-[10px] hover:bg-[#B8956A] hover:border-[#B8956A] hover:text-white transition-all shadow-sm"
+                      onClick={() => setSelectedRegulation(reg)}
+                    >
+                      <Eye className="w-4 h-4 mr-3" />
+                      Visualizar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="bg-white border shadow-sm">
-            <TabsTrigger value="bookings" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
-              Minhas Aulas
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
-              Pagamentos
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content Tabs - Premium Interface */}
+        <Tabs defaultValue="bookings" className="space-y-12">
+          <div className="flex justify-start">
+            <TabsList className="bg-stone-50 border border-stone-100 p-2 rounded-[2rem] h-auto gap-2">
+              <TabsTrigger 
+                value="bookings" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Minhas Aulas
+              </TabsTrigger>
+              <TabsTrigger 
+                value="payments" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Histórico Financeiro
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* Bookings Tab */}
-          <TabsContent value="bookings">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Minhas Reservas</CardTitle>
-                <Link to={createPageUrl('Bookings')}>
-                  <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    Nova Reserva
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
+          <TabsContent value="bookings" className="mt-0">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="p-10 px-12 border-b border-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <h3 className="text-2xl font-serif font-black text-[#2C3E1F]">Agenda Pessoal</h3>
+                <div className="flex gap-4">
+                  <Link to={createPageUrl('Competitions')}>
+                    <Button variant="outline" className="h-14 rounded-2xl border-[#B8956A] text-[#B8956A] font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-[#B8956A]/5 transition-all hover:scale-105 hover:bg-[#B8956A] hover:text-white">
+                      <Star className="w-4 h-4 mr-3" />
+                      Competições
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl('Bookings')}>
+                    <Button className="h-14 rounded-2xl bg-[#B8956A] hover:bg-[#11180D] text-white font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-[#B8956A]/20 transition-all hover:scale-105">
+                      <Plus className="w-4 h-4 mr-3" />
+                      Agendar Aula
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="p-12">
                 {bookingsLoading ? (
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     {[1, 2, 3].map(i => (
-                      <Skeleton key={i} className="h-20 w-full" />
+                      <div key={i} className="h-24 rounded-3xl bg-stone-50 animate-pulse" />
                     ))}
                   </div>
                 ) : bookings.length === 0 ? (
-                  <div className="text-center py-12">
-                    <CalendarDays className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-                    <p className="text-stone-500">Ainda não tem reservas.</p>
+                  <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
+                    <CalendarDays className="w-20 h-20 text-stone-200 mx-auto mb-6" />
+                    <p className="text-xl font-serif font-black text-stone-400">Sem atividades agendadas</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {bookings.map((booking) => {
                       const lesson = lessons.find(l => l.id === booking.lesson_id);
                       return (
                         <div
                           key={booking.id}
-                          className="p-4 bg-stone-50 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                          className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex flex-col lg:flex-row lg:items-center justify-between gap-8 transition-all hover:bg-white hover:shadow-xl hover:border-white group"
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <div className="flex-1 space-y-4">
+                            <div className="flex flex-wrap items-center gap-3">
                               {isLessonCompleted(lesson) && booking.status === 'approved' && (
-                                <Badge className="bg-green-600 text-white">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                <Badge className="bg-green-100 text-green-700 border-none px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
                                   Efetuada
                                 </Badge>
                               )}
-                              {getStatusBadge(booking.status)}
-                              {booking.attendance && (
-                                <Badge variant="outline">
-                                  Presença: {booking.attendance === 'confirmed' ? 'Confirmada' : booking.attendance === 'absent' ? 'Ausente' : 'Pendente'}
-                                </Badge>
-                              )}
-                              {booking.status === 'approved' && lesson && new Date(lesson.date) < new Date() && (
-                                <Button
-                                  onClick={() => setFeedbackBooking(booking)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="ml-auto"
-                                >
-                                  <Star className="w-4 h-4 mr-1" />
-                                  Deixar Feedback
-                                </Button>
-                              )}
+                              <Badge className={`${
+                                booking.status === 'approved' ? 'bg-blue-100 text-blue-700' :
+                                booking.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                'bg-stone-100 text-stone-700'
+                              } border-none px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest`}>
+                                {booking.status === 'approved' ? 'Confirmada' : 
+                                 booking.status === 'pending' ? 'Em Aprovação' : 
+                                 'Cancelada'}
+                              </Badge>
                             </div>
-                            <p className="font-semibold text-[#2C3E1F]">
-                              {lesson ? format(new Date(lesson.date), "d 'de' MMMM", { locale: pt }) : 'Data não disponível'}
-                            </p>
-                            <p className="text-sm text-stone-500">
-                              {lesson?.start_time || '--:--'} - {lesson?.end_time || '--:--'}
-                            </p>
+                            <div>
+                              <p className="font-serif text-3xl font-black text-[#2C3E1F] mb-1">
+                                {lesson ? format(new Date(lesson.date), "d 'de' MMMM", { locale: pt }) : 'Data Indisponível'}
+                              </p>
+                              <p className="text-lg text-[#B8956A] font-bold">
+                                {lesson?.start_time || '--:--'} — {lesson?.end_time || '--:--'}
+                              </p>
+                            </div>
                           </div>
 
-                          {booking.status === 'approved' && booking.attendance === 'pending' && (
-                            <div className="flex gap-2">
+                          <div className="flex flex-wrap items-center gap-4">
+                            {booking.status === 'approved' && lesson && new Date(lesson.date) < new Date() && (
                               <Button
-                                size="sm"
+                                onClick={() => setFeedbackBooking(booking)}
                                 variant="outline"
-                                className="text-green-600 border-green-600 hover:bg-green-50"
-                                onClick={() => updateAttendanceMutation.mutate({
-                                  bookingId: booking.id,
-                                  attendance: 'confirmed'
-                                })}
+                                className="h-14 rounded-2xl border-stone-100 text-[#2C3E1F] font-black uppercase tracking-widest text-[10px] px-8 bg-white shadow-sm"
                               >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Vou
+                                <Star className="w-4 h-4 mr-3 text-[#B8956A]" />
+                                Avaliar Experiência
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600 border-red-600 hover:bg-red-50"
-                                onClick={() => updateAttendanceMutation.mutate({
-                                  bookingId: booking.id,
-                                  attendance: 'absent'
-                                })}
-                              >
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Não Vou
-                              </Button>
-                            </div>
-                          )}
+                            )}
+
+                            {booking.status === 'approved' && booking.attendance === 'pending' && (
+                              <div className="flex gap-4">
+                                <Button
+                                  className="h-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-green-600/10 transition-all hover:scale-105"
+                                  onClick={() => updateAttendanceMutation.mutate({
+                                    bookingId: booking.id,
+                                    attendance: 'confirmed'
+                                  })}
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-3" />
+                                  Vou Comparacer
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="h-14 rounded-2xl border-red-100 text-red-600 font-black uppercase tracking-widest text-[10px] px-8 bg-white hover:bg-red-50 transition-all"
+                                  onClick={() => updateAttendanceMutation.mutate({
+                                    bookingId: booking.id,
+                                    attendance: 'absent'
+                                  })}
+                                >
+                                  <XCircle className="w-4 h-4 mr-3" />
+                                  Não Poderei Ir
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
 
-          {/* Payments Tab */}
-          <TabsContent value="payments">
-            <Card>
-              <CardHeader>
-                <CardTitle>Histórico de Pagamentos</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <TabsContent value="payments" className="mt-0">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="p-10 px-12 border-b border-stone-50">
+                <h3 className="text-2xl font-serif font-black text-[#2C3E1F]">Extrato Digital</h3>
+              </div>
+              <div className="p-12">
                 {paymentsLoading ? (
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     {[1, 2, 3].map(i => (
-                      <Skeleton key={i} className="h-16 w-full" />
+                      <div key={i} className="h-24 rounded-3xl bg-stone-50 animate-pulse" />
                     ))}
                   </div>
                 ) : payments.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Euro className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-                    <p className="text-stone-500">Sem pagamentos registados.</p>
+                  <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
+                    <Euro className="w-20 h-20 text-stone-200 mx-auto mb-6" />
+                    <p className="text-xl font-serif font-black text-stone-400">Sem histórico de transações</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {payments.map((payment) => (
                       <div
                         key={payment.id}
-                        className="p-4 bg-stone-50 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                        className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-8 transition-all hover:bg-white hover:shadow-xl hover:border-white group"
                       >
-                        <div>
-                          <p className="font-semibold text-[#2C3E1F]">
+                        <div className="space-y-2">
+                          <p className="font-serif text-3xl font-black text-[#2C3E1F]">
                             {payment.month}
                           </p>
-                          <p className="text-sm text-stone-500">
-                            Vencimento: {payment.due_date ? format(new Date(payment.due_date), 'dd/MM/yyyy') : 'N/A'}
-                          </p>
+                          <div className="flex items-center gap-3 text-sm font-bold text-stone-400">
+                            <CalendarIcon className="w-4 h-4" />
+                            Vencimento: {payment.due_date ? format(new Date(payment.due_date), 'dd/MM/yyyy') : 'Imediato'}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-10">
                           <div className="text-right">
-                            <p className="font-bold text-lg">
+                            <p className="text-4xl font-serif font-black text-[#11180D]">
                               {(payment.total || payment.amount).toFixed(2)}€
                             </p>
                             {payment.penalty > 0 && (
-                              <p className="text-xs text-red-600">
-                                Inclui {payment.penalty.toFixed(2)}€ de penalização
+                              <p className="text-xs font-black uppercase tracking-widest text-red-500 mt-2">
+                                +{payment.penalty.toFixed(2)}€ Mora
                               </p>
                             )}
                           </div>
@@ -518,39 +523,39 @@ export default function ClientDashboard() {
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
-
-
         </Tabs>
 
-        {/* Regulation Viewer Dialog */}
+        {/* Premium Regulation Viewer */}
         <Dialog open={!!selectedRegulation} onOpenChange={() => setSelectedRegulation(null)}>
-          <DialogContent className="max-w-6xl h-[90vh]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#B8956A]" />
-                  {selectedRegulation?.title}
-                </span>
+          <DialogContent className="max-w-7xl h-[95vh] rounded-[3rem] p-0 border-none shadow-[0_100px_200px_-50px_rgba(0,0,0,1)] bg-[#11180D]">
+            <div className="flex flex-col h-full overflow-hidden">
+              <div className="p-8 px-12 border-b border-white/5 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[#B8956A] rounded-xl flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-serif font-black text-white">{selectedRegulation?.title}</h2>
+                </div>
                 <Button
                   variant="ghost"
-                  size="icon"
+                  className="w-16 h-16 rounded-full text-white hover:bg-white/5"
                   onClick={() => setSelectedRegulation(null)}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-8 h-8" />
                 </Button>
-              </DialogTitle>
-            </DialogHeader>
-            <div className="flex-1 h-full">
-              {selectedRegulation && (
-                <iframe
-                  src={selectedRegulation.file_url}
-                  className="w-full h-full rounded-lg"
-                  title={selectedRegulation.title}
-                />
-              )}
+              </div>
+              <div className="flex-grow p-8 bg-stone-100 overflow-hidden rounded-b-[3rem]">
+                {selectedRegulation && (
+                  <iframe
+                    src={selectedRegulation.file_url}
+                    className="w-full h-full rounded-[2rem] shadow-2xl"
+                    title={selectedRegulation.title}
+                  />
+                )}
+              </div>
             </div>
           </DialogContent>
         </Dialog>
