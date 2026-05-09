@@ -74,8 +74,8 @@ export default function Competitions() {
         keywords="competições equestres, provas, dressage, working equitation, inscrições"
       />
 
-      <section className="relative py-20 sm:py-24 bg-[#2C3E1F] overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
+      <section className="relative py-20 sm:py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+        <div className="absolute inset-0 opacity-30">
           <LazyImage
             src={heroImage}
             alt="Competições"
@@ -83,7 +83,7 @@ export default function Competitions() {
             priority={true}
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#2C3E1F]/40 via-[#2C3E1F]/55 to-[#2C3E1F]/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/65" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
