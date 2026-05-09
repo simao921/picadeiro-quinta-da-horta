@@ -1,43 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  User, Calendar, Euro, History, MessageSquare, 
-  Mail, Phone, MapPin, Edit2, Save, X, CheckCircle2,
-  Clock, AlertCircle, Ban, Send
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import FeedbackModal from '@/components/FeedbackModal';
+import {
+  CalendarDays, Clock, CheckCircle, XCircle, 
+  AlertCircle, Euro, LogOut, Plus, Trophy,
+  Calendar as CalendarIcon, FileText, Eye, X, Star, Trash2,
+  User as UserIcon, History, MessageSquare, Mail, Phone, MapPin, Edit2, Save, CheckCircle2, Ban, Send
 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useLanguage } from '@/components/LanguageProvider';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
-import { useLanguage } from '@/components/LanguageProvider';
-import FeedbackModal from '@/components/FeedbackModal';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 export default function UserProfile() {
+  const [user, setUser] = useState(null);
+  const [selectedRegulation, setSelectedRegulation] = useState(null);
+  const [feedbackBooking, setFeedbackBooking] = useState(null);
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+
+  // Profile Edit States
   const [editMode, setEditMode] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('info');
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [selectedBookingForFeedback, setSelectedBookingForFeedback] = useState(null);
-  
-  // Form states for edit mode
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
     address: ''
   });
-  
-  // Message form
+
+  // Message States
   const [message, setMessage] = useState('');
   const [messageSubject, setMessageSubject] = useState('');
 
@@ -56,190 +70,149 @@ export default function UserProfile() {
           phone: userData.phone || '',
           address: userData.address || ''
         });
-      } catch (error) {
+      } catch (e) {
         base44.auth.redirectToLogin();
-      } finally {
-        setLoading(false);
       }
     };
     checkAuth();
   }, []);
 
-  // Fetch bookings
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ['user-bookings', user?.email],
+    queryKey: ['my-bookings', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return await base44.entities.Booking.filter({ client_email: user.email });
+      try {
+        return await base44.entities.Booking.filter({ client_email: user.email });
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+        return [];
+      }
     },
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
 
-  // Fetch lessons
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+    queryKey: ['my-payments', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        return await base44.entities.Payment.filter({ client_email: user.email });
+      } catch (error) {
+        console.error('Error loading payments:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email
+  });
+
+
+
   const { data: lessons = [] } = useQuery({
     queryKey: ['lessons'],
-    queryFn: () => base44.entities.Lesson.list(),
-  });
-
-  // Fetch services
-  const { data: services = [] } = useQuery({
-    queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list(),
-  });
-
-  // Fetch payments
-  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
-    queryKey: ['user-payments', user?.email],
     queryFn: async () => {
-      if (!user?.email) return [];
-      return await base44.entities.Payment.filter({ client_email: user.email });
-    },
-    enabled: !!user?.email,
-  });
-
-  // Update user info mutation
-  const updateUserMutation = useMutation({
-    mutationFn: async (data) => {
-      await base44.auth.updateMe(data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['user']);
-      setEditMode(false);
-      setUser({ ...user, ...formData });
-    },
-  });
-
-  // Fetch user messages
-  const { data: userMessages = [], isLoading: messagesLoading } = useQuery({
-    queryKey: ['user-messages', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      return await base44.entities.ContactMessage.filter({ email: user.email });
-    },
-    enabled: !!user?.email,
-  });
-
-  // Fetch user feedbacks
-  const { data: userFeedbacks = [] } = useQuery({
-    queryKey: ['user-feedbacks', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      return await base44.entities.Feedback.filter({ client_email: user.email });
-    },
-    enabled: !!user?.email,
-  });
-
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: async (data) => {
-      await base44.entities.ContactMessage.create({
-        name: user.full_name,
-        email: user.email,
-        subject: data.subject,
-        message: data.message,
-        phone: user.phone || ''
-      });
-    },
-    onSuccess: () => {
-      setMessage('');
-      setMessageSubject('');
-      queryClient.invalidateQueries(['user-messages']);
-      alert('Mensagem enviada com sucesso!');
-    },
-  });
-
-  const handleSaveProfile = () => {
-    updateUserMutation.mutate(formData);
-  };
-
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!messageSubject.trim() || !message.trim()) {
-      alert('Por favor preencha o assunto e a mensagem');
-      return;
+      try {
+        return await base44.entities.Lesson.list();
+      } catch (error) {
+        console.error('Error loading lessons:', error);
+        return [];
+      }
     }
-    sendMessageMutation.mutate({ subject: messageSubject, message });
-  };
+  });
 
-  // Check if booking already has feedback
-  const hasFeedback = (bookingId) => {
-    return userFeedbacks.some(feedback => feedback.booking_id === bookingId);
-  };
+  const { data: competitionEntries = [], isLoading: entriesLoading } = useQuery({
+    queryKey: ['my-competition-entries', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        const entries = await base44.entities.CompetitionEntry.filter({ rider_email: user.email });
+        // Carregar competições relacionadas
+        const comps = await base44.entities.Competition.list();
+        return entries.map(entry => {
+          const competition = comps.find(c => c.id === entry.competition_id);
+          return { ...entry, competition };
+        });
+      } catch (error) {
+        console.error('Error loading competition entries:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.email
+  });
 
-  // Get lesson info for booking
-  const getLessonInfo = (booking) => {
-    const lesson = lessons.find(l => l.id === booking.lesson_id);
-    if (!lesson) return null;
-    const service = services.find(s => s.id === lesson.service_id);
-    return { lesson, service };
-  };
+  const { data: regulations = [] } = useQuery({
+    queryKey: ['regulations'],
+    queryFn: async () => {
+      try {
+        return await base44.entities.RegulationDocument.filter({ is_visible: true });
+      } catch (error) {
+        console.error('Error loading regulations:', error);
+        return [];
+      }
+    }
+  });
 
-  // Calculate stats
-  const totalBookings = bookings.length;
-  const upcomingBookings = bookings.filter(b => {
-    const lessonInfo = getLessonInfo(b);
-    return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) >= new Date();
-  }).length;
-  
-  const totalDebt = payments
-    .filter(p => p.status === 'pending' || p.status === 'overdue')
-    .reduce((sum, p) => sum + (p.total || p.amount), 0);
-  
-  const isBlocked = payments.some(p => p.status === 'blocked');
+  const updateAttendanceMutation = useMutation({
+    mutationFn: ({ bookingId, attendance }) => 
+      base44.entities.Booking.update(bookingId, { attendance }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['my-bookings']);
+      toast.success('Presença atualizada!');
+    }
+  });
 
-  // Separate upcoming and past bookings
-  const now = new Date();
-  const upcomingBookingsList = bookings
-    .filter(b => {
-      const lessonInfo = getLessonInfo(b);
-      return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) >= now;
-    })
-    .sort((a, b) => {
-      const lessonA = getLessonInfo(a)?.lesson;
-      const lessonB = getLessonInfo(b)?.lesson;
-      return new Date(lessonA?.date || 0) - new Date(lessonB?.date || 0);
-    });
-
-  const pastBookingsList = bookings
-    .filter(b => {
-      const lessonInfo = getLessonInfo(b);
-      return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) < now;
-    })
-    .sort((a, b) => {
-      const lessonA = getLessonInfo(a)?.lesson;
-      const lessonB = getLessonInfo(b)?.lesson;
-      return new Date(lessonB?.date || 0) - new Date(lessonA?.date || 0);
-    });
-
-  const renderStatusBadge = (status) => {
-    const statusConfig = {
-      approved: { label: 'Aprovada', className: 'bg-green-100 text-green-800' },
-      pending: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800' },
-      rejected: { label: 'Rejeitada', className: 'bg-red-100 text-red-800' },
-      cancelled: { label: 'Cancelada', className: 'bg-stone-100 text-stone-800' },
+  const getStatusBadge = (status) => {
+    const config = {
+      pending: { label: 'Pendente', class: 'bg-amber-100 text-amber-800' },
+      approved: { label: 'Aprovada', class: 'bg-green-100 text-green-800' },
+      rejected: { label: 'Rejeitada', class: 'bg-red-100 text-red-800' },
+      cancelled: { label: 'Cancelada', class: 'bg-stone-100 text-stone-800' }
     };
-    const config = statusConfig[status] || statusConfig.pending;
-    return <Badge className={config.className}>{config.label}</Badge>;
+    const { label, class: className } = config[status] || config.pending;
+    return <Badge className={className}>{label}</Badge>;
   };
 
-  const renderPaymentStatus = (status) => {
-    const statusConfig = {
-      paid: { label: 'Pago', className: 'bg-green-100 text-green-800', icon: CheckCircle2 },
-      pending: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      overdue: { label: 'Atrasado', className: 'bg-red-100 text-red-800', icon: AlertCircle },
-      blocked: { label: 'Bloqueado', className: 'bg-red-100 text-red-800', icon: Ban },
+  const getPaymentStatusBadge = (status) => {
+    const config = {
+      pending: { label: 'Pendente', class: 'bg-amber-100 text-amber-800', icon: Clock },
+      paid: { label: 'Pago', class: 'bg-green-100 text-green-800', icon: CheckCircle },
+      overdue: { label: 'Em Atraso', class: 'bg-red-100 text-red-800', icon: AlertCircle },
+      blocked: { label: 'Bloqueado', class: 'bg-red-100 text-red-800', icon: XCircle }
     };
-    const config = statusConfig[status] || statusConfig.pending;
-    const Icon = config.icon;
+    const { label, class: className, icon: Icon } = config[status] || config.pending;
     return (
-      <Badge className={config.className}>
+      <Badge className={className}>
         <Icon className="w-3 h-3 mr-1" />
-        {config.label}
+        {label}
       </Badge>
     );
   };
 
-  if (loading) {
+  const totalDebt = payments
+    .filter(p => p.status !== 'paid')
+    .reduce((sum, p) => sum + (p.total || p.amount + (p.penalty || 0)), 0);
+
+  const isBlocked = totalDebt > 30;
+
+  const isLessonCompleted = (lesson) => {
+    if (!lesson?.date || !lesson?.end_time) return false;
+    const lessonDateTime = new Date(`${lesson.date}T${lesson.end_time}:00`);
+    return lessonDateTime < new Date();
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await base44.entities.User.delete(user.id);
+      toast.success('Conta eliminada com sucesso');
+      setTimeout(() => {
+        base44.auth.logout();
+      }, 1000);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Erro ao eliminar conta. Contacte o suporte.');
+    }
+  };
+
+  if (!user) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B8956A]"></div>
@@ -248,120 +221,467 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-serif font-bold text-[#2C3E1F]">
-                Olá, {user?.full_name?.split(' ')[0] || 'Aluno'}
+    <div className="min-h-screen bg-[#FDFCFB] py-24">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+        {/* Header - Cinematic Style */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-16"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+            <div className="space-y-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#B8956A]">Portal do Cliente</span>
+              <h1 className="font-serif text-5xl sm:text-6xl font-black text-[#2C3E1F] leading-tight">
+                Olá, <span className="text-[#B8956A] italic">{user.full_name?.split(' ')[0]}!</span>
               </h1>
-              <p className="text-stone-600 mt-2">Gerencie o seu perfil e acompanhe as suas atividades</p>
+              <p className="text-xl text-stone-400 font-medium">{user.email}</p>
             </div>
-            <div className="w-20 h-20 bg-gradient-to-br from-[#B8956A] to-[#8B7355] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-              {user?.full_name?.charAt(0) || 'A'}
+            <div className="flex flex-wrap gap-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    className="h-14 rounded-2xl border-stone-100 text-stone-400 hover:text-red-600 hover:border-red-100 transition-all font-bold"
+                  >
+                    <Trash2 className="w-5 h-5 mr-3" />
+                    Eliminar Conta
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-[2.5rem] p-10 border-none shadow-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-serif text-3xl font-black text-[#2C3E1F]">Tem a certeza absoluta?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-stone-500 font-medium text-lg leading-relaxed pt-4">
+                      Esta ação não pode ser desfeita. Isto irá eliminar permanentemente a sua conta 
+                      e remover todos os seus dados dos nossos servidores, incluindo todas as suas reservas e pagamentos.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="pt-10">
+                    <AlertDialogCancel className="h-14 rounded-2xl border-stone-100 font-black uppercase tracking-widest text-xs">Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="h-14 rounded-2xl bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest text-xs shadow-2xl shadow-red-600/20"
+                    >
+                      Sim, eliminar conta
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button
+                variant="outline"
+                onClick={() => base44.auth.logout()}
+                className="h-14 rounded-2xl border-stone-100 text-[#2C3E1F] font-black uppercase tracking-widest text-xs shadow-sm hover:shadow-lg transition-all"
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                Terminar Sessão
+              </Button>
             </div>
           </div>
+        </motion.div>
 
-          {/* Account Status Alert */}
-          {isBlocked && (
-            <Alert className="bg-red-50 border-red-200 mb-6">
-              <Ban className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                A sua conta está bloqueada devido a pagamentos em atraso. Por favor, regularize a situação para continuar a reservar aulas.
-              </AlertDescription>
-            </Alert>
-          )}
+        {/* Alert if blocked - Premium Version */}
+        {isBlocked && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-16 p-10 bg-red-50 border-2 border-red-100 rounded-[3rem] relative overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-[80px] -mr-32 -mt-32" />
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 relative z-10">
+              <div className="w-16 h-16 bg-red-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl shadow-red-500/20">
+                <AlertCircle className="w-8 h-8 text-white" />
+              </div>
+              <div className="text-center sm:text-left">
+                <h3 className="text-2xl font-black text-red-950 mb-3 uppercase tracking-tight">Acesso Restrito</h3>
+                <p className="text-red-900/70 font-medium text-lg leading-relaxed max-w-3xl">
+                  Detetámos pagamentos em atraso superiores a 30€. Por favor regularize a sua situação (Valor total: <span className="font-black text-red-600">{totalDebt.toFixed(2)}€</span>) para poder continuar as suas atividades.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">Reservas Ativas</p>
-                    <p className="text-3xl font-bold text-blue-900 mt-1">{upcomingBookings}</p>
-                  </div>
-                  <Calendar className="w-12 h-12 text-blue-400" />
-                </div>
-              </CardContent>
-            </Card>
+        {/* Stats Cards - Premium Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-white p-8 border border-stone-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-[#2C3E1F]/5 rounded-[1.5rem] flex items-center justify-center">
+                <CalendarDays className="w-8 h-8 text-[#2C3E1F]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-1">Reservas Ativas</p>
+                <p className="text-4xl font-serif font-black text-[#2C3E1F]">
+                  {bookings.filter(b => b.status === 'approved').length}
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-green-600 font-medium">Total de Aulas</p>
-                    <p className="text-3xl font-bold text-green-900 mt-1">{totalBookings}</p>
-                  </div>
-                  <History className="w-12 h-12 text-green-400" />
-                </div>
-              </CardContent>
-            </Card>
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-white p-8 border border-stone-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-[#B8956A]/10 rounded-[1.5rem] flex items-center justify-center">
+                <Clock className="w-8 h-8 text-[#B8956A]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-1">Pedidas</p>
+                <p className="text-4xl font-serif font-black text-[#B8956A]">
+                  {bookings.filter(b => b.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
-            <Card className={`bg-gradient-to-br ${totalDebt > 0 ? 'from-red-50 to-red-100 border-red-200' : 'from-green-50 to-green-100 border-green-200'}`}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${totalDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>Saldo Pendente</p>
-                    <p className={`text-3xl font-bold mt-1 ${totalDebt > 0 ? 'text-red-900' : 'text-green-900'}`}>€{totalDebt.toFixed(2)}</p>
-                  </div>
-                  <Euro className={`w-12 h-12 ${totalDebt > 0 ? 'text-red-400' : 'text-green-400'}`} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-[#11180D] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]">
+            <div className="flex items-center gap-6">
+              <div className={`w-16 h-16 ${totalDebt > 0 ? 'bg-red-500/10' : 'bg-green-500/10'} rounded-[1.5rem] flex items-center justify-center`}>
+                <Euro className={`w-8 h-8 ${totalDebt > 0 ? 'text-red-500' : 'text-green-500'}`} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-1">Balanço</p>
+                <p className={`text-4xl font-serif font-black ${totalDebt > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  {totalDebt.toFixed(2)}€
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div whileHover={{ y: -5 }} className="premium-card bg-[#B8956A] p-8 shadow-[0_30px_60px_-15px_rgba(184,149,106,0.3)]">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Provas</p>
+                <p className="text-4xl font-serif font-black text-white">
+                  {competitionEntries.length}
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 gap-2">
-            <TabsTrigger value="info" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Informações Pessoais
-            </TabsTrigger>
-            <TabsTrigger value="upcoming" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Próximas Aulas
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <History className="w-4 h-4" />
-              Histórico
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
-              <Euro className="w-4 h-4" />
-              Pagamentos
-            </TabsTrigger>
-            <TabsTrigger value="messages" className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              Mensagens
-            </TabsTrigger>
-          </TabsList>
+        {/* Regulations - Premium Card */}
+        {regulations.length > 0 && (
+          <div className="mb-24">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="bg-[#11180D] p-8 px-12 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <FileText className="w-6 h-6 text-[#B8956A]" />
+                  <h2 className="text-xl font-serif font-black text-white">Regulamentos Internos</h2>
+                </div>
+              </div>
+              <div className="p-8 px-12 divide-y divide-stone-50">
+                {regulations.map((reg) => (
+                  <div key={reg.id} className="py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group">
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center group-hover:bg-[#B8956A]/10 transition-colors duration-500">
+                        <FileText className="w-8 h-8 text-stone-300 group-hover:text-[#B8956A] transition-colors" />
+                      </div>
+                      <div>
+                        <p className="font-black text-xl text-[#2C3E1F] mb-1">{reg.title}</p>
+                        <p className="text-xs font-black uppercase tracking-widest text-stone-400">Formato Digital PDF</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="h-14 rounded-2xl border-stone-100 text-[#2C3E1F] font-black uppercase tracking-widest text-[10px] hover:bg-[#B8956A] hover:border-[#B8956A] hover:text-white transition-all shadow-sm"
+                      onClick={() => setSelectedRegulation(reg)}
+                    >
+                      <Eye className="w-4 h-4 mr-3" />
+                      Visualizar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Personal Information Tab */}
-          <TabsContent value="info">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Informações Pessoais
-                </CardTitle>
+        {/* Main Content Tabs - Premium Interface */}
+        <Tabs defaultValue="bookings" className="space-y-12">
+          <div className="flex justify-start">
+            <TabsList className="bg-stone-50 border border-stone-100 p-2 rounded-[2rem] h-auto gap-2">
+              <TabsTrigger 
+                value="bookings" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Minhas Aulas
+              </TabsTrigger>
+              <TabsTrigger 
+                value="payments" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Histórico Financeiro
+              </TabsTrigger>
+              <TabsTrigger 
+                value="competitions" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Inscrições em Provas
+              </TabsTrigger>
+              <TabsTrigger 
+                value="profile" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Dados Pessoais
+              </TabsTrigger>
+              <TabsTrigger 
+                value="messages" 
+                className="rounded-[1.5rem] px-10 py-4 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-[#2C3E1F] data-[state=active]:text-white transition-all duration-500 shadow-none data-[state=active]:shadow-2xl"
+              >
+                Apoio Cliente
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="bookings" className="mt-0">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="p-10 px-12 border-b border-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <h3 className="text-2xl font-serif font-black text-[#2C3E1F]">Agenda Pessoal</h3>
+                <div className="flex gap-4">
+                  <Link to={createPageUrl('Competitions')}>
+                    <Button variant="outline" className="h-14 rounded-2xl border-[#B8956A] text-[#B8956A] font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-[#B8956A]/5 transition-all hover:scale-105 hover:bg-[#B8956A] hover:text-white">
+                      <Star className="w-4 h-4 mr-3" />
+                      Competições
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl('Bookings')}>
+                    <Button className="h-14 rounded-2xl bg-[#B8956A] hover:bg-[#11180D] text-white font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-[#B8956A]/20 transition-all hover:scale-105">
+                      <Plus className="w-4 h-4 mr-3" />
+                      Agendar Aula
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="p-12">
+                {bookingsLoading ? (
+                  <div className="space-y-8">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-24 rounded-3xl bg-stone-50 animate-pulse" />
+                    ))}
+                  </div>
+                ) : bookings.length === 0 ? (
+                  <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
+                    <CalendarDays className="w-20 h-20 text-stone-200 mx-auto mb-6" />
+                    <p className="text-xl font-serif font-black text-stone-400">Sem atividades agendadas</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {bookings.map((booking) => {
+                      const lesson = lessons.find(l => l.id === booking.lesson_id);
+                      return (
+                        <div
+                          key={booking.id}
+                          className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex flex-col lg:flex-row lg:items-center justify-between gap-8 transition-all hover:bg-white hover:shadow-xl hover:border-white group"
+                        >
+                          <div className="flex-1 space-y-4">
+                            <div className="flex flex-wrap items-center gap-3">
+                              {isLessonCompleted(lesson) && booking.status === 'approved' && (
+                                <Badge className="bg-green-100 text-green-700 border-none px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
+                                  Efetuada
+                                </Badge>
+                              )}
+                              <Badge className={`${
+                                booking.status === 'approved' ? 'bg-blue-100 text-blue-700' :
+                                booking.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                'bg-stone-100 text-stone-700'
+                              } border-none px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest`}>
+                                {booking.status === 'approved' ? 'Confirmada' : 
+                                 booking.status === 'pending' ? 'Em Aprovação' : 
+                                 'Cancelada'}
+                              </Badge>
+                            </div>
+                            <div>
+                              <p className="font-serif text-3xl font-black text-[#2C3E1F] mb-1">
+                                {lesson ? format(new Date(lesson.date), "d 'de' MMMM", { locale: pt }) : 'Data Indisponível'}
+                              </p>
+                              <p className="text-lg text-[#B8956A] font-bold">
+                                {lesson?.start_time || '--:--'} — {lesson?.end_time || '--:--'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-4">
+                            {booking.status === 'approved' && lesson && new Date(lesson.date) < new Date() && (
+                              <Button
+                                onClick={() => setFeedbackBooking(booking)}
+                                variant="outline"
+                                className="h-14 rounded-2xl border-stone-100 text-[#2C3E1F] font-black uppercase tracking-widest text-[10px] px-8 bg-white shadow-sm"
+                              >
+                                <Star className="w-4 h-4 mr-3 text-[#B8956A]" />
+                                Avaliar Experiência
+                              </Button>
+                            )}
+
+                            {booking.status === 'approved' && booking.attendance === 'pending' && (
+                              <div className="flex gap-4">
+                                <Button
+                                  className="h-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-green-600/10 transition-all hover:scale-105"
+                                  onClick={() => updateAttendanceMutation.mutate({
+                                    bookingId: booking.id,
+                                    attendance: 'confirmed'
+                                  })}
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-3" />
+                                  Vou Comparacer
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="h-14 rounded-2xl border-red-100 text-red-600 font-black uppercase tracking-widest text-[10px] px-8 bg-white hover:bg-red-50 transition-all"
+                                  onClick={() => updateAttendanceMutation.mutate({
+                                    bookingId: booking.id,
+                                    attendance: 'absent'
+                                  })}
+                                >
+                                  <XCircle className="w-4 h-4 mr-3" />
+                                  Não Poderei Ir
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-0">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="p-10 px-12 border-b border-stone-50">
+                <h3 className="text-2xl font-serif font-black text-[#2C3E1F]">Extrato Digital</h3>
+              </div>
+              <div className="p-12">
+                {paymentsLoading ? (
+                  <div className="space-y-8">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-24 rounded-3xl bg-stone-50 animate-pulse" />
+                    ))}
+                  </div>
+                ) : payments.length === 0 ? (
+                  <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
+                    <Euro className="w-20 h-20 text-stone-200 mx-auto mb-6" />
+                    <p className="text-xl font-serif font-black text-stone-400">Sem histórico de transações</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {payments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-8 transition-all hover:bg-white hover:shadow-xl hover:border-white group"
+                      >
+                        <div className="space-y-2">
+                          <p className="font-serif text-3xl font-black text-[#2C3E1F]">
+                            {payment.month}
+                          </p>
+                          <div className="flex items-center gap-3 text-sm font-bold text-stone-400">
+                            <CalendarIcon className="w-4 h-4" />
+                            Vencimento: {payment.due_date ? format(new Date(payment.due_date), 'dd/MM/yyyy') : 'Imediato'}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-10">
+                          <div className="text-right">
+                            <p className="text-4xl font-serif font-black text-[#11180D]">
+                              {(payment.total || payment.amount).toFixed(2)}€
+                            </p>
+                            {payment.penalty > 0 && (
+                              <p className="text-xs font-black uppercase tracking-widest text-red-500 mt-2">
+                                +{payment.penalty.toFixed(2)}€ Mora
+                              </p>
+                            )}
+                          </div>
+                          {getPaymentStatusBadge(payment.status)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="competitions" className="mt-0">
+            <div className="premium-card bg-white border border-stone-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="p-10 px-12 border-b border-stone-50">
+                <h3 className="text-2xl font-serif font-black text-[#2C3E1F]">Minhas Provas</h3>
+              </div>
+              <div className="p-12">
+                {entriesLoading ? (
+                  <div className="space-y-8">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-24 rounded-3xl bg-stone-50 animate-pulse" />
+                    ))}
+                  </div>
+                ) : competitionEntries.length === 0 ? (
+                  <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
+                    <Trophy className="w-20 h-20 text-stone-200 mx-auto mb-6" />
+                    <p className="text-xl font-serif font-black text-stone-400">Sem inscrições em provas</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {competitionEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-8 transition-all hover:bg-white hover:shadow-xl hover:border-white group"
+                      >
+                        <div className="space-y-2">
+                          <p className="font-serif text-3xl font-black text-[#2C3E1F]">
+                            {entry.competition?.name || 'Competição'}
+                          </p>
+                          <div className="flex flex-wrap gap-4 text-sm font-bold text-stone-400">
+                            <span className="flex items-center gap-2">
+                              <CalendarIcon className="w-4 h-4" />
+                              {entry.competition?.date ? format(new Date(entry.competition.date), 'dd/MM/yyyy') : 'Data TBD'}
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <Trophy className="w-4 h-4 text-[#B8956A]" />
+                              {entry.horse_name}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <Badge className={`${
+                            entry.status === 'aprovada' ? 'bg-green-100 text-green-700' :
+                            entry.status === 'pendente' ? 'bg-amber-100 text-amber-700' :
+                            'bg-red-100 text-red-700'
+                          } border-none px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest`}>
+                            {entry.status || 'Pendente'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="profile" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/80 backdrop-blur-2xl border border-stone-100 rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden"
+            >
+              <div className="p-10 px-12 border-b border-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-gradient-to-b from-stone-50/50 to-transparent">
+                <div>
+                  <h3 className="text-3xl font-serif font-black text-[#11180D]">Informações de Registo</h3>
+                  <p className="text-stone-400 font-medium text-sm mt-1">Gira os seus dados pessoais e de faturação</p>
+                </div>
                 {!editMode ? (
                   <Button 
                     variant="outline" 
-                    size="sm"
                     onClick={() => setEditMode(true)}
-                    className="flex items-center gap-2"
+                    className="h-14 rounded-2xl border-stone-100 text-[#B8956A] font-black uppercase tracking-widest text-[10px] px-8 bg-white hover:bg-[#B8956A] hover:text-white transition-all duration-500 shadow-sm"
                   >
-                    <Edit2 className="w-4 h-4" />
-                    Editar
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Editar Dados
                   </Button>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-3">
                     <Button 
-                      variant="outline" 
-                      size="sm"
+                      variant="ghost" 
                       onClick={() => {
                         setEditMode(false);
                         setFormData({
@@ -370,479 +690,212 @@ export default function UserProfile() {
                           address: user.address || ''
                         });
                       }}
+                      className="h-14 rounded-2xl text-stone-400 hover:bg-stone-50 font-black uppercase tracking-widest text-[10px] px-6"
                     >
-                      <X className="w-4 h-4" />
+                      Cancelar
                     </Button>
                     <Button 
-                      size="sm"
                       onClick={handleSaveProfile}
                       disabled={updateUserMutation.isPending}
-                      className="bg-[#2C3E1F] hover:bg-[#1A2412]"
+                      className="h-14 rounded-2xl bg-[#11180D] text-white font-black uppercase tracking-widest text-[10px] px-8 shadow-xl hover:bg-[#2C3E1F] transition-all"
                     >
                       <Save className="w-4 h-4 mr-2" />
-                      Guardar
+                      Guardar Alterações
                     </Button>
                   </div>
                 )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  {editMode ? (
+              </div>
+              <div className="p-12 space-y-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nome Completo</Label>
+                    {editMode ? (
+                      <Input
+                        value={formData.full_name}
+                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        className="h-14 rounded-xl border-stone-100 bg-stone-50/50 font-bold"
+                      />
+                    ) : (
+                      <p className="text-2xl font-serif font-black text-[#2C3E1F]">{user?.full_name || '-'}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-4 group">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-stone-400 flex items-center gap-2"><Mail className="w-3 h-3"/> Endereço de Email</Label>
+                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-stone-50/50 border border-stone-100/50 group-hover:bg-white group-hover:shadow-md transition-all">
+                      <div className="w-12 h-12 bg-white shadow-sm rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-[#B8956A]" />
+                      </div>
+                      <p className="text-xl font-bold text-stone-600">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 group">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-stone-400 flex items-center gap-2"><Phone className="w-3 h-3"/> Telefone / WhatsApp</Label>
+                    {editMode ? (
+                      <Input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="h-14 rounded-xl border-stone-100 bg-stone-50/50 font-bold"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-4 p-4 rounded-2xl bg-stone-50/50 border border-stone-100/50 group-hover:bg-white group-hover:shadow-md transition-all">
+                        <div className="w-12 h-12 bg-white shadow-sm rounded-xl flex items-center justify-center">
+                          <Phone className="w-5 h-5 text-[#B8956A]" />
+                        </div>
+                        <p className="text-xl font-bold text-stone-600">{user?.phone || 'Não definido'}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4 group">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-stone-400 flex items-center gap-2"><MapPin className="w-3 h-3"/> Residência Fiscal</Label>
+                    {editMode ? (
+                      <Textarea
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="rounded-xl border-stone-100 bg-stone-50/50 font-bold min-h-[120px]"
+                      />
+                    ) : (
+                      <div className="flex items-start gap-4 p-4 rounded-2xl bg-stone-50/50 border border-stone-100/50 group-hover:bg-white group-hover:shadow-md transition-all">
+                        <div className="w-12 h-12 bg-white shadow-sm rounded-xl flex items-center justify-center shrink-0">
+                          <MapPin className="w-5 h-5 text-[#B8956A]" />
+                        </div>
+                        <p className="text-lg font-bold text-stone-600 mt-2">{user?.address || 'Não definida'}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="messages" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-white border border-stone-100 rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden"
+              >
+                <div className="p-10 px-12 border-b border-stone-50">
+                  <h3 className="text-2xl font-serif font-black text-[#11180D]">Nova Mensagem</h3>
+                  <p className="text-stone-400 font-medium text-sm mt-1">Envie as suas dúvidas para a administração</p>
+                </div>
+                <form onSubmit={handleSendMessage} className="p-12 space-y-8">
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Assunto</Label>
                     <Input
-                      id="name"
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                      value={messageSubject}
+                      onChange={(e) => setMessageSubject(e.target.value)}
+                      placeholder="Ex: Questão sobre mensalidade"
+                      className="h-14 rounded-xl border-stone-100 bg-stone-50/50 font-bold"
                     />
-                  ) : (
-                    <p className="text-lg font-medium">{user?.full_name || '-'}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Email
-                  </Label>
-                  <p className="text-lg">{user?.email}</p>
-                  <p className="text-xs text-stone-500">O email não pode ser alterado</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    Telefone
-                  </Label>
-                  {editMode ? (
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+351 XXX XXX XXX"
-                    />
-                  ) : (
-                    <p className="text-lg">{user?.phone || '-'}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address" className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    Morada
-                  </Label>
-                  {editMode ? (
+                  </div>
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Mensagem</Label>
                     <Textarea
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Rua, Cidade, Código Postal"
-                      rows={3}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Escreva aqui a sua mensagem..."
+                      className="min-h-[200px] rounded-2xl border-stone-100 bg-stone-50/50 font-medium p-6"
                     />
-                  ) : (
-                    <p className="text-lg">{user?.address || '-'}</p>
-                  )}
+                  </div>
+                  <Button 
+                    type="submit"
+                    disabled={sendMessageMutation.isPending}
+                    className="w-full h-16 rounded-2xl bg-[#B8956A] hover:bg-[#11180D] text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-[#B8956A]/20 transition-all"
+                  >
+                    <Send className="w-4 h-4 mr-3" />
+                    {sendMessageMutation.isPending ? 'A enviar...' : 'Enviar Mensagem'}
+                  </Button>
+                </form>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-white border border-stone-100 rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] overflow-hidden"
+              >
+                <div className="p-10 px-12 border-b border-stone-50">
+                  <h3 className="text-2xl font-serif font-black text-[#11180D]">Histórico de Contactos</h3>
                 </div>
-
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-stone-500">
-                    Membro desde {format(new Date(user?.created_date), "MMMM 'de' yyyy", { locale: pt })}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Upcoming Bookings Tab */}
-          <TabsContent value="upcoming">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Próximas Aulas ({upcomingBookingsList.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bookingsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
-                  </div>
-                ) : upcomingBookingsList.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="w-16 h-16 mx-auto text-stone-300 mb-4" />
-                    <p className="text-stone-600 text-lg">Não tem aulas agendadas</p>
-                    <p className="text-stone-500 text-sm mt-2">Reserve a sua próxima aula na página de reservas</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {upcomingBookingsList.map((booking) => {
-                      const info = getLessonInfo(booking);
-                      if (!info) return null;
-                      const { lesson, service } = info;
-
-                      return (
-                        <Card key={booking.id} className="border-l-4 border-[#B8956A]">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-semibold text-lg text-[#2C3E1F]">{service?.title}</h3>
-                                  {renderStatusBadge(booking.status)}
-                                </div>
-                                <div className="space-y-1 text-sm text-stone-600">
-                                <p className="flex items-center gap-2">
-                                 <Calendar className="w-4 h-4" />
-                                 {format(new Date(lesson.date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: pt })}
-                                </p>
-                                <p className="flex items-center gap-2">
-                                 <Clock className="w-4 h-4" />
-                                 {lesson.start_time} - {lesson.end_time}
-                                </p>
-                                {(booking.attendance === 'present' || booking.attendance_status === 'present') && (
-                                 <div className="flex items-center gap-2 mt-2">
-                                   <Badge className="bg-green-100 text-green-800 border border-green-300">
-                                     <CheckCircle2 className="w-3 h-3 mr-1" />
-                                     Presença Confirmada
-                                   </Badge>
-                                 </div>
-                                )}
-                                {(booking.attendance === 'absent' || booking.attendance_status === 'absent') && (
-                                 <div className="flex items-center gap-2 mt-2">
-                                   <Badge className="bg-red-100 text-red-800 border border-red-300">
-                                     <X className="w-3 h-3 mr-1" />
-                                     Ausência Registada
-                                   </Badge>
-                                   {booking.absence_compensable !== undefined && (
-                                     <Badge className={`${booking.absence_compensable ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-stone-100 text-stone-800 border-stone-300'}`}>
-                                       {booking.absence_compensable ? 'Compensável' : 'Não Compensável'}
-                                     </Badge>
-                                   )}
-                                 </div>
-                                )}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* History Tab */}
-          <TabsContent value="history">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="w-5 h-5" />
-                  Histórico de Aulas ({pastBookingsList.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bookingsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
-                  </div>
-                ) : pastBookingsList.length === 0 ? (
-                  <div className="text-center py-12">
-                    <History className="w-16 h-16 mx-auto text-stone-300 mb-4" />
-                    <p className="text-stone-600 text-lg">Sem histórico de aulas</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {pastBookingsList.map((booking) => {
-                      const info = getLessonInfo(booking);
-                      if (!info) return null;
-                      const { lesson, service } = info;
-
-                      return (
-                        <Card key={booking.id} className="opacity-75">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-semibold text-lg text-[#2C3E1F]">{service?.title}</h3>
-                                  {renderStatusBadge(booking.status)}
-                                </div>
-                                <div className="space-y-1 text-sm text-stone-600">
-                                <p className="flex items-center gap-2">
-                                 <Calendar className="w-4 h-4" />
-                                 {format(new Date(lesson.date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
-                                </p>
-                                <p className="flex items-center gap-2">
-                                 <Clock className="w-4 h-4" />
-                                 {lesson.start_time} - {lesson.end_time}
-                                </p>
-                                {(booking.attendance === 'present' || booking.attendance_status === 'present') && (
-                                 <div className="flex items-center gap-2 mt-2">
-                                   <Badge className="bg-green-100 text-green-800 border border-green-300">
-                                     <CheckCircle2 className="w-3 h-3 mr-1" />
-                                     Presença Confirmada
-                                   </Badge>
-                                 </div>
-                                )}
-                                {(booking.attendance === 'absent' || booking.attendance_status === 'absent') && (
-                                 <div className="flex flex-col gap-2 mt-2">
-                                   <Badge className="bg-red-100 text-red-800 border border-red-300 w-fit">
-                                     <X className="w-3 h-3 mr-1" />
-                                     Ausência Registada
-                                   </Badge>
-                                   {booking.absence_compensable !== undefined && (
-                                     <Badge className={`w-fit ${booking.absence_compensable ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-stone-100 text-stone-800 border-stone-300'}`}>
-                                       {booking.absence_compensable ? 'Ausência Compensável' : 'Ausência Não Compensável'}
-                                     </Badge>
-                                   )}
-                                 </div>
-                                )}
-                                </div>
-                                </div>
-                                {hasFeedback(booking.id) ? (
-                                <Badge className="bg-green-100 text-green-800 mt-3">
-                                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                                  Feedback Enviado
-                                </Badge>
-                                ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedBookingForFeedback(booking);
-                                    setShowFeedback(true);
-                                  }}
-                                  className="flex items-center gap-2 mt-3"
-                                >
-                                  <MessageSquare className="w-4 h-4" />
-                                  Deixar Feedback
-                                </Button>
-                                )}
-                                </div>
-                                </CardContent>
-                                </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Payments Tab */}
-          <TabsContent value="payments">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Euro className="w-5 h-5" />
-                  Pagamentos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {paymentsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}
-                  </div>
-                ) : payments.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Euro className="w-16 h-16 mx-auto text-stone-300 mb-4" />
-                    <p className="text-stone-600 text-lg">Sem pagamentos registados</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {payments
-                      .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
-                      .map((payment) => (
-                        <Card key={payment.id} className={payment.status === 'overdue' ? 'border-red-300' : ''}>
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="font-semibold">
-                                    {payment.month ? format(new Date(payment.month + '-01'), "MMMM 'de' yyyy", { locale: pt }) : 'Pagamento'}
-                                  </h4>
-                                  {renderPaymentStatus(payment.status)}
-                                </div>
-                                <p className="text-sm text-stone-600">
-                                  Vencimento: {payment.due_date ? format(new Date(payment.due_date), "d 'de' MMMM", { locale: pt }) : '-'}
-                                </p>
-                                {payment.notes && (
-                                  <p className="text-xs text-stone-500 mt-1">{payment.notes}</p>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <p className="text-2xl font-bold text-[#2C3E1F]">
-                                  €{(payment.total || payment.amount).toFixed(2)}
-                                </p>
-                                {payment.penalty > 0 && (
-                                  <p className="text-xs text-red-600">
-                                    +€{payment.penalty.toFixed(2)} penalização
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Messages Tab */}
-          <TabsContent value="messages">
-            <div className="space-y-6">
-              {/* Historical Messages */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5" />
-                    Minhas Mensagens ({userMessages.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                <div className="p-10 max-h-[600px] overflow-y-auto space-y-6">
                   {messagesLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2].map(i => <Skeleton key={i} className="h-32" />)}
+                    <div className="space-y-6">
+                      {[1, 2].map(i => <div key={i} className="h-32 rounded-3xl bg-stone-50 animate-pulse" />)}
                     </div>
                   ) : userMessages.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageSquare className="w-12 h-12 mx-auto text-stone-300 mb-3" />
-                      <p className="text-stone-600">Ainda não enviou nenhuma mensagem</p>
+                    <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100">
+                      <MessageSquare className="w-16 h-16 text-stone-200 mx-auto mb-4" />
+                      <p className="text-lg font-serif font-black text-stone-400">Sem mensagens enviadas</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {userMessages
-                        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
-                        .map((msg) => (
-                          <Card key={msg.id} className={msg.replied_at ? 'border-l-4 border-green-500' : 'border-l-4 border-blue-500'}>
-                            <CardContent className="p-4">
-                              <div className="space-y-3">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <h4 className="font-semibold text-[#2C3E1F]">{msg.subject}</h4>
-                                      {msg.replied_at ? (
-                                        <Badge className="bg-green-100 text-green-800">
-                                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                                          Respondida
-                                        </Badge>
-                                      ) : msg.is_read ? (
-                                        <Badge className="bg-blue-100 text-blue-800">Lida</Badge>
-                                      ) : (
-                                        <Badge className="bg-yellow-100 text-yellow-800">Enviada</Badge>
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-stone-500 mb-2">
-                                      {format(new Date(msg.created_date), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: pt })}
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                <div className="bg-stone-50 p-3 rounded-lg">
-                                  <p className="text-sm text-stone-700 whitespace-pre-wrap">{msg.message}</p>
-                                </div>
-
-                                {msg.replied_at && (
-                                  <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-lg mt-3">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                      <span className="text-sm font-semibold text-green-800">
-                                        Resposta recebida em {format(new Date(msg.replied_at), "d 'de' MMMM 'às' HH:mm", { locale: pt })}
-                                      </span>
-                                    </div>
-                                    <p className="text-sm text-stone-600 italic">
-                                      A resposta foi enviada para o seu email: {msg.email}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                    </div>
+                    userMessages.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map((msg) => (
+                      <div key={msg.id} className="p-8 bg-stone-50/50 rounded-[2.5rem] border border-stone-100 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-serif text-xl font-black text-[#2C3E1F]">{msg.subject}</h4>
+                          <Badge className={msg.replied_at ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}>
+                            {msg.replied_at ? 'Respondida' : 'Enviada'}
+                          </Badge>
+                        </div>
+                        <p className="text-stone-500 text-sm italic">"{msg.message}"</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-stone-300">
+                          {format(new Date(msg.created_date), "d 'de' MMMM", { locale: pt })}
+                        </p>
+                      </div>
+                    ))
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Send New Message */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Send className="w-5 h-5" />
-                    Enviar Nova Mensagem
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSendMessage} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="subject">Assunto</Label>
-                      <Input
-                        id="subject"
-                        value={messageSubject}
-                        onChange={(e) => setMessageSubject(e.target.value)}
-                        placeholder="Motivo do contacto"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="message">Mensagem</Label>
-                      <Textarea
-                        id="message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Escreva a sua mensagem..."
-                        rows={6}
-                        required
-                      />
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-[#2C3E1F] hover:bg-[#1A2412]"
-                      disabled={sendMessageMutation.isPending}
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      {sendMessageMutation.isPending ? 'A enviar...' : 'Enviar Mensagem'}
-                    </Button>
-                  </form>
-
-                  <div className="mt-6 p-4 bg-stone-50 rounded-lg">
-                    <h4 className="font-semibold mb-2">Outras formas de contacto:</h4>
-                    <div className="space-y-2 text-sm text-stone-600">
-                      <p className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        +351 932 111 786
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        picadeiroquintadahortagf@gmail.com
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </motion.div>
             </div>
           </TabsContent>
         </Tabs>
-      </div>
 
-      {/* Feedback Modal */}
-      {showFeedback && selectedBookingForFeedback && (
-        <FeedbackModal
-          booking={selectedBookingForFeedback}
-          onClose={() => {
-            setShowFeedback(false);
-            setSelectedBookingForFeedback(null);
-          }}
-          onSuccess={() => {
-            queryClient.invalidateQueries(['user-bookings']);
-            queryClient.invalidateQueries(['user-feedbacks']);
-          }}
-        />
-      )}
+        {/* Premium Regulation Viewer */}
+        <Dialog open={!!selectedRegulation} onOpenChange={() => setSelectedRegulation(null)}>
+          <DialogContent className="max-w-7xl h-[95vh] rounded-[3rem] p-0 border-none shadow-[0_100px_200px_-50px_rgba(0,0,0,1)] bg-[#11180D]">
+            <div className="flex flex-col h-full overflow-hidden">
+              <div className="p-8 px-12 border-b border-white/5 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[#B8956A] rounded-xl flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-serif font-black text-white">{selectedRegulation?.title}</h2>
+                </div>
+                <Button
+                  variant="ghost"
+                  className="w-16 h-16 rounded-full text-white hover:bg-white/5"
+                  onClick={() => setSelectedRegulation(null)}
+                >
+                  <X className="w-8 h-8" />
+                </Button>
+              </div>
+              <div className="flex-grow p-8 bg-stone-100 overflow-hidden rounded-b-[3rem]">
+                {selectedRegulation && (
+                  <iframe
+                    src={selectedRegulation.file_url}
+                    className="w-full h-full rounded-[2rem] shadow-2xl"
+                    title={selectedRegulation.title}
+                  />
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Feedback Modal */}
+        {feedbackBooking && (
+          <FeedbackModal
+            booking={feedbackBooking}
+            onClose={() => setFeedbackBooking(null)}
+            onSuccess={() => {
+              queryClient.invalidateQueries(['reviews']);
+              setFeedbackBooking(null);
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }
