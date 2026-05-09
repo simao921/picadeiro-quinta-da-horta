@@ -1,0 +1,27 @@
+{
+  "name": "BlockedSlot",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data bloqueada (YYYY-MM-DD)"
+    },
+    "time_slot": {
+      "type": "string",
+      "description": "Hor\u00e1rio bloqueado (HH:MM) - se vazio bloqueia o dia todo"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Motivo do bloqueio"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o bloqueio est\u00e1 ativo"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

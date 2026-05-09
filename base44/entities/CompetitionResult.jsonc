@@ -1,0 +1,71 @@
+{
+  "name": "CompetitionResult",
+  "type": "object",
+  "properties": {
+    "competition_id": {
+      "type": "string"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "ID da inscri\u00e7\u00e3o"
+    },
+    "rider_name": {
+      "type": "string"
+    },
+    "horse_name": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number",
+      "description": "Pontua\u00e7\u00e3o final"
+    },
+    "percentage": {
+      "type": "number"
+    },
+    "penalties": {
+      "type": "number",
+      "default": 0
+    },
+    "time": {
+      "type": "string",
+      "description": "Tempo (se aplic\u00e1vel)"
+    },
+    "position": {
+      "type": "number",
+      "description": "Posi\u00e7\u00e3o final"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "judge_name": {
+      "type": "string"
+    },
+    "technical_score": {
+      "type": "number",
+      "description": "Pontos t\u00e9cnicos obtidos"
+    },
+    "technical_percentage": {
+      "type": "number",
+      "description": "Percentagem t\u00e9cnica"
+    },
+    "qualitative_score": {
+      "type": "number",
+      "description": "Pontos qualitativos obtidos"
+    },
+    "qualitative_percentage": {
+      "type": "number",
+      "description": "Percentagem qualitativa"
+    },
+    "benefits": {
+      "type": "number",
+      "default": 0,
+      "description": "Beneficia\u00e7\u00f5es (somadas \u00e0 percentagem)"
+    }
+  },
+  "required": [
+    "competition_id",
+    "rider_name",
+    "horse_name",
+    "score"
+  ]
+}

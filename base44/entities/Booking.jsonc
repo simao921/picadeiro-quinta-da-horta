@@ -1,0 +1,67 @@
+{
+  "name": "Booking",
+  "type": "object",
+  "properties": {
+    "lesson_id": {
+      "type": "string"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "attendance": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "absent",
+        "pending"
+      ],
+      "default": "pending",
+      "description": "Confirma\u00e7\u00e3o de presen\u00e7a pelo cliente"
+    },
+    "absence_compensable": {
+      "type": "boolean",
+      "description": "Se a aus\u00eancia \u00e9 compens\u00e1vel ou n\u00e3o (apenas relevante quando attendance = 'absent')"
+    },
+    "is_fixed_student": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 reserva de aluno fixo"
+    },
+    "is_owner_booking": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 reserva de propriet\u00e1rio (prioridade baixa)"
+    },
+    "has_photo_package": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "lesson_id",
+    "client_email"
+  ]
+}

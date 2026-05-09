@@ -1,0 +1,31 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "phone": {
+      "type": "string",
+      "description": "N\u00famero de telefone do utilizador"
+    },
+    "notification_preferences": {
+      "type": "object",
+      "properties": {
+        "sms_enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "email_enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "default": {
+        "sms_enabled": false,
+        "email_enabled": true
+      },
+      "description": "Prefer\u00eancias de notifica\u00e7\u00e3o do utilizador"
+    }
+  },
+  "required": [
+    "phone"
+  ]
+}
