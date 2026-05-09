@@ -1,0 +1,61 @@
+{
+  "name": "Service",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Nome do servi\u00e7o"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o completa do servi\u00e7o"
+    },
+    "short_description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o curta para cards"
+    },
+    "price": {
+      "type": "number",
+      "description": "Pre\u00e7o base do servi\u00e7o"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Dura\u00e7\u00e3o em minutos"
+    },
+    "max_participants": {
+      "type": "number",
+      "description": "N\u00famero m\u00e1ximo de participantes"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL da imagem do servi\u00e7o"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Nome do \u00edcone Lucide"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "auto_approve": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se as reservas s\u00e3o auto-aprovadas"
+    },
+    "order": {
+      "type": "number",
+      "default": 0,
+      "description": "Ordem de exibi\u00e7\u00e3o"
+    },
+    "is_owner_service": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 servi\u00e7o para propriet\u00e1rios (prioridade baixa)"
+    }
+  },
+  "required": [
+    "title",
+    "description"
+  ]
+}

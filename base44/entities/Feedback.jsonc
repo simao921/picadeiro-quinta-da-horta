@@ -1,0 +1,46 @@
+{
+  "name": "Feedback",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "ID da reserva"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Classifica\u00e7\u00e3o de 1 a 5 estrelas"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Coment\u00e1rio do cliente"
+    },
+    "sentiment": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "description": "Sentimento analisado pela IA"
+    },
+    "action_required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se requer a\u00e7\u00e3o da equipa"
+    },
+    "ai_insights": {
+      "type": "object",
+      "description": "Insights gerados pela IA"
+    }
+  },
+  "required": [
+    "booking_id",
+    "client_email",
+    "rating"
+  ]
+}

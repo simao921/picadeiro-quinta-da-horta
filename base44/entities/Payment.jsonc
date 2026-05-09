@@ -1,0 +1,58 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "client_email": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "penalty": {
+      "type": "number",
+      "default": 0
+    },
+    "total": {
+      "type": "number"
+    },
+    "month": {
+      "type": "string",
+      "description": "M\u00eas referente (YYYY-MM)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "overdue",
+        "blocked"
+      ],
+      "default": "pending"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "paid_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "transfer",
+        "mbway",
+        "cash",
+        "card"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_email",
+    "amount",
+    "month"
+  ]
+}

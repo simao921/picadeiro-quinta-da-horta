@@ -1,0 +1,46 @@
+{
+  "name": "Horse",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do cavalo"
+    },
+    "breed": {
+      "type": "string",
+      "description": "Ra\u00e7a"
+    },
+    "age": {
+      "type": "number",
+      "description": "Idade em anos"
+    },
+    "color": {
+      "type": "string",
+      "description": "Cor do cavalo"
+    },
+    "height": {
+      "type": "number",
+      "description": "Altura em cm"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "specialties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Especialidades (hipoterapia, saltos, etc.)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

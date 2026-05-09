@@ -1,0 +1,18 @@
+{
+  "name": "Wishlist",
+  "type": "object",
+  "properties": {
+    "client_email": {
+      "type": "string",
+      "description": "Email do cliente"
+    },
+    "product_id": {
+      "type": "string",
+      "description": "ID do produto"
+    }
+  },
+  "required": [
+    "client_email",
+    "product_id"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "PhotoPackage",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "ID da reserva associada"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "package_type": {
+      "type": "string",
+      "enum": [
+        "10_photos",
+        "12_photos",
+        "15_photos",
+        "20_photos",
+        "video_1min",
+        "extra_photo"
+      ],
+      "description": "Tipo de pacote fotogr\u00e1fico"
+    },
+    "price": {
+      "type": "number",
+      "description": "Pre\u00e7o do pacote"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "delivered"
+      ],
+      "default": "pending"
+    },
+    "delivery_url": {
+      "type": "string",
+      "description": "Link para download das fotos/v\u00eddeo"
+    }
+  },
+  "required": [
+    "client_email",
+    "package_type",
+    "price"
+  ]
+}

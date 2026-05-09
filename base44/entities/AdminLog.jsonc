@@ -1,0 +1,33 @@
+{
+  "name": "AdminLog",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string",
+      "description": "Tipo de a\u00e7\u00e3o (login, update, delete, etc.)"
+    },
+    "admin_email": {
+      "type": "string"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "entity_type": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "action",
+    "admin_email"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "Instructor",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do monitor"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Biografia"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "specialties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_champion": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 campe\u00e3o mundial"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

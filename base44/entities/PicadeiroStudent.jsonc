@@ -1,0 +1,75 @@
+{
+  "name": "PicadeiroStudent",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do aluno"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email (opcional)"
+    },
+    "assigned_horse": {
+      "type": "string",
+      "description": "Cavalo atribu\u00eddo"
+    },
+    "student_level": {
+      "type": "string",
+      "enum": [
+        "iniciante",
+        "intermedio",
+        "avancado"
+      ],
+      "default": "iniciante"
+    },
+    "student_type": {
+      "type": "string",
+      "enum": [
+        "fixo",
+        "flexivel",
+        "avulso"
+      ],
+      "default": "avulso",
+      "description": "fixo=hor\u00e1rio fixo semanal, flex\u00edvel=hor\u00e1rio vari\u00e1vel, avulso=pontual"
+    },
+    "fixed_schedule": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Hor\u00e1rios fixos semanais"
+    },
+    "monthly_fee": {
+      "type": "number",
+      "default": 0,
+      "description": "Mensalidade"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notas adicionais"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
