@@ -24,19 +24,19 @@ import { useLanguage } from '@/components/LanguageProvider';
 // Segunda-feira: 09:00 - 19:00 (último slot 19:00)
 const mondayTimeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'
+  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'
 ];
 
 // Terça a Sexta: 09:00 - 19:30 (último slot 19:30)
 const weekdayTimeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'
+  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'
 ];
 
 // Sábado: 09:00 - 16:00 (último slot 16:00)
 const saturdayTimeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '14:30', '15:00', '15:30', '16:00'
+  '15:00', '15:30', '16:00'
 ];
 
 const getTimeSlotsForDay = (dayOfWeek) => {
@@ -417,8 +417,9 @@ export default function NewBookingForm({ user, isBlocked }) {
 
         return bookingsToCreate;
       } else {
-        // Aulas fixas em grupo: criar todas as reservas para os proximos 3 meses
-        if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
+        const isStandardService = selectedService?.title !== 'Proprietários';
+        // Aulas fixas: criar todas as reservas para os proximos 1 mês
+        if (isStandardService && selectedModalidade === 'fixo') {
           if (!fixoDaysSelected || fixoDaysSelected.length === 0 || fixoDaysSelected.some(s => s.day === null || s.time === null)) {
             throw new Error('Por favor selecione pelo menos um dia e horário');
           }
@@ -426,7 +427,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           const duration = selectedPlan?.duration || 30;
           const dayNames = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
-          // Gerar todas as datas para os proximos 3 meses
+          // Gerar todas as datas para os proximos 1 mês
           const allDatesToCreate = [];
           for (const sched of fixoDaysSelected) {
             if (sched.day === null || sched.day === undefined) continue;
@@ -438,7 +439,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             if (start <= new Date()) start.setDate(start.getDate() + 7);
 
             const end = new Date();
-            end.setMonth(end.getMonth() + 3);
+            end.setMonth(end.getMonth() + 1);
 
             const cur = new Date(start);
             while (cur <= end) {
@@ -537,7 +538,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           return bookingsToMake;
         }
 
-        // Proprietários fixo: criar todas as reservas para os proximos 3 meses
+        // Proprietários fixo: criar todas as reservas para os proximos 1 mês
         if (selectedService?.title === 'Proprietários' && selectedModalidade === 'fixo') {
           if (selectedDayOfWeek === null || !selectedTime) {
             throw new Error('Por favor selecione o dia da semana e horário');
@@ -545,7 +546,7 @@ export default function NewBookingForm({ user, isBlocked }) {
 
           const duration = selectedPlan?.duration || 30;
 
-          // Gerar todas as datas para os proximos 3 meses
+          // Gerar todas as datas para os proximos 1 mês
           const allDatesToCreate = [];
           const start = new Date();
           start.setHours(0, 0, 0, 0);
@@ -553,7 +554,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           if (start <= new Date()) start.setDate(start.getDate() + 7);
 
           const end = new Date();
-          end.setMonth(end.getMonth() + 3);
+          end.setMonth(end.getMonth() + 1);
 
           const cur = new Date(start);
           while (cur <= end) {
@@ -638,7 +639,17 @@ export default function NewBookingForm({ user, isBlocked }) {
         const start = new Date();
         start.setHours(0, 0, 0, 0);
         while (start.getDay() !== selectedDayOfWeek) start.setDate(start.getDate() + 1);
-        if (start <= new Date() && start.getTime() !== new Date(new Date().setHours(0,0,0,0)).getTime()) {
+        
+        // Se a data de início calhar no próprio dia, verificar se a hora já passou
+        if (start.getTime() === new Date(new Date().setHours(0,0,0,0)).getTime()) {
+           const now = new Date();
+           const currentHourMinute = format(now, 'HH:mm');
+           if (selectedTime <= currentHourMinute) {
+             // O horário de hoje já passou, começar na próxima semana
+             start.setDate(start.getDate() + 7);
+           }
+        } else if (start <= new Date()) {
+           // Fallback de segurança (se por alguma razão start ficar no passado, o que não devia acontecer com o while)
            start.setDate(start.getDate() + 7);
         }
 
@@ -885,18 +896,9 @@ export default function NewBookingForm({ user, isBlocked }) {
   };
 
   const goToStep3 = () => {
-    if (!selectedService) {
-      toast.error('Selecione um serviço para continuar.');
-      return;
-    }
+    const isStandardService = selectedService?.title !== 'Proprietários';
 
-    if (selectedService?.title === 'Hipoterapia') {
-      setSelectedPlan({ label: 'Sessão de Hipoterapia', price: 50 });
-      setStep(3);
-      return;
-    }
-
-    if (selectedService?.title === 'Aulas em Grupo' && !selectedModalidade) {
+    if (isStandardService && !selectedModalidade) {
       toast.error('Por favor escolha entre Aula Avulso ou Aula Fixa.');
       return;
     }
@@ -910,7 +912,7 @@ export default function NewBookingForm({ user, isBlocked }) {
       setSelectedPlan({ label: selectedService.title, price: selectedService.price });
     }
     // Reset para fixo
-    if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
+    if (isStandardService && selectedModalidade === 'fixo') {
       setFixoDaysSelected([]);
     } else {
       // Reset avulso
@@ -922,8 +924,10 @@ export default function NewBookingForm({ user, isBlocked }) {
   };
 
   const goToStep4 = () => {
+    const isStandardService = selectedService?.title !== 'Proprietários';
+
     // Aulas fixas: validar seleção de dias
-    if (selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo') {
+    if (isStandardService && selectedModalidade === 'fixo') {
       if (fixoDaysSelected.length === 0 || fixoDaysSelected.some(d => d.day === null || !d.time)) {
         toast.error('Por favor selecione pelo menos um dia e horário.');
         return;
@@ -1112,7 +1116,7 @@ export default function NewBookingForm({ user, isBlocked }) {
         <div>
           <h2 className="font-serif text-xl font-bold text-[#2C3E1F] mb-4">{t('select_plan')}</h2>
 
-          {selectedService?.title === 'Aulas em Grupo' && (
+          {selectedService?.title !== 'Proprietários' && (
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Tipo de aula</p>
@@ -1138,7 +1142,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   >
                     <CardContent className="p-6">
                       <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Aula Fixa</h3>
-                      <p className="text-sm text-stone-600">Aulas semanais fixas durante 3 meses</p>
+                      <p className="text-sm text-stone-600">Aulas semanais fixas durante 1 mês</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -1212,51 +1216,9 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
-          {/* Serviços genéricos (ex: Aulas Particulares, Seções Fotográficas, etc.) */}
-          {selectedService &&
-            selectedService.title !== 'Aulas em Grupo' &&
-            selectedService.title !== 'Proprietários' &&
-            selectedService.title !== 'Hipoterapia' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card
-                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${selectedPlan?.duration === 30
-                        ? 'border-[#B8956A] bg-[#B8956A]/5'
-                        : 'border-stone-200 hover:border-[#B8956A]/50'
-                      }`}
-                    onClick={() => setSelectedPlan({ label: '30 minutos', duration: 30, frequency: 1 })}
-                  >
-                    <CardContent className="p-6">
-                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">30 minutos</h3>
-                      <p className="text-sm text-stone-600">Sessão de meia hora</p>
-                    </CardContent>
-                  </Card>
-                  <Card
-                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${selectedPlan?.duration === 60
-                        ? 'border-[#B8956A] bg-[#B8956A]/5'
-                        : 'border-stone-200 hover:border-[#B8956A]/50'
-                      }`}
-                    onClick={() => setSelectedPlan({ label: '60 minutos', duration: 60, frequency: 1 })}
-                  >
-                    <CardContent className="p-6">
-                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">60 minutos</h3>
-                      <p className="text-sm text-stone-600">Sessão de uma hora</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            )}
 
-          {selectedService?.title === 'Hipoterapia' && (
-            <div className="space-y-4">
-              <Card className="border-[#B8956A] bg-[#B8956A]/5">
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Sessão de Hipoterapia</h3>
-                  <p className="text-sm text-stone-600 mb-4">Terapia assistida por cavalos com profissionais especializados</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+
+
 
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={() => setStep(1)} className="border-stone-300">{t('back')}</Button>
@@ -1287,10 +1249,10 @@ export default function NewBookingForm({ user, isBlocked }) {
             </div>
           )}
 
-          {/* Aulas em Grupo - Fixo: selecionar dia(s) da semana */}
-          {selectedService?.title === 'Aulas em Grupo' && selectedModalidade === 'fixo' && (
+          {/* Aulas Fixo: selecionar dia(s) da semana */}
+          {selectedService?.title !== 'Proprietários' && selectedModalidade === 'fixo' && (
             <div className="space-y-4">
-              <p className="text-sm text-stone-600">Selecione os dias da semana e horários para as suas aulas fixas (durante 3 meses).</p>
+              <p className="text-sm text-stone-600">Selecione os dias da semana e horários para as suas aulas fixas (durante 1 mês).</p>
               {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((dayLabel, idx) => {
                 const dayNum = idx + 1; // 1=Segunda...6=Sábado
                 const selected = fixoDaysSelected.find(s => s.day === dayNum);
@@ -1344,7 +1306,7 @@ export default function NewBookingForm({ user, isBlocked }) {
           {/* Proprietários Fixo: selecionar dia da semana + horário */}
           {selectedService?.title === 'Proprietários' && selectedModalidade === 'fixo' && (
             <div className="space-y-4">
-              <p className="text-sm text-stone-600">Selecione o dia da semana e o horário para as suas sessões fixas (durante 3 meses).</p>
+              <p className="text-sm text-stone-600">Selecione o dia da semana e o horário para as suas sessões fixas (durante 1 mês).</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                 {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((dayLabel, idx) => {
                   const dayNum = idx + 1;
@@ -1411,48 +1373,78 @@ export default function NewBookingForm({ user, isBlocked }) {
 
           {/* Avulso simples (agora 4 semanas) */}
           {(!selectedModalidade || selectedModalidade === 'avulso') && (!selectedPlan?.frequency || selectedPlan?.frequency === 1) && (
-            <div className="space-y-4">
-              <p className="text-sm text-stone-600">Selecione o dia da semana e o horário. A reserva será feita para 4 semanas consecutivas.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-                {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((dayLabel, idx) => {
-                  const dayNum = idx + 1;
-                  return (
-                    <Button
-                      key={dayNum}
-                      variant={selectedDayOfWeek === dayNum ? 'default' : 'outline'}
-                      className={selectedDayOfWeek === dayNum
-                        ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A]'
-                        : 'border-stone-300 hover:border-[#B8956A]'
-                      }
-                      onClick={() => { setSelectedDayOfWeek(dayNum); setSelectedTime(null); }}
-                    >
-                      {dayLabel}
-                    </Button>
-                  );
-                })}
-              </div>
-              {selectedDayOfWeek !== null && (
-                <div>
-                  <Label className="mb-2 block font-semibold text-[#2C3E1F]">Horário</Label>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                    {getTimeSlotsForDay(selectedDayOfWeek).map(slot => (
-                      <Button
-                        key={slot}
-                        size="sm"
-                        variant={selectedTime === slot ? 'default' : 'outline'}
-                        className={selectedTime === slot
-                          ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] text-xs'
-                          : 'border-stone-300 hover:border-[#B8956A] text-xs'
-                        }
-                        onClick={() => setSelectedTime(slot)}
-                      >
-                        {slot}
-                      </Button>
-                    ))}
+            <Card className="border-2 border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="pt-6">
+                <div className="mb-4 p-4 bg-[#B8956A]/10 border border-[#B8956A]/20 rounded-lg flex items-start gap-3">
+                  <CalendarDays className="w-5 h-5 text-[#B8956A] mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-[#2C3E1F]">Reserva Mensal (4 Semanas)</p>
+                    <p className="text-xs text-stone-600 mt-1">Ao selecionar um dia e horário, será automaticamente agendado para as próximas 4 semanas consecutivas.</p>
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="mb-3 block font-semibold text-[#2C3E1F]">Dia da Semana</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'].map((dayLabel, idx) => {
+                        const dayNum = idx + 1;
+                        return (
+                          <Button
+                            key={dayNum}
+                            variant={selectedDayOfWeek === dayNum ? 'default' : 'outline'}
+                            className={selectedDayOfWeek === dayNum
+                              ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] shadow-md transition-all'
+                              : 'border-stone-200 hover:border-[#B8956A] text-stone-600 bg-stone-50 hover:bg-white transition-all'
+                            }
+                            onClick={() => { setSelectedDayOfWeek(dayNum); setSelectedTime(null); }}
+                          >
+                            {dayLabel}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label className="mb-3 block font-semibold text-[#2C3E1F]">Horário</Label>
+                    {selectedDayOfWeek === null ? (
+                      <div className="text-center py-10 bg-stone-50 rounded-lg border border-dashed border-stone-200 text-sm text-stone-500">
+                        Selecione um dia da semana para ver os horários.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto p-3 bg-stone-50 rounded-lg border border-stone-100">
+                        {getTimeSlotsForDay(selectedDayOfWeek).map(slot => {
+                          // Se o dia da semana for hoje, desativar os horários que já passaram
+                          const isToday = today.getDay() === selectedDayOfWeek;
+                          const now = new Date();
+                          const currentHourMinute = format(now, 'HH:mm');
+                          const isPast = isToday && slot <= currentHourMinute;
+
+                          return (
+                            <Button
+                              key={slot}
+                              size="sm"
+                              disabled={isPast}
+                              variant={selectedTime === slot ? 'default' : 'outline'}
+                              className={selectedTime === slot
+                                ? 'bg-[#B8956A] hover:bg-[#8B7355] text-white border-[#B8956A] font-semibold shadow-md'
+                                : isPast
+                                  ? 'border-stone-200 text-stone-300 bg-stone-100 cursor-not-allowed'
+                                  : 'border-stone-200 hover:border-[#B8956A] hover:text-[#B8956A] text-stone-600 bg-white hover:bg-stone-50 transition-all'
+                              }
+                              onClick={() => setSelectedTime(slot)}
+                            >
+                              {slot}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           <div className="mt-6 flex justify-between">
@@ -1490,7 +1482,7 @@ export default function NewBookingForm({ user, isBlocked }) {
                   <div className="flex justify-between py-3 border-b border-stone-200">
                     <span className="text-stone-600">Modalidade</span>
                     <span className="font-semibold text-[#2C3E1F]">
-                      {selectedModalidade === 'fixo' ? 'Aula Fixa (3 meses)' : 'Aula Avulso'}
+                      {selectedModalidade === 'fixo' ? 'Aula Fixa (1 mês)' : 'Aula Avulso'}
                     </span>
                   </div>
                 )}
