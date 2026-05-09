@@ -199,5 +199,4 @@ export default function Bookings() {
         </div>
       </section>
     </div>);
-
 }
