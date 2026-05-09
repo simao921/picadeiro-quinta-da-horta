@@ -107,11 +107,10 @@ export default function Services() {
       {/* Hero Section */}
       <section className="relative py-12 sm:py-16 md:py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 opacity-20">
-          <LazyImage
-            src={heroImage}
-            alt="Serviços Equestres"
+          <img
+            src="https://images.unsplash.com/photo-1460134846237-51c777df6111?w=1920&q=80"
+            alt=""
             className="w-full h-full object-cover"
-            priority={true}
           />
         </div>
         {/* Decorative Elements */}
