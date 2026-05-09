@@ -24,7 +24,8 @@ export default function Competitions() {
     queryKey: ['competitions'],
     queryFn: () => base44.entities.Competition.list('-date')
   });
-
+  const { data: modalities = [] } = useQuery({
+    queryKey: ['modalities'],
     queryFn: () => base44.entities.CompetitionModality.list()
   });
 
