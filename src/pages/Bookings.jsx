@@ -64,8 +64,8 @@ export default function Bookings() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-stone-50">
-        <section className="relative py-24 bg-[#2C3E1F] overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
+        <section className="relative py-24 bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A] overflow-hidden">
+          <div className="absolute inset-0 opacity-30">
             <LazyImage
               src={heroImage}
               alt=""
@@ -73,6 +73,7 @@ export default function Bookings() {
               priority={true}
             />
           </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/65" />
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -101,7 +102,7 @@ export default function Bookings() {
   return (
     <div className="min-h-screen bg-[#FDFCFB]">
       {/* Cinematic Hero Section */}
-      <section className="relative h-[40vh] flex items-center overflow-hidden bg-[#11180D]">
+      <section className="relative h-[40vh] flex items-center overflow-hidden bg-gradient-to-br from-[#2D2D2D] to-[#1A1A1A]">
         <div className="absolute inset-0 z-0">
           <motion.div 
             initial={{ scale: 1.1 }}
@@ -112,10 +113,11 @@ export default function Bookings() {
             <LazyImage
               src={heroImage}
               alt="Reservas"
-              className="w-full h-full object-cover opacity-30"
+              className="w-full h-full object-cover opacity-40"
               priority={true}
             />
           </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/55" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCFB] via-transparent to-transparent" />
         </div>
         
