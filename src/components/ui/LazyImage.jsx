@@ -74,10 +74,10 @@ export default function LazyImage({
     className: `${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 ease-in-out`,
     onLoad: handleLoad,
     onError: () => {
-      setIsLoaded(true); // Show placeholder on error
+      setImageSrc(placeholder);
+      setIsLoaded(true);
     },
-    loading: priority ? "eager" : "lazy",
-    decoding: "async"
+    loading: priority ? "eager" : "lazy"
   };
 
   if (width) imgProps.width = width;
@@ -87,7 +87,7 @@ export default function LazyImage({
     imgProps.fetchPriority = "high";
   }
 
-  const imgElement = <img {...imgProps} />;
+  const imgElement = <img {...(imgProps as any)} />;
 
   // If width/height provided, wrap in container for better control
   if (width || height) {
