@@ -125,7 +125,7 @@ export default function Bookings() {
             animate={{ opacity: 1, y: 0 }}>
             
             <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2">
-              {t('hello')}, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
+              {t('Bem Vindo')}, <span className="text-[#B8956A]">{user?.full_name?.split(' ')[0]}</span>
             </h1>
             <p className="text-stone-300 hidden">
               {t('manage_bookings_subtitle')}
