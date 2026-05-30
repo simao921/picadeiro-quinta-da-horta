@@ -5,7 +5,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -807,6 +807,7 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingEntry ? 'Editar Participante' : 'Adicionar Participante'}</DialogTitle>
+              <DialogDescription>Preencha os dados do participante</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -857,6 +858,7 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
                 <Sparkles className="w-5 h-5 text-[#B8956A]" />
                 Importar Ordem de Entrada (PDF)
               </DialogTitle>
+              <DialogDescription>Faça upload de um PDF para importar participantes automaticamente com IA</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -918,6 +920,7 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Importar Alunos do Picadeiro</DialogTitle>
+              <DialogDescription>Selecione os alunos a importar para esta competição</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               {picadeiroStudents.length === 0 ? (
