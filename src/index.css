@@ -77,6 +77,16 @@
 
 
 
+/* Hide platform badge */
+#base44-badge,
+[id="base44-badge"],
+[class*="base44-badge"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
