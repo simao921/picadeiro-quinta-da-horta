@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
-import * as XLSX from '@/lib/exportExcel';
+import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';

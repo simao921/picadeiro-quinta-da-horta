@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
-import * as XLSX from '@/lib/exportExcel';
+import * as XLSX from 'xlsx';
 
 export default function AdminCompetitionOrder() {
   const [selectedCompetition, setSelectedCompetition] = useState('');
