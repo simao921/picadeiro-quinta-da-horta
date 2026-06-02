@@ -83,8 +83,8 @@ export default function LazyImage({
   if (width) imgProps.width = width;
   if (height) imgProps.height = height;
   if (sizes) imgProps.sizes = sizes;
-  if (priority) {
-    imgProps.fetchpriority = "high";
+  if (priority && 'fetchPriority' in Image.prototype) {
+    imgProps.fetchPriority = "high";
   }
 
   const imgElement = <img {...imgProps} />;
