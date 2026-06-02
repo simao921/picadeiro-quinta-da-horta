@@ -68,7 +68,6 @@ export default function AdminCompetitionReports() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
-  const [displayInterval, setDisplayInterval] = useState(10);
   const [reportFile, setReportFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
@@ -832,29 +831,16 @@ Estrutura no formato JSON especificado.
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end gap-1">
-              <div>
-                <Label className="text-xs text-stone-600 mb-1">Intervalo (seg)</Label>
-                <Input
-                  type="number"
-                  min={3}
-                  max={120}
-                  value={displayInterval}
-                  onChange={(e) => setDisplayInterval(Math.max(3, Number(e.target.value)))}
-                  className="w-20"
-                />
-              </div>
-              <Button
-                onClick={() => {
-                  if (!selectedCompetition) { toast.error('Selecione uma competição'); return; }
-                  window.open(`/RankingDisplay?competition_id=${selectedCompetition}&interval=${displayInterval}`, '_blank');
-                }}
-                className="bg-[#2D2D2D] hover:bg-[#1A1A1A]"
-              >
-                <Monitor className="w-4 h-4 mr-2" />
-                Exibir em Ecrã
-              </Button>
-            </div>
+            <Button
+              onClick={() => {
+                if (!selectedCompetition) { toast.error('Selecione uma competição'); return; }
+                window.open(`/RankingDisplay?competition_id=${selectedCompetition}`, '_blank');
+              }}
+              className="bg-[#2D2D2D] hover:bg-[#1A1A1A] mt-5"
+            >
+              <Monitor className="w-4 h-4 mr-2" />
+              Exibir em Ecrã
+            </Button>
             <Button onClick={generateResultsPDF} variant="outline" className="border-red-500 text-red-700 hover:bg-red-50 mt-5">
               <Download className="w-4 h-4 mr-2" />
               PDF Resultados
