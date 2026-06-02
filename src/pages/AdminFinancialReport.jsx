@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import * as XLSX from '@/lib/exportExcel';
 
 export default function AdminFinancialReport() {
   const [selectedCompetition, setSelectedCompetition] = useState('');
