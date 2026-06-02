@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import AdminLayout from '@/components/admin/AdminLayout';
 import { Trophy, Clock, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -124,6 +125,7 @@ export default function RankingDisplay() {
   };
 
   return (
+    <AdminLayout fullscreen>
     <div className="min-h-screen bg-gradient-to-br from-[#1A1A1A] via-[#2D2D2D] to-[#1A1A1A] text-white flex flex-col">
       {/* Header */}
       <div className="relative py-8 px-6 text-center border-b border-white/10">
@@ -283,5 +285,6 @@ export default function RankingDisplay() {
         Picadeiro Quinta da Horta · {new Date().getFullYear()}
       </div>
     </div>
+    </AdminLayout>
   );
 }
