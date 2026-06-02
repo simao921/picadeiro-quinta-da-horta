@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { GripVertical, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles, UserCheck, UserX, DollarSign, Search } from 'lucide-react';
+import { GripVertical, User, Trophy, Download, Save, Plus, UserPlus, Trash2, FileText, Sparkles, UserCheck, UserX, DollarSign, Search, ArrowDownAZ } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -358,6 +358,16 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
     updateOrder.mutate(orderedEntries);
   };
 
+  const handleSortByGrade = () => {
+    const sorted = [...orderedEntries].sort((a, b) => {
+      const gradeCompare = (a.grade || '').localeCompare(b.grade || '', 'pt');
+      if (gradeCompare !== 0) return gradeCompare;
+      return (a.rider_name || '').localeCompare(b.rider_name || '', 'pt');
+    });
+    setOrderedEntries(sorted);
+    toast.success('Ordenado por escalão A-Z (clique em "Guardar Ordem" para confirmar)');
+  };
+
   const generatePDF = async () => {
     const comp = competitions.find(c => c.id === selectedCompetition);
     if (!comp) return;
@@ -521,6 +531,10 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
             )}
             {orderedEntries.length > 0 && (
               <>
+                <Button onClick={handleSortByGrade} variant="outline" className="border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10">
+                  <ArrowDownAZ className="w-4 h-4 mr-2" />
+                  Ordenar por Escalão A-Z
+                </Button>
                 <Button onClick={handleSaveOrder} className="bg-green-600 hover:bg-green-700">
                   <Save className="w-4 h-4 mr-2" />
                   Guardar Ordem

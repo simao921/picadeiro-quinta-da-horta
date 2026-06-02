@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download, Search } from 'lucide-react';
+import { Upload, FileText, Sparkles, CheckCircle, Edit, Calculator, Download, Search, Monitor } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
@@ -831,6 +831,16 @@ Estrutura no formato JSON especificado.
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              onClick={() => {
+                if (!selectedCompetition) { toast.error('Selecione uma competição'); return; }
+                window.open(`/RankingDisplay?competition_id=${selectedCompetition}`, '_blank');
+              }}
+              className="bg-[#2D2D2D] hover:bg-[#1A1A1A] mt-5"
+            >
+              <Monitor className="w-4 h-4 mr-2" />
+              Exibir em Ecrã
+            </Button>
             <Button onClick={generateResultsPDF} variant="outline" className="border-red-500 text-red-700 hover:bg-red-50 mt-5">
               <Download className="w-4 h-4 mr-2" />
               PDF Resultados

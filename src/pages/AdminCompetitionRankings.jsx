@@ -5,7 +5,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trophy, Medal, Award, Download, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Award, Download, TrendingUp, Monitor } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
@@ -219,9 +219,20 @@ export default function AdminCompetitionRankings() {
             <h1 className="text-3xl font-bold">Rankings de Competição</h1>
             <p className="text-stone-600 mt-1">Classificação geral por pontos acumulados</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {rankings.length > 0 && (
               <>
+                <Button
+                  onClick={() => {
+                    const params = new URLSearchParams({ year: selectedYear });
+                    if (selectedGrade) params.set('grade', selectedGrade);
+                    window.open(`/RankingDisplay?${params.toString()}`, '_blank');
+                  }}
+                  className="bg-[#2D2D2D] hover:bg-[#1A1A1A]"
+                >
+                  <Monitor className="w-4 h-4 mr-2" />
+                  Exibir em Ecrã
+                </Button>
                 <Button onClick={generatePDF} variant="outline" className="border-red-500 text-red-700">
                   <Download className="w-4 h-4 mr-2" />
                   PDF

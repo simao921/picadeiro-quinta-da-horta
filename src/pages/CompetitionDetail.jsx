@@ -405,9 +405,9 @@ export default function CompetitionDetail() {
                             </div>
                           );
                         })}
-                        {filteredResults.length === 0 && (
+                        {entries.length === 0 && (
                           <p className="text-stone-500 text-center py-8">
-                            Sem resultados para o escalão selecionado.
+                            Sem participantes nesta prova.
                           </p>
                         )}
                       </div>
