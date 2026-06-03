@@ -339,9 +339,15 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
         percentage = applyPercentageAdjustments(percentage);
       }
       
+      // Limitar ao máximo da modalidade
+      if (maxPoints > 0 && finalScoreValue > maxPoints) {
+        finalScoreValue = maxPoints;
+        percentage = 100;
+      }
+
       return {
         final_score: parseFloat(finalScoreValue.toFixed(2)),
-        percentage: parseFloat(Math.max(0, percentage).toFixed(2)),
+        percentage: parseFloat(Math.min(100, Math.max(0, percentage)).toFixed(2)),
         calculation_details: `Total: ${details.join(' + ')} = ${basePointsScore} pts${!shouldUseTechQualAverage && penaltyMode === 'percentage' && penaltiesNum > 0 ? ` | Perc: -${penaltiesNum}%` : ''}${!shouldUseTechQualAverage && bonusNum > 0 ? ` +${bonusNum}%` : ''}${weightedDetails ? ` | ${weightedDetails}` : ` = ${percentage.toFixed(2)}%`}${shouldUseTechQualAverage ? ` | Nota final: ${finalScoreValue.toFixed(2)}` : ''}`
       };
     }
@@ -485,9 +491,17 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     }
   }
 
+  // Aplicar limite máximo da modalidade ao final_score
+  const modalityMax = computeModalityMaxPoints();
+  if (modalityMax > 0 && final_score > modalityMax) {
+    final_score = modalityMax;
+    percentage = 100;
+    calculation_details += ` [limitado ao máximo: ${modalityMax}]`;
+  }
+
   return {
     final_score: parseFloat(final_score.toFixed(2)),
-    percentage: parseFloat(percentage.toFixed(2)),
+    percentage: parseFloat(Math.min(100, percentage).toFixed(2)),
     calculation_details
   };
 }
