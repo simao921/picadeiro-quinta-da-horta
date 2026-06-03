@@ -33,7 +33,29 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
   const rawTechnicalScore = scores?.technical_score;
   const rawArtisticScore = scores?.artistic_score;
 
+  // Calcula o total de pontos máximos da modalidade a partir dos exercícios configurados
+  const computeModalityMaxPoints = () => {
+    const src =
+      competitionData?.exercises?.length > 0
+        ? competitionData.exercises
+        : modalityData?.exercises?.length > 0
+          ? modalityData.exercises
+          : modalityData?.coefficients?.__exercises?.length > 0
+            ? modalityData.coefficients.__exercises
+            : [];
+    if (src.length === 0) return 0;
+    return src.reduce((acc, ex) => {
+      const exMax = toSafeNumber(ex.max_points, 10);
+      const coef = toSafeNumber(ex.coefficient, 1);
+      return acc + (exMax > 0 ? exMax : 10) * (coef > 0 ? coef : 1);
+    }, 0);
+  };
+
   const inferScaleMax = (...values) => {
+    // Primeiro tenta usar o máximo real da modalidade (ex: 150 pts)
+    const modalityMax = computeModalityMaxPoints();
+    if (modalityMax > 0) return modalityMax;
+
     const numeric = values
       .map((v) => toSafeNumber(v, NaN))
       .filter((v) => Number.isFinite(v) && v > 0);
