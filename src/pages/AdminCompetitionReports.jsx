@@ -422,6 +422,11 @@ Estrutura no formato JSON especificado.
       if (normalizedExercises.length > 0 && competition?.modality_id) {
         const modality = modalities.find(m => m.id === competition.modality_id);
         if (modality) {
+          // Calcular pontuação máxima total dos exercícios
+          const totalMaxPoints = normalizedExercises.reduce(
+            (acc, ex) => acc + (ex.max_points || 10) * (ex.coefficient || 1), 0
+          );
+
           await base44.entities.CompetitionModality.update(modality.id, {
             coefficients: {
               ...(modality.coefficients || {}),
@@ -430,6 +435,15 @@ Estrutura no formato JSON especificado.
             },
             exercises: normalizedExercises
           });
+
+          // Guardar o máximo total na competição para limitar pontuações
+          if (totalMaxPoints > 0) {
+            await base44.entities.Competition.update(selectedCompetition, {
+              base_percentage: totalMaxPoints
+            });
+            await queryClient.refetchQueries({ queryKey: ['competitions'] });
+          }
+
           // Refetch imediato dos dados com delay pequeno para garantir que DB foi atualizada
           await new Promise(resolve => setTimeout(resolve, 500));
           await queryClient.refetchQueries({ queryKey: ['modalities'] });
@@ -496,6 +510,12 @@ Estrutura no formato JSON especificado.
           })
         );
 
+       // Calcular o máximo real da modalidade para limitar pontuações
+       const modalityExercisesForLimit = getModalityExercises(modality);
+       const modalityMaxPoints = modalityExercisesForLimit.length > 0
+         ? modalityExercisesForLimit.reduce((acc, ex) => acc + (ex.max_points || 10) * (ex.coefficient || 1), 0)
+         : 0;
+
        const calculated = calculateFinalScore(competition, modality, {
           base_score: toSafeNumber(r.base_score, 0),
           technical_score: toSafeNumber(r.technical_score, 0),
@@ -507,6 +527,13 @@ Estrutura no formato JSON especificado.
           time: r.time,
           exercise_scores: normalizedExerciseScores
         });
+
+       // Aplicar limite máximo ao score final
+       if (modalityMaxPoints > 0 && calculated.final_score > modalityMaxPoints) {
+         calculated.final_score = modalityMaxPoints;
+         calculated.percentage = 100;
+       }
+       if (calculated.percentage > 100) calculated.percentage = 100;
 
         const notesArray = [];
         

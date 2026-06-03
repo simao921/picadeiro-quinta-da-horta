@@ -52,10 +52,15 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
   };
 
   const inferScaleMax = (...values) => {
-    // Primeiro tenta usar o máximo real da modalidade (ex: 150 pts)
+    // 1. Usa o máximo real calculado pelos exercícios da modalidade (ex: 150 pts)
     const modalityMax = computeModalityMaxPoints();
     if (modalityMax > 0) return modalityMax;
 
+    // 2. Usa base_percentage da competição se definido (campo explícito)
+    const configuredBase = toSafeNumber(competitionData?.base_percentage, 0);
+    if (configuredBase > 0) return configuredBase;
+
+    // 3. Fallback: inferir pela escala dos valores
     const numeric = values
       .map((v) => toSafeNumber(v, NaN))
       .filter((v) => Number.isFinite(v) && v > 0);
