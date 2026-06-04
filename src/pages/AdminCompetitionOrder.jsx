@@ -653,8 +653,59 @@ Analisa este documento de ORDEM DE ENTRADA de competição equestre e extrai TOD
                             </div>
                           </div>
 
+                          <div className="flex flex-col gap-2">
+                            {entry.absent ? (
+                              <div className="flex items-center gap-1">
+                                <Badge className="bg-red-500 text-white px-2 py-1 text-xs font-bold">
+                                  <UserX className="w-3 h-3 mr-1" />
+                                  Ausente
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs hover:bg-green-50"
+                                  onClick={() => toggleAbsent.mutate({ id: entry.id, absent: false })}
+                                >
+                                  ✓ Presente
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <Badge className="bg-green-500 text-white px-2 py-1 text-xs font-bold">
+                                  <UserCheck className="w-3 h-3 mr-1" />
+                                  Presente
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs hover:bg-red-50"
+                                  onClick={() => toggleAbsent.mutate({ id: entry.id, absent: true })}
+                                >
+                                  ✕ Ausente
+                                </Button>
+                              </div>
+                            )}
+                            <Button
+                              variant={entry.paid ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => togglePaid.mutate({ id: entry.id, paid: !entry.paid })}
+                              className={entry.paid ? "bg-green-600 hover:bg-green-700 text-xs h-7 font-bold" : "text-xs h-7 border-stone-300"}
+                            >
+                              <DollarSign className="w-3 h-3 mr-1" />
+                              {entry.paid ? 'Pago' : 'Não Pago'}
+                            </Button>
+                          </div>
+
                           <Button variant="outline" size="sm" onClick={() => handleStartEdit(entry)}>
                             Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => { if (confirm('Remover este participante?')) deleteEntry.mutate(entry.id); }}
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       ))}
