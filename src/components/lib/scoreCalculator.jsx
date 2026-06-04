@@ -358,13 +358,16 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
     }
   }
 
-  // Se já tiver pontuação final extraída e não houver fórmula, usa a extraída
-  if (scores.final_score && !modalityData?.scoring_formula) {
-    const extractedPercentage = toSafeNumber(scores.percentage, 0);
+  // Se já tiver percentagem extraída válida (0–100) E pontuação final, usa directamente
+  // Isto evita recalcular com divisor errado quando a IA já extraiu os valores corretos
+  const extractedPct = toSafeNumber(scores.percentage, NaN);
+  const extractedFinal = toSafeNumber(scores.final_score, NaN);
+  if (Number.isFinite(extractedPct) && extractedPct > 0 && extractedPct <= 100 && Number.isFinite(extractedFinal)) {
+    const adjustedPct = applyPercentageAdjustments(extractedPct);
     return {
-      final_score: scores.final_score,
-      percentage: parseFloat(applyPercentageAdjustments(extractedPercentage).toFixed(2)),
-      calculation_details: 'Pontuação extraída do protocolo'
+      final_score: parseFloat(extractedFinal.toFixed(2)),
+      percentage: parseFloat(Math.min(100, Math.max(0, adjustedPct)).toFixed(2)),
+      calculation_details: `Extraído do protocolo: ${extractedFinal} pts = ${extractedPct.toFixed(2)}%`
     };
   }
 
