@@ -455,14 +455,22 @@ Estrutura os dados de forma clara seguindo o schema JSON.
               <div>
                 <Label className="text-xs">Peso Técnica (%)</Label>
                 <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   className="h-8 text-sm"
                   value={formData.coefficients?.technical_percentage ?? 70}
                   onChange={(e) => {
-                    const value = parseFloat(e.target.value);
+                    const raw = e.target.value.replace(',', '.');
+                    setFormData({
+                      ...formData,
+                      coefficients: {
+                        ...(formData.coefficients || {}),
+                        technical_percentage: raw
+                      }
+                    });
+                  }}
+                  onBlur={(e) => {
+                    const value = parseFloat(String(e.target.value).replace(',', '.'));
                     setFormData({
                       ...formData,
                       coefficients: {
@@ -476,14 +484,22 @@ Estrutura os dados de forma clara seguindo o schema JSON.
               <div>
                 <Label className="text-xs">Peso Qualitativa (%)</Label>
                 <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   className="h-8 text-sm"
                   value={formData.coefficients?.qualitative_percentage ?? 30}
                   onChange={(e) => {
-                    const value = parseFloat(e.target.value);
+                    const raw = e.target.value.replace(',', '.');
+                    setFormData({
+                      ...formData,
+                      coefficients: {
+                        ...(formData.coefficients || {}),
+                        qualitative_percentage: raw
+                      }
+                    });
+                  }}
+                  onBlur={(e) => {
+                    const value = parseFloat(String(e.target.value).replace(',', '.'));
                     setFormData({
                       ...formData,
                       coefficients: {
