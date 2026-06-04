@@ -263,83 +263,13 @@ export function calculateFinalScore(competitionData, modalityData, scores) {
       let weightedDetails = '';
 
       if (hasTechnicalExercises || hasQualitativeExercises) {
-        const coefficients = modalityData?.coefficients || {};
-        const technicalRaw = Number(
-          coefficients.technical_percentage ??
-          coefficients.technical_weight ??
-          70
-        );
-        const qualitativeRaw = Number(
-          coefficients.qualitative_percentage ??
-          coefficients.qualitative_weight ??
-          (100 - technicalRaw)
-        );
-
-        const technicalWeight = Number.isFinite(technicalRaw) ? technicalRaw : 70;
-        const qualitativeWeight = Number.isFinite(qualitativeRaw) ? qualitativeRaw : 30;
-
-        const technicalBaseForAverage = isFixedTechQualScale ? 100 : technicalMax;
-        const qualitativeBaseForAverage = isFixedTechQualScale ? 40 : qualitativeMax;
-        const technicalPercentage =
-          technicalScoredCount > 0 && technicalBaseForAverage > 0
-            ? (technicalPoints / technicalBaseForAverage) * 100
-            : null;
-        const qualitativePercentage =
-          qualitativeScoredCount > 0 && qualitativeBaseForAverage > 0
-            ? (qualitativePoints / qualitativeBaseForAverage) * 100
-            : null;
-
-        if (technicalPercentage !== null || qualitativePercentage !== null) {
-          let weightedBase = basePercentage;
-
-          if (shouldUseTechQualAverage) {
-            if (technicalPercentage !== null && qualitativePercentage !== null) {
-              weightedBase = (technicalPercentage + qualitativePercentage) / 2;
-            } else if (technicalPercentage !== null) {
-              weightedBase = technicalPercentage;
-            } else if (qualitativePercentage !== null) {
-              weightedBase = qualitativePercentage;
-            }
-          } else {
-            if (technicalPercentage !== null && qualitativePercentage !== null) {
-              const weightedTechnical = (technicalPercentage * technicalWeight) / 100;
-              const weightedQualitative = (qualitativePercentage * qualitativeWeight) / 100;
-              weightedBase = weightedTechnical + weightedQualitative;
-            } else if (technicalPercentage !== null) {
-              weightedBase = technicalPercentage;
-            } else if (qualitativePercentage !== null) {
-              weightedBase = qualitativePercentage;
-            }
-          }
-
-          const shouldApplyAdjustments = shouldAutoAdjustPercentage;
-          percentage = shouldApplyAdjustments
-            ? applyPercentageAdjustments(weightedBase)
-            : Math.max(0, weightedBase);
-          if (shouldUseTechQualAverage) {
-            finalScoreValue = percentage;
-          }
-          weightedDetails = [
-            technicalPercentage !== null
-              ? `Téc: ${technicalPercentage.toFixed(2)}%×${technicalWeight}%`
-              : '',
-            qualitativePercentage !== null
-              ? `Qual: ${qualitativePercentage.toFixed(2)}%×${qualitativeWeight}%`
-              : '',
-            shouldUseTechQualAverage && technicalPercentage !== null && qualitativePercentage !== null
-              ? `Média(Téc,Qual): (${technicalPercentage.toFixed(2)}% + ${qualitativePercentage.toFixed(2)}%) / 2`
-              : '',
-            technicalPercentage !== null && qualitativePercentage === null
-              ? `Apenas Técnica considerada`
-              : '',
-            qualitativePercentage !== null && technicalPercentage === null
-              ? `Apenas Qualitativa considerada`
-              : '',
-            !shouldUseTechQualAverage && penaltyMode === 'percentage' && penaltiesNum > 0 ? `- ${penaltiesNum}%` : '',
-            !shouldUseTechQualAverage && penaltyMode !== 'percentage' && penaltiesNum > 0 ? `Penalizações: ${penaltiesNum} (sem desconto % automático)` : '',
-            !shouldUseTechQualAverage && bonusNum > 0 ? `+ ${bonusNum}%` : ''
-          ].filter(Boolean).join(' | ');
-        }
+        // Percentagem simples: total obtido / total máximo — é sempre o correto quando
+        // os exercícios já têm max_points e coeficientes definidos na mesma escala (0-10).
+        // Pesos 67%/33% só são necessários para Infantil/modalidades com escalas distintas.
+        percentage = applyPercentageAdjustments(basePercentage);
+        weightedDetails = penaltiesNum > 0 || bonusNum > 0
+          ? `${penaltiesNum > 0 ? `- ${penaltiesNum}%` : ''}${bonusNum > 0 ? ` + ${bonusNum}%` : ''}`.trim()
+          : '';
       } else {
         percentage = applyPercentageAdjustments(percentage);
       }
