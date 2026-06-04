@@ -396,7 +396,7 @@ const LayoutContent = React.memo(({ children, currentPageName }) => {
                 </DropdownMenu>
               ) : (
                 <Button 
-                  onClick={() => base44.auth.redirectToLogin()}
+                  onClick={() => window.location.href = '/Login'}
                   className="bg-[#2D2D2D] hover:bg-[#1A1A1A] text-white"
                 >
                   {t('login')}

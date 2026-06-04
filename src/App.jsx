@@ -8,6 +8,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import RankingDisplay from '@/pages/RankingDisplay';
+import Login from '@/pages/Login';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -61,6 +62,8 @@ const AuthenticatedApp = () => {
       ))}
       {/* Página pública de ranking para exibição em ecrã durante competições */}
       <Route path="/RankingDisplay" element={<RankingDisplay />} />
+      {/* Página de login público */}
+      <Route path="/Login" element={<Login />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
