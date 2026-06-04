@@ -119,7 +119,7 @@ const LayoutContent = React.memo(({ children, currentPageName }) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit6' || e.key === '6')) {
         e.preventDefault();
         sessionStorage.setItem('admin_keyboard_access', 'true');
-        window.location.href = createPageUrl('AdminLogin');
+        window.location.href = '/AdminLogin';
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit9' || e.key === '9')) {
         e.preventDefault();
