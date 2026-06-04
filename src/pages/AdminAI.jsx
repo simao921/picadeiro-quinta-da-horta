@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Brain, TrendingUp, Calendar, AlertTriangle, 
-  Loader2, Star, Clock 
+  Loader2, Clock 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -34,18 +34,6 @@ export default function AdminAI() {
   const { data: payments } = useQuery({
     queryKey: ['all-payments'],
     queryFn: () => base44.entities.Payment.list(),
-    initialData: []
-  });
-
-  const { data: products } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list(),
-    initialData: []
-  });
-
-  const { data: orders } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list(),
     initialData: []
   });
 
@@ -94,66 +82,6 @@ export default function AdminAI() {
     } catch (e) {
       console.error('Error:', e);
       toast.error('Erro ao analisar horários: ' + (e.message || 'Erro desconhecido'));
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
-  const analyzeProductPerformance = async () => {
-    setAnalyzing(true);
-    try {
-      const analysis = await base44.integrations.Core.InvokeLLM({
-        prompt: `
-          Analisa o desempenho da loja online de um centro equestre:
-          
-          **Produtos:**
-          ${JSON.stringify(products, null, 2)}
-          
-          **Encomendas:**
-          ${JSON.stringify(orders, null, 2)}
-          
-          Fornece:
-          1. Top 5 produtos mais vendidos e porquê
-          2. Produtos com baixo desempenho e possíveis razões
-          3. Sugestões de produtos para destacar (featured)
-          4. Recomendações de preços ou promoções
-          5. Produtos que devem ser reabastecidos prioritariamente
-        `,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            top_products: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  reason: { type: "string" }
-                }
-              }
-            },
-            underperforming: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  reason: { type: "string" },
-                  suggestion: { type: "string" }
-                }
-              }
-            },
-            featured_recommendations: { type: "array", items: { type: "string" } },
-            pricing_suggestions: { type: "array", items: { type: "string" } },
-            restock_priority: { type: "array", items: { type: "string" } }
-          }
-        }
-      });
-
-      setSuggestions(prev => ({ ...prev, products: analysis }));
-      toast.success('Análise de produtos concluída!');
-    } catch (e) {
-      toast.error('Erro ao analisar produtos');
     } finally {
       setAnalyzing(false);
     }
@@ -226,10 +154,7 @@ export default function AdminAI() {
               <Calendar className="w-5 h-5 mr-2" />
               <span className="font-medium">Otimização de Horários</span>
             </TabsTrigger>
-            <TabsTrigger value="sales" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4A5D23] data-[state=active]:to-[#3A4A1B] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg px-5 py-3">
-              <TrendingUp className="w-5 h-5 mr-2" />
-              <span className="font-medium">Análise de Vendas</span>
-            </TabsTrigger>
+
           </TabsList>
 
           {/* Proactive Alerts */}
@@ -402,79 +327,7 @@ export default function AdminAI() {
             </Card>
           </TabsContent>
 
-          {/* Sales Analysis */}
-          <TabsContent value="sales" className="space-y-4 animate-fadeIn">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
-              <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-purple-600" />
-                  Análise de Vendas com IA
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={analyzeProductPerformance}
-                  disabled={analyzing}
-                  className="bg-gradient-to-r from-[#4A5D23] to-[#3A4A1B] hover:from-[#3A4A1B] hover:to-[#2A3A0B] text-white mb-4 shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  {analyzing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      A analisar...
-                    </>
-                  ) : (
-                    <>
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Analisar Desempenho
-                    </>
-                  )}
-                </Button>
 
-                {suggestions?.products && (
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <Star className="w-4 h-4 text-amber-500" />
-                        Top Produtos
-                      </h4>
-                      <div className="space-y-2">
-                        {suggestions.products.top_products?.map((product, i) => (
-                          <div key={i} className="p-3 bg-green-50 border border-green-200 rounded">
-                            <p className="font-medium text-green-900">{product.name}</p>
-                            <p className="text-sm text-green-700">{product.reason}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold mb-2">Produtos para Destacar</h4>
-                      <ul className="list-disc pl-5 space-y-1">
-                        {suggestions.products.featured_recommendations?.map((rec, i) => (
-                          <li key={i} className="text-sm text-stone-700">{rec}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {suggestions.products.underperforming?.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2">Atenção Necessária</h4>
-                        <div className="space-y-2">
-                          {suggestions.products.underperforming.map((product, i) => (
-                            <div key={i} className="p-3 bg-amber-50 border border-amber-200 rounded">
-                              <p className="font-medium text-amber-900">{product.name}</p>
-                              <p className="text-sm text-amber-700">{product.reason}</p>
-                              <p className="text-sm text-amber-600 mt-1">💡 {product.suggestion}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
