@@ -119,7 +119,7 @@ const LayoutContent = React.memo(({ children, currentPageName }) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit6' || e.key === '6')) {
         e.preventDefault();
         sessionStorage.setItem('admin_keyboard_access', 'true');
-        window.location.href = '/AdminLogin';
+        window.location.href = createPageUrl('AdminLogin');
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.code === 'Digit9' || e.key === '9')) {
         e.preventDefault();
@@ -396,7 +396,7 @@ const LayoutContent = React.memo(({ children, currentPageName }) => {
                 </DropdownMenu>
               ) : (
                 <Button 
-                  onClick={() => window.location.href = '/Login'}
+                  onClick={() => base44.auth.redirectToLogin()}
                   className="bg-[#2D2D2D] hover:bg-[#1A1A1A] text-white"
                 >
                   {t('login')}

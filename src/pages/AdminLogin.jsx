@@ -48,8 +48,7 @@ export default function AdminLogin() {
   }, []);
 
   const handleLogin = () => {
-    sessionStorage.setItem('admin_keyboard_access', 'true');
-    base44.auth.redirectToLogin(window.location.origin + '/AdminLogin');
+    base44.auth.redirectToLogin(createPageUrl('AdminLogin'));
   };
 
   if (isLoading) {
