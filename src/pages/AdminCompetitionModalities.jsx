@@ -458,7 +458,7 @@ Estrutura os dados de forma clara seguindo o schema JSON.
                   type="number"
                   min="0"
                   max="100"
-                  step="1"
+                  step="0.01"
                   className="h-8 text-sm"
                   value={formData.coefficients?.technical_percentage ?? 70}
                   onChange={(e) => {
@@ -479,7 +479,7 @@ Estrutura os dados de forma clara seguindo o schema JSON.
                   type="number"
                   min="0"
                   max="100"
-                  step="1"
+                  step="0.01"
                   className="h-8 text-sm"
                   value={formData.coefficients?.qualitative_percentage ?? 30}
                   onChange={(e) => {
