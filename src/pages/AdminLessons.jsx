@@ -1175,6 +1175,12 @@ export default function AdminLessons() {
                                     <span className="text-stone-300">•</span>
                                     <span className="font-medium">{lesson.end_time || '--:--'}</span>
                                   </div>
+                                  {lesson.notes && (
+                                    <div className="mt-2 flex items-start gap-2">
+                                      <Users className="w-4 h-4 text-[#B8956A] mt-0.5 flex-shrink-0" />
+                                      <p className="text-sm text-stone-600 font-medium">{lesson.notes}</p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               {attendanceStats.total > 0 && (
