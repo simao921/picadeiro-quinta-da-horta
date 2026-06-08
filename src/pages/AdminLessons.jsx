@@ -78,10 +78,9 @@ export default function AdminLessons() {
     gcTime: 0
   });
 
-  const { data: allLessons } = useQuery({
+  const { data: allLessons = [] } = useQuery({
     queryKey: ['admin-all-lessons'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 1000),
-    initialData: []
   });
 
   const { data: bookings } = useQuery({
