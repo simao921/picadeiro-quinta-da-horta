@@ -77,8 +77,8 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function retryWithBackoff(fn, maxRetries = 4) {
-  let delay = 1000;
+async function retryWithBackoff(fn, maxRetries = 6) {
+  let delay = 2000;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
@@ -92,7 +92,7 @@ async function retryWithBackoff(fn, maxRetries = 4) {
       if (isRateLimit && attempt < maxRetries) {
         console.warn(`Rate limit - aguardando ${delay}ms antes de retry ${attempt + 1}/${maxRetries}`);
         await sleep(delay);
-        delay *= 2; // backoff exponencial
+        delay = Math.min(delay * 2, 30000); // backoff exponencial, máx 30s
       } else {
         throw error;
       }
@@ -100,11 +100,11 @@ async function retryWithBackoff(fn, maxRetries = 4) {
   }
 }
 
-async function bulkCreateInBatchesWithRetry(entity, items, batchSize = 10) {
+async function bulkCreateInBatchesWithRetry(entity, items, batchSize = 5) {
   const results = [];
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
-    if (i > 0) await sleep(600); // delay fixo entre batches
+    if (i > 0) await sleep(1500); // delay maior entre batches
     const created = await retryWithBackoff(() => entity.bulkCreate(batch));
     results.push(...(Array.isArray(created) ? created : []));
   }
@@ -242,7 +242,7 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
       const updates = Object.values(byStudent);
       for (let idx = 0; idx < updates.length; idx++) {
         const s = updates[idx];
-        if (idx > 0) await sleep(300); // delay entre operações de alunos
+        if (idx > 0) await sleep(800); // delay maior entre operações de alunos
         
         if (!s.id) {
           const newStudent = await retryWithBackoff(() => base44.entities.PicadeiroStudent.create({
@@ -377,18 +377,19 @@ export default function PdfScheduleImporter({ students, onImportDone }) {
         for (const l of existingLessons) existingLessonById[l.id] = l;
 
         const lessonUpdateEntries = Object.entries(spotsByLesson);
-        for (let i = 0; i < lessonUpdateEntries.length; i += 10) {
-          const batch = lessonUpdateEntries.slice(i, i + 10);
-          if (i > 0) await sleep(500); // Delay entre batches de atualização
-          await Promise.all(batch.map(([lessonId, count]) => {
+        for (let i = 0; i < lessonUpdateEntries.length; i += 5) {
+          const batch = lessonUpdateEntries.slice(i, i + 5);
+          if (i > 0) await sleep(1200); // Delay maior entre batches de atualização
+          for (const [lessonId, count] of batch) {
             const lesson = existingLessonById[lessonId];
             const currentSpots = lesson ? (lesson.booked_spots || 0) : 0;
             const currentFixed = lesson ? (lesson.fixed_students_count || 0) : 0;
-            return retryWithBackoff(() => base44.entities.Lesson.update(lessonId, {
+            await retryWithBackoff(() => base44.entities.Lesson.update(lessonId, {
               booked_spots: currentSpots + count,
               fixed_students_count: currentFixed + count
             }));
-          }));
+            await sleep(300); // Pequeno delay entre cada update individual
+          }
         }
       }
 
