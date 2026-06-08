@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,8 +26,9 @@ import {
 import { 
   Plus, CalendarDays, Clock, Users, 
   CheckCircle, XCircle, Loader2, AlertCircle, Search,
-  UserCheck, UserX, Edit2, Filter, ChevronLeft, ChevronRight
+  UserCheck, UserX, Edit2, Filter, ChevronLeft, ChevronRight, BookOpen
 } from 'lucide-react';
+import AdminLessonHistory from '@/components/admin/AdminLessonHistory';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { toast } from 'sonner';
@@ -641,6 +643,27 @@ export default function AdminLessons() {
             <h1 className="text-2xl font-bold text-[#2C3E1F]">Gestão de Aulas</h1>
             <p className="text-stone-500">Gerir aulas e reservas</p>
           </div>
+        </div>
+
+        <Tabs defaultValue="schedule" className="space-y-6">
+          <TabsList className="bg-white border shadow-sm">
+            <TabsTrigger value="schedule" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
+              <CalendarDays className="w-4 h-4 mr-2" />
+              Horário
+            </TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
+              <BookOpen className="w-4 h-4 mr-2" />
+              Histórico
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="history">
+            <AdminLessonHistory />
+          </TabsContent>
+
+          <TabsContent value="schedule">
+        <div className="space-y-6">
+          <div className="flex justify-end">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#B8956A] hover:bg-[#8B7355] text-white">
@@ -1498,6 +1521,10 @@ export default function AdminLessons() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
+
+          </TabsContent>
+        </Tabs>
 
         {/* Dialog para escolher se ausência é compensável */}
         <Dialog open={showCompensableDialog} onOpenChange={setShowCompensableDialog}>
