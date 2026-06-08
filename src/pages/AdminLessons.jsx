@@ -1218,14 +1218,21 @@ export default function AdminLessons() {
                                   Pendente
                                 </Badge>
                               )}
-                              <Badge className={`text-lg px-6 py-2.5 font-bold shadow-lg ${
-                                isFull ? 'bg-red-500 text-white' : 
-                                (lesson.booked_spots || 0) > 3 ? 'bg-amber-500 text-white' :
-                                'bg-[#B8956A] text-white'
-                              }`}>
-                                <Users className="w-5 h-5 mr-2" />
-                                {lesson.booked_spots || 0}/6
-                              </Badge>
+                              {(() => {
+                                const notesCount = lesson.notes ? lesson.notes.split(';').map(s => s.trim()).filter(Boolean).length : 0;
+                                const displayCount = Math.max(lesson.booked_spots || 0, notesCount);
+                                const isFullDisplay = displayCount >= 6;
+                                return (
+                                  <Badge className={`text-lg px-6 py-2.5 font-bold shadow-lg ${
+                                    isFullDisplay ? 'bg-red-500 text-white' : 
+                                    displayCount > 3 ? 'bg-amber-500 text-white' :
+                                    'bg-[#B8956A] text-white'
+                                  }`}>
+                                    <Users className="w-5 h-5 mr-2" />
+                                    {displayCount}/6
+                                  </Badge>
+                                );
+                              })()}
                             </div>
                           </div>
 
