@@ -208,6 +208,7 @@ export default function NewBookingForm({ user, isBlocked }) {
   const [selectedPhotoPackage, setSelectedPhotoPackage] = useState(null);
   const [showPhotoVideoDialog, setShowPhotoVideoDialog] = useState(false);
   const [wantsPhotoVideo, setWantsPhotoVideo] = useState(false);
+  const [selectedInstructor, setSelectedInstructor] = useState(null); // 'team' | 'gilberto'
 
   const queryClient = useQueryClient();
   const today = new Date();
@@ -714,7 +715,8 @@ export default function NewBookingForm({ user, isBlocked }) {
           client_email: user.email,
           client_name: user.full_name,
           status: selectedService.auto_approve ? 'approved' : 'pending',
-          is_owner_booking: selectedService.title === 'Proprietários'
+          is_owner_booking: selectedService.title === 'Proprietários',
+          notes: selectedInstructor === 'gilberto' ? 'Instrutor preferido: Gilberto Filipe' : selectedInstructor === 'team' ? 'Instrutor preferido: Monitores / Team' : undefined
         });
 
         // Enviar email de confirmação
@@ -845,6 +847,14 @@ export default function NewBookingForm({ user, isBlocked }) {
       return;
     }
 
+    // Aulas particulares: validar instrutor
+    if (selectedService && selectedService.title !== 'Aulas em Grupo' && selectedService.title !== 'Proprietários' && selectedService.title !== 'Hipoterapia') {
+      if (!selectedInstructor) {
+        toast.error('Por favor escolha um instrutor.');
+        return;
+      }
+    }
+
     if (selectedService?.title === 'Aulas em Grupo' && !selectedModalidade) {
       toast.error('Por favor escolha entre Aula Avulso ou Aula Fixa.');
       return;
@@ -958,6 +968,7 @@ export default function NewBookingForm({ user, isBlocked }) {
             setSelectedModalidade(null);
             setSelectedDayOfWeek(null);
             setFixoDaysSelected([]);
+            setSelectedInstructor(null);
           }}
           className="bg-[#4A5D23] hover:bg-[#3A4A1B]"
         >
@@ -1173,35 +1184,74 @@ export default function NewBookingForm({ user, isBlocked }) {
            selectedService.title !== 'Aulas em Grupo' && 
            selectedService.title !== 'Proprietários' && 
            selectedService.title !== 'Hipoterapia' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card
-                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
-                    selectedPlan?.duration === 30 
-                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
-                      : 'border-stone-200 hover:border-[#B8956A]/50'
-                  }`}
-                  onClick={() => setSelectedPlan({ label: '30 minutos', duration: 30, frequency: 1 })}
-                >
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">30 minutos</h3>
-                    <p className="text-sm text-stone-600">Sessão de meia hora</p>
-                  </CardContent>
-                </Card>
-                <Card
-                  className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
-                    selectedPlan?.duration === 60 
-                      ? 'border-[#B8956A] bg-[#B8956A]/5' 
-                      : 'border-stone-200 hover:border-[#B8956A]/50'
-                  }`}
-                  onClick={() => setSelectedPlan({ label: '60 minutos', duration: 60, frequency: 1 })}
-                >
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">60 minutos</h3>
-                    <p className="text-sm text-stone-600">Sessão de uma hora</p>
-                  </CardContent>
-                </Card>
+            <div className="space-y-6">
+              {/* Escolha de Instrutor */}
+              <div>
+                <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Instrutor</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedInstructor === 'team'
+                        ? 'border-[#B8956A] bg-[#B8956A]/5'
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedInstructor('team')}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Monitores / Team</h3>
+                      <p className="text-sm text-stone-600">Aula com um dos monitores da equipa</p>
+                    </CardContent>
+                  </Card>
+                  <Card
+                    className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedInstructor === 'gilberto'
+                        ? 'border-[#B8956A] bg-[#B8956A]/5'
+                        : 'border-stone-200 hover:border-[#B8956A]/50'
+                    }`}
+                    onClick={() => setSelectedInstructor('gilberto')}
+                  >
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">Gilberto Filipe</h3>
+                      <p className="text-sm text-stone-600">Aula com o campeão mundial Gilberto Filipe</p>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
+
+              {/* Escolha de Duração */}
+              {selectedInstructor && (
+                <div>
+                  <p className="text-sm font-semibold text-[#2C3E1F] mb-3">Duração</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card
+                      className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                        selectedPlan?.duration === 30 
+                          ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                          : 'border-stone-200 hover:border-[#B8956A]/50'
+                      }`}
+                      onClick={() => setSelectedPlan({ label: '30 minutos', duration: 30, frequency: 1 })}
+                    >
+                      <CardContent className="p-6">
+                        <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">30 minutos</h3>
+                        <p className="text-sm text-stone-600">Sessão de meia hora</p>
+                      </CardContent>
+                    </Card>
+                    <Card
+                      className={`cursor-pointer border-2 transition-all hover:shadow-lg ${
+                        selectedPlan?.duration === 60 
+                          ? 'border-[#B8956A] bg-[#B8956A]/5' 
+                          : 'border-stone-200 hover:border-[#B8956A]/50'
+                      }`}
+                      onClick={() => setSelectedPlan({ label: '60 minutos', duration: 60, frequency: 1 })}
+                    >
+                      <CardContent className="p-6">
+                        <h3 className="font-semibold text-lg text-[#2C3E1F] mb-2">60 minutos</h3>
+                        <p className="text-sm text-stone-600">Sessão de uma hora</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1472,6 +1522,14 @@ export default function NewBookingForm({ user, isBlocked }) {
                   <span className="text-stone-600">Plano</span>
                   <span className="font-semibold text-[#2C3E1F]">{selectedPlan?.label}</span>
                 </div>
+                {selectedInstructor && (
+                  <div className="flex justify-between py-3 border-b border-stone-200">
+                    <span className="text-stone-600">Instrutor</span>
+                    <span className="font-semibold text-[#2C3E1F]">
+                      {selectedInstructor === 'gilberto' ? 'Gilberto Filipe' : 'Monitores / Team'}
+                    </span>
+                  </div>
+                )}
                 {selectedModalidade && (
                   <div className="flex justify-between py-3 border-b border-stone-200">
                     <span className="text-stone-600">Modalidade</span>
