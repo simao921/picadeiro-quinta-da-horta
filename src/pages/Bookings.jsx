@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Euro, Plus, AlertCircle } from 'lucide-react';
+import { Euro, Plus, AlertCircle, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import NewBookingForm from '@/components/bookings/NewBookingForm';
 import PaymentsSection from '@/components/bookings/PaymentsSection';
+import LessonHistory from '@/components/bookings/LessonHistory';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/components/LanguageProvider';
 import LazyImage from '@/components/ui/LazyImage';
@@ -186,6 +187,10 @@ export default function Bookings() {
                 <Euro className="w-4 h-4 mr-2" />
                 {t('payments')}
               </TabsTrigger>
+              <TabsTrigger value="history" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Histórico
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="new">
@@ -194,6 +199,10 @@ export default function Bookings() {
 
             <TabsContent value="payments">
               <PaymentsSection user={user} />
+            </TabsContent>
+
+            <TabsContent value="history">
+              <LessonHistory user={user} />
             </TabsContent>
           </Tabs>
         </div>
