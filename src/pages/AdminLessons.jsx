@@ -63,7 +63,7 @@ export default function AdminLessons() {
 
   const queryClient = useQueryClient();
 
-  const { data: lessons, isLoading } = useQuery({
+  const { data: lessons = [], isLoading } = useQuery({
     queryKey: ['admin-lessons', format(selectedDate, 'yyyy-MM-dd')],
     queryFn: async () => {
       const result = await base44.entities.Lesson.filter({ date: format(selectedDate, 'yyyy-MM-dd') });
@@ -74,7 +74,8 @@ export default function AdminLessons() {
         return timeA.localeCompare(timeB);
       });
     },
-    initialData: []
+    staleTime: 0,
+    gcTime: 0
   });
 
   const { data: allLessons } = useQuery({
