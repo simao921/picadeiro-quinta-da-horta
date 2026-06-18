@@ -69,7 +69,7 @@ export const translations = {
     // Home - CTA
     cta_title: 'Pronto para Começar a Sua',
     cta_title_highlight: ' Jornada Equestre?',
-    cta_subtitle: 'Dê o primeiro passo para uma experiência única com cavalos. Reserve a sua primeira aula experimental ou entre em contacto para mais informações.',
+    cta_subtitle: 'ê o primeiro passo para uma experiência única com cavalos. Reserve a sua primeira aula experimental ou entre em contacto para mais informações.',
     cta_book: 'Reservar Aula',
     cta_call: 'Ligar Agora',
     cta_card_1: 'Aula Experimental',
