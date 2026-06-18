@@ -68,7 +68,7 @@ export const translations = {
     
     // Home - CTA
     cta_title: 'Dê o primeiro passo no',
-    cta_title_highlight: 'Mundo Equestre',
+    cta_title_highlight: ' Mundo Equestre',
     cta_subtitle: 'Reserve a sua primeira aula experimental gratuita e contacte-nos para mais informações.',
     cta_book: 'Reservar Aula',
     cta_call: 'Ligar Agora',
