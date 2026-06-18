@@ -10,11 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  User, Calendar, Euro, History, MessageSquare, 
+import {
+  User, Calendar, Euro, History, MessageSquare,
   Mail, Phone, MapPin, Edit2, Save, X, CheckCircle2,
-  Clock, AlertCircle, Ban, Send
-} from 'lucide-react';
+  Clock, AlertCircle, Ban, Send } from
+'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { useLanguage } from '@/components/LanguageProvider';
@@ -29,14 +29,14 @@ export default function UserProfile() {
   const [selectedTab, setSelectedTab] = useState('info');
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedBookingForFeedback, setSelectedBookingForFeedback] = useState(null);
-  
+
   // Form states for edit mode
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
     address: ''
   });
-  
+
   // Message form
   const [message, setMessage] = useState('');
   const [messageSubject, setMessageSubject] = useState('');
@@ -72,19 +72,19 @@ export default function UserProfile() {
       if (!user?.email) return [];
       return await base44.entities.Booking.filter({ client_email: user.email });
     },
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
 
   // Fetch lessons
   const { data: lessons = [] } = useQuery({
     queryKey: ['lessons'],
-    queryFn: () => base44.entities.Lesson.list(),
+    queryFn: () => base44.entities.Lesson.list()
   });
 
   // Fetch services
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list(),
+    queryFn: () => base44.entities.Service.list()
   });
 
   // Fetch payments
@@ -94,7 +94,7 @@ export default function UserProfile() {
       if (!user?.email) return [];
       return await base44.entities.Payment.filter({ client_email: user.email });
     },
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
 
   // Update user info mutation
@@ -106,7 +106,7 @@ export default function UserProfile() {
       queryClient.invalidateQueries(['user']);
       setEditMode(false);
       setUser({ ...user, ...formData });
-    },
+    }
   });
 
   // Fetch user messages
@@ -116,7 +116,7 @@ export default function UserProfile() {
       if (!user?.email) return [];
       return await base44.entities.ContactMessage.filter({ email: user.email });
     },
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
 
   // Fetch user feedbacks
@@ -126,7 +126,7 @@ export default function UserProfile() {
       if (!user?.email) return [];
       return await base44.entities.Feedback.filter({ client_email: user.email });
     },
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
 
   // Send message mutation
@@ -145,7 +145,7 @@ export default function UserProfile() {
       setMessageSubject('');
       queryClient.invalidateQueries(['user-messages']);
       alert('Mensagem enviada com sucesso!');
-    },
+    }
   });
 
   const handleSaveProfile = () => {
@@ -163,60 +163,60 @@ export default function UserProfile() {
 
   // Check if booking already has feedback
   const hasFeedback = (bookingId) => {
-    return userFeedbacks.some(feedback => feedback.booking_id === bookingId);
+    return userFeedbacks.some((feedback) => feedback.booking_id === bookingId);
   };
 
   // Get lesson info for booking
   const getLessonInfo = (booking) => {
-    const lesson = lessons.find(l => l.id === booking.lesson_id);
+    const lesson = lessons.find((l) => l.id === booking.lesson_id);
     if (!lesson) return null;
-    const service = services.find(s => s.id === lesson.service_id);
+    const service = services.find((s) => s.id === lesson.service_id);
     return { lesson, service };
   };
 
   // Calculate stats
   const totalBookings = bookings.length;
-  const upcomingBookings = bookings.filter(b => {
+  const upcomingBookings = bookings.filter((b) => {
     const lessonInfo = getLessonInfo(b);
     return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) >= new Date();
   }).length;
-  
-  const totalDebt = payments
-    .filter(p => p.status === 'pending' || p.status === 'overdue')
-    .reduce((sum, p) => sum + (p.total || p.amount), 0);
-  
-  const isBlocked = payments.some(p => p.status === 'blocked');
+
+  const totalDebt = payments.
+  filter((p) => p.status === 'pending' || p.status === 'overdue').
+  reduce((sum, p) => sum + (p.total || p.amount), 0);
+
+  const isBlocked = payments.some((p) => p.status === 'blocked');
 
   // Separate upcoming and past bookings
   const now = new Date();
-  const upcomingBookingsList = bookings
-    .filter(b => {
-      const lessonInfo = getLessonInfo(b);
-      return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) >= now;
-    })
-    .sort((a, b) => {
-      const lessonA = getLessonInfo(a)?.lesson;
-      const lessonB = getLessonInfo(b)?.lesson;
-      return new Date(lessonA?.date || 0) - new Date(lessonB?.date || 0);
-    });
+  const upcomingBookingsList = bookings.
+  filter((b) => {
+    const lessonInfo = getLessonInfo(b);
+    return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) >= now;
+  }).
+  sort((a, b) => {
+    const lessonA = getLessonInfo(a)?.lesson;
+    const lessonB = getLessonInfo(b)?.lesson;
+    return new Date(lessonA?.date || 0) - new Date(lessonB?.date || 0);
+  });
 
-  const pastBookingsList = bookings
-    .filter(b => {
-      const lessonInfo = getLessonInfo(b);
-      return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) < now;
-    })
-    .sort((a, b) => {
-      const lessonA = getLessonInfo(a)?.lesson;
-      const lessonB = getLessonInfo(b)?.lesson;
-      return new Date(lessonB?.date || 0) - new Date(lessonA?.date || 0);
-    });
+  const pastBookingsList = bookings.
+  filter((b) => {
+    const lessonInfo = getLessonInfo(b);
+    return lessonInfo?.lesson && new Date(lessonInfo.lesson.date) < now;
+  }).
+  sort((a, b) => {
+    const lessonA = getLessonInfo(a)?.lesson;
+    const lessonB = getLessonInfo(b)?.lesson;
+    return new Date(lessonB?.date || 0) - new Date(lessonA?.date || 0);
+  });
 
   const renderStatusBadge = (status) => {
     const statusConfig = {
       approved: { label: 'Aprovada', className: 'bg-green-100 text-green-800' },
       pending: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800' },
       rejected: { label: 'Rejeitada', className: 'bg-red-100 text-red-800' },
-      cancelled: { label: 'Cancelada', className: 'bg-stone-100 text-stone-800' },
+      cancelled: { label: 'Cancelada', className: 'bg-stone-100 text-stone-800' }
     };
     const config = statusConfig[status] || statusConfig.pending;
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -227,7 +227,7 @@ export default function UserProfile() {
       paid: { label: 'Pago', className: 'bg-green-100 text-green-800', icon: CheckCircle2 },
       pending: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800', icon: Clock },
       overdue: { label: 'Atrasado', className: 'bg-red-100 text-red-800', icon: AlertCircle },
-      blocked: { label: 'Bloqueado', className: 'bg-red-100 text-red-800', icon: Ban },
+      blocked: { label: 'Bloqueado', className: 'bg-red-100 text-red-800', icon: Ban }
     };
     const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
@@ -235,16 +235,16 @@ export default function UserProfile() {
       <Badge className={config.className}>
         <Icon className="w-3 h-3 mr-1" />
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B8956A]"></div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -265,14 +265,14 @@ export default function UserProfile() {
           </div>
 
           {/* Account Status Alert */}
-          {isBlocked && (
-            <Alert className="bg-red-50 border-red-200 mb-6">
+          {isBlocked &&
+          <Alert className="bg-red-50 border-red-200 mb-6">
               <Ban className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 A sua conta está bloqueada devido a pagamentos em atraso. Por favor, regularize a situação para continuar a reservar aulas.
               </AlertDescription>
             </Alert>
-          )}
+          }
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -329,7 +329,7 @@ export default function UserProfile() {
               <History className="w-4 h-4" />
               Histórico
             </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
+            <TabsTrigger value="payments" className="flex items-center gap-2 hidden">
               <Euro className="w-4 h-4" />
               Pagamentos
             </TabsTrigger>
@@ -347,56 +347,56 @@ export default function UserProfile() {
                   <User className="w-5 h-5" />
                   Informações Pessoais
                 </CardTitle>
-                {!editMode ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setEditMode(true)}
-                    className="flex items-center gap-2"
-                  >
+                {!editMode ?
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditMode(true)}
+                  className="flex items-center gap-2">
+                  
                     <Edit2 className="w-4 h-4" />
                     Editar
-                  </Button>
-                ) : (
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setEditMode(false);
-                        setFormData({
-                          full_name: user.full_name || '',
-                          phone: user.phone || '',
-                          address: user.address || ''
-                        });
-                      }}
-                    >
+                  </Button> :
+
+                <div className="flex gap-2">
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditMode(false);
+                      setFormData({
+                        full_name: user.full_name || '',
+                        phone: user.phone || '',
+                        address: user.address || ''
+                      });
+                    }}>
+                    
                       <X className="w-4 h-4" />
                     </Button>
-                    <Button 
-                      size="sm"
-                      onClick={handleSaveProfile}
-                      disabled={updateUserMutation.isPending}
-                      className="bg-[#2C3E1F] hover:bg-[#1A2412]"
-                    >
+                    <Button
+                    size="sm"
+                    onClick={handleSaveProfile}
+                    disabled={updateUserMutation.isPending}
+                    className="bg-[#2C3E1F] hover:bg-[#1A2412]">
+                    
                       <Save className="w-4 h-4 mr-2" />
                       Guardar
                     </Button>
                   </div>
-                )}
+                }
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo</Label>
-                  {editMode ? (
-                    <Input
-                      id="name"
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    />
-                  ) : (
-                    <p className="text-lg font-medium">{user?.full_name || '-'}</p>
-                  )}
+                  {editMode ?
+                  <Input
+                    id="name"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} /> :
+
+
+                  <p className="text-lg font-medium">{user?.full_name || '-'}</p>
+                  }
                 </div>
 
                 <div className="space-y-2">
@@ -413,17 +413,17 @@ export default function UserProfile() {
                     <Phone className="w-4 h-4" />
                     Telefone
                   </Label>
-                  {editMode ? (
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+351 XXX XXX XXX"
-                    />
-                  ) : (
-                    <p className="text-lg">{user?.phone || '-'}</p>
-                  )}
+                  {editMode ?
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+351 XXX XXX XXX" /> :
+
+
+                  <p className="text-lg">{user?.phone || '-'}</p>
+                  }
                 </div>
 
                 <div className="space-y-2">
@@ -431,17 +431,17 @@ export default function UserProfile() {
                     <MapPin className="w-4 h-4" />
                     Morada
                   </Label>
-                  {editMode ? (
-                    <Textarea
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Rua, Cidade, Código Postal"
-                      rows={3}
-                    />
-                  ) : (
-                    <p className="text-lg">{user?.address || '-'}</p>
-                  )}
+                  {editMode ?
+                  <Textarea
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Rua, Cidade, Código Postal"
+                    rows={3} /> :
+
+
+                  <p className="text-lg">{user?.address || '-'}</p>
+                  }
                 </div>
 
                 <div className="pt-4 border-t">
@@ -463,25 +463,25 @@ export default function UserProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {bookingsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
-                  </div>
-                ) : upcomingBookingsList.length === 0 ? (
-                  <div className="text-center py-12">
+                {bookingsLoading ?
+                <div className="space-y-4">
+                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+                  </div> :
+                upcomingBookingsList.length === 0 ?
+                <div className="text-center py-12">
                     <Calendar className="w-16 h-16 mx-auto text-stone-300 mb-4" />
                     <p className="text-stone-600 text-lg">Não tem aulas agendadas</p>
                     <p className="text-stone-500 text-sm mt-2">Reserve a sua próxima aula na página de reservas</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {upcomingBookingsList.map((booking) => {
-                      const info = getLessonInfo(booking);
-                      if (!info) return null;
-                      const { lesson, service } = info;
+                  </div> :
 
-                      return (
-                        <Card key={booking.id} className="border-l-4 border-[#B8956A]">
+                <div className="space-y-4">
+                    {upcomingBookingsList.map((booking) => {
+                    const info = getLessonInfo(booking);
+                    if (!info) return null;
+                    const { lesson, service } = info;
+
+                    return (
+                      <Card key={booking.id} className="border-l-4 border-[#B8956A]">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
@@ -498,36 +498,36 @@ export default function UserProfile() {
                                  <Clock className="w-4 h-4" />
                                  {lesson.start_time} - {lesson.end_time}
                                 </p>
-                                {(booking.attendance === 'present' || booking.attendance_status === 'present') && (
-                                 <div className="flex items-center gap-2 mt-2">
+                                {(booking.attendance === 'present' || booking.attendance_status === 'present') &&
+                                <div className="flex items-center gap-2 mt-2">
                                    <Badge className="bg-green-100 text-green-800 border border-green-300">
                                      <CheckCircle2 className="w-3 h-3 mr-1" />
                                      Presença Confirmada
                                    </Badge>
                                  </div>
-                                )}
-                                {(booking.attendance === 'absent' || booking.attendance_status === 'absent') && (
-                                 <div className="flex items-center gap-2 mt-2">
+                                }
+                                {(booking.attendance === 'absent' || booking.attendance_status === 'absent') &&
+                                <div className="flex items-center gap-2 mt-2">
                                    <Badge className="bg-red-100 text-red-800 border border-red-300">
                                      <X className="w-3 h-3 mr-1" />
                                      Ausência Registada
                                    </Badge>
-                                   {booking.absence_compensable !== undefined && (
-                                     <Badge className={`${booking.absence_compensable ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-stone-100 text-stone-800 border-stone-300'}`}>
+                                   {booking.absence_compensable !== undefined &&
+                                  <Badge className={`${booking.absence_compensable ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-stone-100 text-stone-800 border-stone-300'}`}>
                                        {booking.absence_compensable ? 'Compensável' : 'Não Compensável'}
                                      </Badge>
-                                   )}
+                                  }
                                  </div>
-                                )}
+                                }
                                 </div>
                               </div>
                             </div>
                           </CardContent>
-                        </Card>
-                      );
-                    })}
+                        </Card>);
+
+                  })}
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </TabsContent>
@@ -542,24 +542,24 @@ export default function UserProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {bookingsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
-                  </div>
-                ) : pastBookingsList.length === 0 ? (
-                  <div className="text-center py-12">
+                {bookingsLoading ?
+                <div className="space-y-4">
+                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+                  </div> :
+                pastBookingsList.length === 0 ?
+                <div className="text-center py-12">
                     <History className="w-16 h-16 mx-auto text-stone-300 mb-4" />
                     <p className="text-stone-600 text-lg">Sem histórico de aulas</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {pastBookingsList.map((booking) => {
-                      const info = getLessonInfo(booking);
-                      if (!info) return null;
-                      const { lesson, service } = info;
+                  </div> :
 
-                      return (
-                        <Card key={booking.id} className="opacity-75">
+                <div className="space-y-4">
+                    {pastBookingsList.map((booking) => {
+                    const info = getLessonInfo(booking);
+                    if (!info) return null;
+                    const { lesson, service } = info;
+
+                    return (
+                      <Card key={booking.id} className="opacity-75">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
@@ -576,55 +576,55 @@ export default function UserProfile() {
                                  <Clock className="w-4 h-4" />
                                  {lesson.start_time} - {lesson.end_time}
                                 </p>
-                                {(booking.attendance === 'present' || booking.attendance_status === 'present') && (
-                                 <div className="flex items-center gap-2 mt-2">
+                                {(booking.attendance === 'present' || booking.attendance_status === 'present') &&
+                                <div className="flex items-center gap-2 mt-2">
                                    <Badge className="bg-green-100 text-green-800 border border-green-300">
                                      <CheckCircle2 className="w-3 h-3 mr-1" />
                                      Presença Confirmada
                                    </Badge>
                                  </div>
-                                )}
-                                {(booking.attendance === 'absent' || booking.attendance_status === 'absent') && (
-                                 <div className="flex flex-col gap-2 mt-2">
+                                }
+                                {(booking.attendance === 'absent' || booking.attendance_status === 'absent') &&
+                                <div className="flex flex-col gap-2 mt-2">
                                    <Badge className="bg-red-100 text-red-800 border border-red-300 w-fit">
                                      <X className="w-3 h-3 mr-1" />
                                      Ausência Registada
                                    </Badge>
-                                   {booking.absence_compensable !== undefined && (
-                                     <Badge className={`w-fit ${booking.absence_compensable ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-stone-100 text-stone-800 border-stone-300'}`}>
+                                   {booking.absence_compensable !== undefined &&
+                                  <Badge className={`w-fit ${booking.absence_compensable ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-stone-100 text-stone-800 border-stone-300'}`}>
                                        {booking.absence_compensable ? 'Ausência Compensável' : 'Ausência Não Compensável'}
                                      </Badge>
-                                   )}
+                                  }
                                  </div>
-                                )}
+                                }
                                 </div>
                                 </div>
-                                {hasFeedback(booking.id) ? (
-                                <Badge className="bg-green-100 text-green-800 mt-3">
+                                {hasFeedback(booking.id) ?
+                            <Badge className="bg-green-100 text-green-800 mt-3">
                                   <CheckCircle2 className="w-3 h-3 mr-1" />
                                   Feedback Enviado
-                                </Badge>
-                                ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedBookingForFeedback(booking);
-                                    setShowFeedback(true);
-                                  }}
-                                  className="flex items-center gap-2 mt-3"
-                                >
+                                </Badge> :
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedBookingForFeedback(booking);
+                                setShowFeedback(true);
+                              }}
+                              className="flex items-center gap-2 mt-3">
+                              
                                   <MessageSquare className="w-4 h-4" />
                                   Deixar Feedback
                                 </Button>
-                                )}
+                            }
                                 </div>
                                 </CardContent>
-                                </Card>
-                      );
-                    })}
+                                </Card>);
+
+                  })}
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </TabsContent>
@@ -639,21 +639,21 @@ export default function UserProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {paymentsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}
-                  </div>
-                ) : payments.length === 0 ? (
-                  <div className="text-center py-12">
+                {paymentsLoading ?
+                <div className="space-y-4">
+                    {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}
+                  </div> :
+                payments.length === 0 ?
+                <div className="text-center py-12">
                     <Euro className="w-16 h-16 mx-auto text-stone-300 mb-4" />
                     <p className="text-stone-600 text-lg">Sem pagamentos registados</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {payments
-                      .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
-                      .map((payment) => (
-                        <Card key={payment.id} className={payment.status === 'overdue' ? 'border-red-300' : ''}>
+                  </div> :
+
+                <div className="space-y-4">
+                    {payments.
+                  sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).
+                  map((payment) =>
+                  <Card key={payment.id} className={payment.status === 'overdue' ? 'border-red-300' : ''}>
                           <CardContent className="p-4">
                             <div className="flex justify-between items-center">
                               <div>
@@ -666,26 +666,26 @@ export default function UserProfile() {
                                 <p className="text-sm text-stone-600">
                                   Vencimento: {payment.due_date ? format(new Date(payment.due_date), "d 'de' MMMM", { locale: pt }) : '-'}
                                 </p>
-                                {payment.notes && (
-                                  <p className="text-xs text-stone-500 mt-1">{payment.notes}</p>
-                                )}
+                                {payment.notes &&
+                          <p className="text-xs text-stone-500 mt-1">{payment.notes}</p>
+                          }
                               </div>
                               <div className="text-right">
                                 <p className="text-2xl font-bold text-[#2C3E1F]">
                                   €{(payment.total || payment.amount).toFixed(2)}
                                 </p>
-                                {payment.penalty > 0 && (
-                                  <p className="text-xs text-red-600">
+                                {payment.penalty > 0 &&
+                          <p className="text-xs text-red-600">
                                     +€{payment.penalty.toFixed(2)} penalização
                                   </p>
-                                )}
+                          }
                               </div>
                             </div>
                           </CardContent>
                         </Card>
-                      ))}
+                  )}
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </TabsContent>
@@ -702,37 +702,37 @@ export default function UserProfile() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {messagesLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2].map(i => <Skeleton key={i} className="h-32" />)}
-                    </div>
-                  ) : userMessages.length === 0 ? (
-                    <div className="text-center py-8">
+                  {messagesLoading ?
+                  <div className="space-y-4">
+                      {[1, 2].map((i) => <Skeleton key={i} className="h-32" />)}
+                    </div> :
+                  userMessages.length === 0 ?
+                  <div className="text-center py-8">
                       <MessageSquare className="w-12 h-12 mx-auto text-stone-300 mb-3" />
                       <p className="text-stone-600">Ainda não enviou nenhuma mensagem</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {userMessages
-                        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
-                        .map((msg) => (
-                          <Card key={msg.id} className={msg.replied_at ? 'border-l-4 border-green-500' : 'border-l-4 border-blue-500'}>
+                    </div> :
+
+                  <div className="space-y-4">
+                      {userMessages.
+                    sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).
+                    map((msg) =>
+                    <Card key={msg.id} className={msg.replied_at ? 'border-l-4 border-green-500' : 'border-l-4 border-blue-500'}>
                             <CardContent className="p-4">
                               <div className="space-y-3">
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <h4 className="font-semibold text-[#2C3E1F]">{msg.subject}</h4>
-                                      {msg.replied_at ? (
-                                        <Badge className="bg-green-100 text-green-800">
+                                      {msg.replied_at ?
+                                <Badge className="bg-green-100 text-green-800">
                                           <CheckCircle2 className="w-3 h-3 mr-1" />
                                           Respondida
-                                        </Badge>
-                                      ) : msg.is_read ? (
-                                        <Badge className="bg-blue-100 text-blue-800">Lida</Badge>
-                                      ) : (
-                                        <Badge className="bg-yellow-100 text-yellow-800">Enviada</Badge>
-                                      )}
+                                        </Badge> :
+                                msg.is_read ?
+                                <Badge className="bg-blue-100 text-blue-800">Lida</Badge> :
+
+                                <Badge className="bg-yellow-100 text-yellow-800">Enviada</Badge>
+                                }
                                     </div>
                                     <p className="text-xs text-stone-500 mb-2">
                                       {format(new Date(msg.created_date), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: pt })}
@@ -744,8 +744,8 @@ export default function UserProfile() {
                                   <p className="text-sm text-stone-700 whitespace-pre-wrap">{msg.message}</p>
                                 </div>
 
-                                {msg.replied_at && (
-                                  <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-lg mt-3">
+                                {msg.replied_at &&
+                          <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-lg mt-3">
                                     <div className="flex items-center gap-2 mb-2">
                                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                                       <span className="text-sm font-semibold text-green-800">
@@ -756,13 +756,13 @@ export default function UserProfile() {
                                       A resposta foi enviada para o seu email: {msg.email}
                                     </p>
                                   </div>
-                                )}
+                          }
                               </div>
                             </CardContent>
                           </Card>
-                        ))}
+                    )}
                     </div>
-                  )}
+                  }
                 </CardContent>
               </Card>
 
@@ -783,8 +783,8 @@ export default function UserProfile() {
                         value={messageSubject}
                         onChange={(e) => setMessageSubject(e.target.value)}
                         placeholder="Motivo do contacto"
-                        required
-                      />
+                        required />
+                      
                     </div>
 
                     <div className="space-y-2">
@@ -795,15 +795,15 @@ export default function UserProfile() {
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Escreva a sua mensagem..."
                         rows={6}
-                        required
-                      />
+                        required />
+                      
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full bg-[#2C3E1F] hover:bg-[#1A2412]"
-                      disabled={sendMessageMutation.isPending}
-                    >
+                      disabled={sendMessageMutation.isPending}>
+                      
                       <Send className="w-4 h-4 mr-2" />
                       {sendMessageMutation.isPending ? 'A enviar...' : 'Enviar Mensagem'}
                     </Button>
@@ -830,19 +830,19 @@ export default function UserProfile() {
       </div>
 
       {/* Feedback Modal */}
-      {showFeedback && selectedBookingForFeedback && (
-        <FeedbackModal
-          booking={selectedBookingForFeedback}
-          onClose={() => {
-            setShowFeedback(false);
-            setSelectedBookingForFeedback(null);
-          }}
-          onSuccess={() => {
-            queryClient.invalidateQueries(['user-bookings']);
-            queryClient.invalidateQueries(['user-feedbacks']);
-          }}
-        />
-      )}
-    </div>
-  );
+      {showFeedback && selectedBookingForFeedback &&
+      <FeedbackModal
+        booking={selectedBookingForFeedback}
+        onClose={() => {
+          setShowFeedback(false);
+          setSelectedBookingForFeedback(null);
+        }}
+        onSuccess={() => {
+          queryClient.invalidateQueries(['user-bookings']);
+          queryClient.invalidateQueries(['user-feedbacks']);
+        }} />
+
+      }
+    </div>);
+
 }
