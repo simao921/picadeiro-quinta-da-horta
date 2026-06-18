@@ -329,10 +329,10 @@ export default function UserProfile() {
               <History className="w-4 h-4" />
               Histórico
             </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2 hidden">
-              <Euro className="w-4 h-4" />
-              Pagamentos
-            </TabsTrigger>
+            
+
+
+            
             <TabsTrigger value="messages" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
               Mensagens

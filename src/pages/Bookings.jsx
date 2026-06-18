@@ -183,10 +183,10 @@ export default function Bookings() {
                 <Plus className="w-4 h-4 mr-2" />
                 {t('new_booking')}
               </TabsTrigger>
-              <TabsTrigger value="payments" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white hidden">
-                <Euro className="w-4 h-4 mr-2" />
-                {t('payments')}
-              </TabsTrigger>
+              
+
+
+              
               <TabsTrigger value="history" className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white">
                 <BookOpen className="w-4 h-4 mr-2" />
                 Histórico
